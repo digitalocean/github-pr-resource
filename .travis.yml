@@ -1,0 +1,20 @@
+language: go
+sudo: false
+services:
+  - docker
+matrix:
+  include:
+  - os: osx
+    go: 1.10.x
+    env:
+      - TARGET=darwin
+      - ARCH=amd64
+  - os: linux
+    go: 1.10.x
+    env:
+      - TARGET=linux
+      - ARCH=amd64
+notifications:
+  email: false
+script:
+- make build
