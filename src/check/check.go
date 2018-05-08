@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"golang.org/x/oauth2"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/google/go-github/github"
 	"github.com/itsdalmo/github-pr-resource/src/models"
 	"github.com/shurcooL/githubql"
 )
@@ -19,7 +21,10 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 	auth := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: request.Source.AccessToken},
 	)
-	client := githubql.NewClient(oauth2.NewClient(context.Background(), auth))
+	oauth := oauth2.NewClient(context.Background(), auth)
+
+	client := githubql.NewClient(oauth)
+	prClient := github.NewClient(oauth).PullRequests
 
 	var query struct {
 		Repository Repository `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
@@ -50,9 +55,23 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 			Ref:        string(c.AbbreviatedOid),
 			PushedDate: c.PushedDate.Time,
 		}
-		if v.PushedDate.After(request.Version.PushedDate) {
-			response = append(response, v)
+		if !v.PushedDate.After(request.Version.PushedDate) {
+			continue
 		}
+		files, _, err := prClient.ListFiles(
+			context.Background(),
+			owner,
+			repository,
+			int(p.Node.Number),
+			nil,
+		)
+		if err != nil {
+			return response, err
+		}
+		if !filesInPath(files, request.Source.Path) {
+			continue
+		}
+		response = append(response, v)
 	}
 
 	if len(response) > 0 {
@@ -62,6 +81,22 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 	}
 
 	return response, nil
+}
+
+func filesInPath(files []*github.CommitFile, glob string) bool {
+	if glob == "" {
+		return true
+	}
+	for _, file := range files {
+		include, err := path.Match(glob, *file.Filename)
+		if err != nil {
+			panic(err)
+		}
+		if include {
+			return true
+		}
+	}
+	return false
 }
 
 func parseRepository(s string) (string, string, error) {

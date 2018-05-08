@@ -8,6 +8,7 @@ import (
 // Source represents the configuration for the resource.
 type Source struct {
 	Context     string `json:"context"`
+	Path        string `json:"path"`
 	Repository  string `json:"repository"`
 	AccessToken string `json:"access_token"`
 }
