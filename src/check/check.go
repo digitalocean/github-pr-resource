@@ -54,31 +54,36 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 			Ref:        string(c.AbbreviatedOid),
 			PushedDate: c.PushedDate.Time,
 		}
+
 		if !v.PushedDate.After(request.Version.PushedDate) {
 			continue
 		}
-		files, _, err := v3Client.PullRequests.ListFiles(
-			context.Background(),
-			owner,
-			repository,
-			int(p.Node.Number),
-			nil,
-		)
-		if err != nil {
-			return response, err
-		}
 
-		// Ignore path is provided and ALL files match it.
-		if glob := request.Source.IgnorePath; glob != "" {
-			if allFilesMatch(files, glob) {
-				continue
+		// Filter files if path or ignore_path is specified
+		if request.Source.Path != "" || request.Source.IgnorePath != "" {
+			files, _, err := v3Client.PullRequests.ListFiles(
+				context.Background(),
+				owner,
+				repository,
+				int(p.Node.Number),
+				nil,
+			)
+			if err != nil {
+				return response, err
 			}
-		}
 
-		// Path is provided but no files match it.
-		if glob := request.Source.Path; glob != "" {
-			if !anyFilesMatch(files, glob) {
-				continue
+			// Ignore path is provided and ALL files match it.
+			if glob := request.Source.IgnorePath; glob != "" {
+				if allFilesMatch(files, glob) {
+					continue
+				}
+			}
+
+			// Path is provided but no files match it.
+			if glob := request.Source.Path; glob != "" {
+				if !anyFilesMatch(files, glob) {
+					continue
+				}
 			}
 		}
 
