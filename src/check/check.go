@@ -21,10 +21,10 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 	auth := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: request.Source.AccessToken},
 	)
-	oauth := oauth2.NewClient(context.Background(), auth)
+	client := oauth2.NewClient(context.Background(), auth)
 
-	client := githubql.NewClient(oauth)
-	prClient := github.NewClient(oauth).PullRequests
+	v3Client := github.NewClient(client)
+	v4Client := githubql.NewClient(client)
 
 	var query struct {
 		Repository Repository `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
@@ -41,10 +41,9 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 		"pullrequestLast":   githubql.Int(100),
 		"pullrequestStates": []githubql.PullRequestState{githubql.PullRequestStateOpen},
 		"commitsLast":       githubql.Int(1),
-		"contextName":       githubql.String(request.Source.Context),
 	}
 
-	if err := client.Query(context.Background(), &query, vars); err != nil {
+	if err := v4Client.Query(context.Background(), &query, vars); err != nil {
 		return response, err
 	}
 
@@ -58,7 +57,7 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 		if !v.PushedDate.After(request.Version.PushedDate) {
 			continue
 		}
-		files, _, err := prClient.ListFiles(
+		files, _, err := v3Client.PullRequests.ListFiles(
 			context.Background(),
 			owner,
 			repository,
@@ -68,12 +67,25 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 		if err != nil {
 			return response, err
 		}
-		if !filesInPath(files, request.Source.Path) {
-			continue
+
+		// Ignore path is provided and ALL files match it.
+		if glob := request.Source.IgnorePath; glob != "" {
+			if allFilesMatch(files, glob) {
+				continue
+			}
 		}
+
+		// Path is provided but no files match it.
+		if glob := request.Source.Path; glob != "" {
+			if !anyFilesMatch(files, glob) {
+				continue
+			}
+		}
+
 		response = append(response, v)
 	}
 
+	// Sort the versions chronologically (oldest to newest)
 	if len(response) > 0 {
 		sort.Sort(response)
 	} else {
@@ -83,16 +95,28 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 	return response, nil
 }
 
-func filesInPath(files []*github.CommitFile, glob string) bool {
-	if glob == "" {
-		return true
-	}
+// True if all files match the glob pattern.
+func allFilesMatch(files []*github.CommitFile, glob string) bool {
 	for _, file := range files {
-		include, err := path.Match(glob, *file.Filename)
+		match, err := path.Match(glob, *file.Filename)
 		if err != nil {
 			panic(err)
 		}
-		if include {
+		if !match {
+			return false
+		}
+	}
+	return true
+}
+
+// True if one file matches the glob pattern.
+func anyFilesMatch(files []*github.CommitFile, glob string) bool {
+	for _, file := range files {
+		match, err := path.Match(glob, *file.Filename)
+		if err != nil {
+			panic(err)
+		}
+		if match {
 			return true
 		}
 	}
@@ -140,12 +164,6 @@ type Commits struct {
 // Commit https://developer.github.com/v4/object/commit/
 type Commit struct {
 	AbbreviatedOid githubql.String
-	CommittedDate  githubql.DateTime
 	PushedDate     githubql.DateTime
 	Message        githubql.String
-	Status         struct {
-		Context struct {
-			State githubql.StatusState
-		} `graphql:"context(name:$contextName)"`
-	}
 }

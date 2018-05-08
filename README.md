@@ -8,6 +8,8 @@ be made for use with webhooks, and hopefully be a bit simpler/bare bones than th
 
 - `repository`: `owner/repository-name` this resource should target.
 - `access_token`: A Github Access Token with repository access (required for setting status on commits).
+- `path`: Only produce new versions if the PR includes changes to files that match a glob pattern.
+- `ignore_path`: Inverse of the above.
 
 ## Behaviour
 

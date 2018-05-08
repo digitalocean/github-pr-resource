@@ -7,16 +7,16 @@ import (
 
 // Source represents the configuration for the resource.
 type Source struct {
-	Context     string `json:"context"`
 	Path        string `json:"path"`
+	IgnorePath  string `json:"ignore_path"`
 	Repository  string `json:"repository"`
 	AccessToken string `json:"access_token"`
 }
 
 // Validate the source configuration.
 func (s *Source) Validate() error {
-	if s.Context == "" {
-		return errors.New("context must be set")
+	if s.AccessToken == "" {
+		return errors.New("access_token must be set")
 	}
 	// TODO: Regexp this one?
 	if s.Repository == "" {
