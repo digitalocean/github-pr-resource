@@ -90,10 +90,11 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 		response = append(response, v)
 	}
 
-	// Sort the versions chronologically (oldest to newest)
 	if len(response) > 0 {
+		// Sort the versions chronologically (oldest to newest)
 		sort.Sort(response)
-	} else {
+	} else if request.Version.PR != "" {
+		// I.e., it's not the first time we are checking
 		response = append(response, request.Version)
 	}
 
