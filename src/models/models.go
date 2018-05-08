@@ -34,7 +34,7 @@ type Metadata struct {
 type Version struct {
 	PR         string    `json:"pr"`
 	Ref        string    `json:"ref"`
-	PushedDate time.Time `json:"pushed_date"`
+	PushedDate time.Time `json:"pushed_date,omitempty"`
 }
 
 // CheckRequest ...
