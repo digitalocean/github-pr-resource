@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/itsdalmo/github-pr-resource/src/check"
 	"github.com/itsdalmo/github-pr-resource/src/models"
@@ -22,9 +23,9 @@ func main() {
 			AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 		},
 		Version: models.Version{
-			PR:        "",
-			Ref:       "",
-			Timestamp: "",
+			PR:         "",
+			Ref:        "",
+			PushedDate: time.Date(2018, time.May, 8, 8, 12, 6, 0, time.UTC),
 		},
 	}
 

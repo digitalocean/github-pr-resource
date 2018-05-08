@@ -3,11 +3,12 @@ package check
 import (
 	"context"
 	"errors"
-	"github.com/itsdalmo/github-pr-resource/src/models"
-	"github.com/shurcooL/githubql"
 	"golang.org/x/oauth2"
 	"strconv"
 	"strings"
+
+	"github.com/itsdalmo/github-pr-resource/src/models"
+	"github.com/shurcooL/githubql"
 )
 
 // Run (business logic)
@@ -43,12 +44,14 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 
 	for _, p := range query.Repository.PullRequests.Edges {
 		c := p.Node.Commits.Edges[0].Node.Commit
-
-		response = append(response, models.Version{
-			PR:        strconv.Itoa(int(p.Node.Number)),
-			Ref:       string(c.AbbreviatedOid),
-			Timestamp: c.PushedDate.String(),
-		})
+		v := models.Version{
+			PR:         strconv.Itoa(int(p.Node.Number)),
+			Ref:        string(c.AbbreviatedOid),
+			PushedDate: c.PushedDate.Time,
+		}
+		if v.PushedDate.After(request.Version.PushedDate) {
+			response = append(response, v)
+		}
 	}
 
 	return response, nil

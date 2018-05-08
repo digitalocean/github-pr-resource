@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"time"
 )
 
 // Source represents the configuration for the resource.
@@ -31,9 +32,9 @@ type Metadata struct {
 
 // Version for the resource.
 type Version struct {
-	PR        string `json:"pr"`
-	Ref       string `json:"ref"`
-	Timestamp string `json:"time"`
+	PR         string    `json:"pr"`
+	Ref        string    `json:"ref"`
+	PushedDate time.Time `json:"pushed_date"`
 }
 
 // CheckRequest ...
