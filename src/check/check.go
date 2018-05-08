@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"golang.org/x/oauth2"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -52,6 +53,12 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 		if v.PushedDate.After(request.Version.PushedDate) {
 			response = append(response, v)
 		}
+	}
+
+	if len(response) > 0 {
+		sort.Sort(response)
+	} else {
+		response = append(response, request.Version)
 	}
 
 	return response, nil

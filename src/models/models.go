@@ -46,6 +46,18 @@ type CheckRequest struct {
 // CheckResponse ...
 type CheckResponse []Version
 
+func (p CheckResponse) Len() int {
+	return len(p)
+}
+
+func (p CheckResponse) Less(i, j int) bool {
+	return p[j].PushedDate.After(p[i].PushedDate)
+}
+
+func (p CheckResponse) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
 // PutParameters for the resource.
 type PutParameters struct {
 	Template  string            `json:"template"`
