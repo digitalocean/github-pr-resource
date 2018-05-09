@@ -24,7 +24,7 @@ Produces new versions for all commits (after the last version) ordered by the pu
 #### `put`
 
 - `status`: One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.
-- `context`: A context to use for the status.
+- `context`: A context to use for the status. (Prefixed with `concourse-ci`).
 - `comment`: Add a comment to the PR.
 
 TODO

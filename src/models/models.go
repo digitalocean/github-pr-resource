@@ -2,15 +2,19 @@ package models
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
+
+	"github.com/shurcooL/githubql"
 )
 
 // Source represents the configuration for the resource.
 type Source struct {
-	Path        string `json:"path"`
-	IgnorePath  string `json:"ignore_path"`
 	Repository  string `json:"repository"`
 	AccessToken string `json:"access_token"`
+	Path        string `json:"path"`
+	IgnorePath  string `json:"ignore_path"`
 }
 
 // Validate the source configuration.
@@ -31,10 +35,11 @@ type Metadata struct {
 	Value string `json:"value"`
 }
 
-// Version for the resource.
+// Version for the resource. ID is the Github Global ID.
 type Version struct {
 	PR         string    `json:"pr"`
-	Ref        string    `json:"ref"`
+	SHA        string    `json:"sha"`
+	ID         string    `json:"id"`
 	PushedDate time.Time `json:"pushed,omitempty"`
 }
 
@@ -59,17 +64,56 @@ func (p CheckResponse) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 
+// GetParameters for the resource.
+type GetParameters struct{}
+
+// Validate the get parameters.
+func (p *GetParameters) Validate() error {
+	return nil
+}
+
+// GetRequest ...
+type GetRequest struct {
+	Source  Source        `json:"source"`
+	Version Version       `json:"version"`
+	Params  GetParameters `json:"params"`
+}
+
+// GetResponse ...
+type GetResponse struct {
+	Version  Version    `json:"version"`
+	Metadata []Metadata `json:"metadata,omitempty"`
+}
+
 // PutParameters for the resource.
 type PutParameters struct {
-	Template  string            `json:"template"`
-	VarFile   string            `json:"var_file"`
-	Variables map[string]string `json:"variables"`
+	Path        string `json:"path"`
+	Context     string `json:"context"`
+	Status      string `json:"status"`
+	CommentFile string `json:"comment_file"`
+	Comment     string `json:"comment"`
 }
 
 // Validate the put parameters.
 func (p *PutParameters) Validate() error {
-	if p.Template == "" {
-		return errors.New("template must be set")
+	if p.Status == "" {
+		return errors.New("status must be set")
+	}
+
+	// Make sure we are setting an allowed status
+	var allowedStatus bool
+
+	status := strings.ToLower(p.Status)
+	allowed := []string{"success", "pending", "failure", "error"}
+
+	for _, a := range allowed {
+		if status == a {
+			allowedStatus = true
+		}
+	}
+
+	if !allowedStatus {
+		return fmt.Errorf("unknown status: %s", p.Status)
 	}
 	return nil
 }
@@ -83,5 +127,43 @@ type PutRequest struct {
 // PutResponse ...
 type PutResponse struct {
 	Version  Version    `json:"version"`
-	Metadata []Metadata `json:"metadata"`
+	Metadata []Metadata `json:"metadata,omitempty"`
+}
+
+// PullRequest represents the GraphQL commit node.
+// https://developer.github.com/v4/object/pullrequest/
+type PullRequest struct {
+	Number  int
+	URL     string
+	Commits struct {
+		Edges []struct {
+			Node struct {
+				Commit Commit
+			}
+		}
+	} `graphql:"commits(last:$commitsLast)"`
+}
+
+// GetCommits returns the commits in a PullRequest
+func (p *PullRequest) GetCommits() []Commit {
+	var commits []Commit
+	for _, c := range p.Commits.Edges {
+		commits = append(commits, c.Node.Commit)
+	}
+	return commits
+}
+
+// Commit represents the GraphQL commit node.
+// https://developer.github.com/v4/object/commit/
+type Commit struct {
+	ID             string
+	OID            string
+	AbbreviatedOID string
+	PushedDate     githubql.DateTime
+	Message        string
+	Author         struct {
+		User struct {
+			Login string
+		}
+	}
 }
