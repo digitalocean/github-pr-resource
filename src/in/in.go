@@ -33,57 +33,16 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 	}
 
 	return &models.GetResponse{
-		Version: request.Version,
+		Version:  request.Version,
+		Metadata: nil,
 	}, nil
-	// manager, err := manager.New(request.Source.Repository, request.Source.AccessToken)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to create manager: %s", err)
-	// }
-	// commit, err := manager.GetCommitByID(request.Version.ID)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get last commits: %s", err)
-	// }
-
-	// outputDir = filepath.Join(outputDir, ".git", "metadata")
-	// if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
-	// 	return nil, fmt.Errorf("failed to create output directory: %s", err)
-	// }
-	// if err := ioutil.WriteFile(filepath.Join(outputDir, "sha"), []byte(query.Node.Commit.OID), 0644); err != nil {
-	// 	return nil, fmt.Errorf("failed to write commit sha: %s", err)
-	// }
-
-	// // Return the response
-	// response.Version = request.Version
-	// return &response, nil
 }
 
-// func imageMetadata(image *ec2.Image) []models.Metadata {
-// 	var m []models.Metadata
-
-// 	m = append(m, models.Metadata{
-// 		Name:  "name",
-// 		Value: aws.StringValue(image.Name),
-// 	})
-
-// 	m = append(m, models.Metadata{
-// 		Name:  "owner_id",
-// 		Value: aws.StringValue(image.OwnerId),
-// 	})
-
-// 	m = append(m, models.Metadata{
-// 		Name:  "creation_date",
-// 		Value: aws.StringValue(image.CreationDate),
-// 	})
-
-// 	m = append(m, models.Metadata{
-// 		Name:  "virtualization_type",
-// 		Value: aws.StringValue(image.VirtualizationType),
-// 	})
-
-// 	m = append(m, models.Metadata{
-// 		Name:  "root_device_type",
-// 		Value: aws.StringValue(image.RootDeviceType),
-// 	})
-
-// 	return m
-// }
+func commitMetadata(commit *models.Commit) []models.Metadata {
+	// var m []models.Metadata
+	// m = append(m, models.Metadata{
+	// 	Name:  "name",
+	// 	Value: "",
+	// })
+	return nil
+}

@@ -15,19 +15,6 @@ func main() {
 		log.Fatalf("failed to unmarshal request: %s", err)
 	}
 
-	// request := models.CheckRequest{
-	// 	Source: models.Source{
-	// 		Context:     "concourse-ci/status",
-	// 		Repository:  "itsdalmo/test-repository",
-	// 		AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
-	// 	},
-	// 	Version: models.Version{
-	// 		PR:         "",
-	// 		Ref:        "",
-	// 		PushedDate: time.Date(2018, time.May, 8, 8, 12, 6, 0, time.UTC),
-	// 	},
-	// }
-
 	response, err := check.Run(request)
 	if err != nil {
 		log.Fatalf("check failed: %s", err)
