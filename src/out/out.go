@@ -21,7 +21,7 @@ func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error
 
 	// Version available after a GET step.
 	var version models.Version
-	path := filepath.Join(inputDir, ".git", "resource", "version.json")
+	path := filepath.Join(inputDir, request.Params.Path, ".git", "resource", "version.json")
 
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
