@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 
 	"github.com/itsdalmo/github-pr-resource/src/manager"
 	"github.com/itsdalmo/github-pr-resource/src/models"
@@ -37,6 +38,18 @@ func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error
 	}
 	if err := manager.SetCommitStatus(version.SHA, request.Params.Context, request.Params.Status); err != nil {
 		return nil, fmt.Errorf("failed to set status: %s", err)
+	}
+
+	// Set comment if specified
+	if comment := request.Params.Comment; comment != "" {
+		pr, err := strconv.Atoi(version.PR)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert pr number to int: %s", err)
+		}
+		err = manager.AddComment(pr, comment)
+		if err != nil {
+			return nil, fmt.Errorf("failed to post comment: %s", err)
+		}
 	}
 
 	return &models.PutResponse{

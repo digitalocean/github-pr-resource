@@ -116,13 +116,13 @@ func (m *Manager) SetCommitStatus(commitSHA, ctx, status string) error {
 }
 
 // GetChangedFiles in a PullRequest.
-func (m *Manager) GetChangedFiles(pullrequestNumber int) ([]string, error) {
+func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 	var files []string
 	result, _, err := m.V3.PullRequests.ListFiles(
 		context.Background(),
 		m.Owner,
 		m.Repository,
-		pullrequestNumber,
+		pr,
 		nil,
 	)
 	if err != nil {
@@ -132,4 +132,21 @@ func (m *Manager) GetChangedFiles(pullrequestNumber int) ([]string, error) {
 		files = append(files, *f.Filename)
 	}
 	return files, nil
+}
+
+// AddComment in a PullRequest.
+func (m *Manager) AddComment(pr int, comment string) error {
+	_, _, err := m.V3.Issues.CreateComment(
+		context.Background(),
+		m.Owner,
+		m.Repository,
+		pr,
+		&github.IssueComment{
+			Body: github.String(comment),
+		},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -23,9 +23,11 @@ Produces new versions for all commits (after the last version) ordered by the pu
 
 #### `put`
 
+- `path`: The name given to the resource in a GET step.
 - `status`: One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.
-- `context`: A context to use for the status. (Prefixed with `concourse-ci`).
-- `comment`: Add a comment to the PR.
+- `context`: *Optional*: A context to use for the status. (Prefixed with `concourse-ci`).
+- `comment`: *Optional*: A comment to add to the pull request.
+- `comment_file`: *Optional*: Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).
 
 TODO
 
