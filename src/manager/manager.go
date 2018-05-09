@@ -48,7 +48,8 @@ type Manager struct {
 	Owner      string
 }
 
-// GetLastCommits gets the last commit on all open Pull requests.
+// GetLastCommits gets the last commit on all open Pull requests
+// COST: 1 * number of open pull requests
 func (m *Manager) GetLastCommits(count int) ([]models.PullRequestCommits, error) {
 	var query struct {
 		Repository struct {
@@ -78,7 +79,7 @@ func (m *Manager) GetLastCommits(count int) ([]models.PullRequestCommits, error)
 	return response, nil
 }
 
-// GetCommitByID ...
+// GetCommitByID ... zero cost.
 func (m *Manager) GetCommitByID(objectID string) (models.Commit, error) {
 	var query struct {
 		Node struct {
@@ -95,7 +96,7 @@ func (m *Manager) GetCommitByID(objectID string) (models.Commit, error) {
 	return query.Node.Commit, nil
 }
 
-// GetPullRequestByID ...
+// GetPullRequestByID ... zero cost.
 func (m *Manager) GetPullRequestByID(objectID string) (models.PullRequest, error) {
 	var query struct {
 		Node struct {

@@ -21,9 +21,6 @@ func Run(request models.CheckRequest) (*models.CheckResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create manager: %s", err)
 	}
-	if last, err := manager.GetCommitByID(request.Version.Commit); err == nil {
-		request.Version.PushedDate = last.PushedDate.Time
-	}
 	pulls, err := manager.GetLastCommits(1)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last commits: %s", err)
