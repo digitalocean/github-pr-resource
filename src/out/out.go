@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"strconv"
 
 	"github.com/itsdalmo/github-pr-resource/src/manager"
 	"github.com/itsdalmo/github-pr-resource/src/models"
@@ -42,13 +41,25 @@ func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error
 
 	// Set comment if specified
 	if comment := request.Params.Comment; comment != "" {
-		pr, err := strconv.Atoi(version.PR)
-		if err != nil {
-			return nil, fmt.Errorf("failed to convert pr number to int: %s", err)
-		}
-		err = manager.AddComment(pr, comment)
+		err = manager.AddComment(version.PR, comment)
 		if err != nil {
 			return nil, fmt.Errorf("failed to post comment: %s", err)
+		}
+	}
+
+	// Set comment from a file
+	if cf := request.Params.CommentFile; cf != "" {
+		path := filepath.Join(inputDir, request.Params.CommentFile)
+		content, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read comment file: %s", err)
+		}
+		comment := string(content)
+		if comment != "" {
+			err = manager.AddComment(version.PR, comment)
+			if err != nil {
+				return nil, fmt.Errorf("failed to post comment: %s", err)
+			}
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -135,12 +136,16 @@ func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 }
 
 // AddComment in a PullRequest.
-func (m *Manager) AddComment(pr int, comment string) error {
-	_, _, err := m.V3.Issues.CreateComment(
+func (m *Manager) AddComment(pr string, comment string) error {
+	id, err := strconv.Atoi(pr)
+	if err != nil {
+		return fmt.Errorf("failed to convert pr number to int: %s", err)
+	}
+	_, _, err = m.V3.Issues.CreateComment(
 		context.Background(),
 		m.Owner,
 		m.Repository,
-		pr,
+		id,
 		&github.IssueComment{
 			Body: github.String(comment),
 		},
