@@ -49,12 +49,12 @@ type Manager struct {
 }
 
 // GetLastCommits gets the last commit on all open Pull requests.
-func (m *Manager) GetLastCommits(count int) ([]models.PullRequest, error) {
+func (m *Manager) GetLastCommits(count int) ([]models.PullRequestCommits, error) {
 	var query struct {
 		Repository struct {
 			PullRequests struct {
 				Edges []struct {
-					Node models.PullRequest
+					Node models.PullRequestCommits
 				}
 			} `graphql:"pullRequests(last:$pullrequestLast,states:$pullrequestStates)"`
 		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
@@ -71,14 +71,14 @@ func (m *Manager) GetLastCommits(count int) ([]models.PullRequest, error) {
 	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
 		return nil, err
 	}
-	var response []models.PullRequest
+	var response []models.PullRequestCommits
 	for _, p := range query.Repository.PullRequests.Edges {
 		response = append(response, p.Node)
 	}
 	return response, nil
 }
 
-// GetCommitByID in a PullRequest.
+// GetCommitByID ...
 func (m *Manager) GetCommitByID(objectID string) (models.Commit, error) {
 	var query struct {
 		Node struct {
@@ -93,6 +93,23 @@ func (m *Manager) GetCommitByID(objectID string) (models.Commit, error) {
 		return models.Commit{}, err
 	}
 	return query.Node.Commit, nil
+}
+
+// GetPullRequestByID ...
+func (m *Manager) GetPullRequestByID(objectID string) (models.PullRequest, error) {
+	var query struct {
+		Node struct {
+			PullRequest models.PullRequest `graphql:"... on PullRequest"`
+		} `graphql:"node(id:$nodeId)"`
+	}
+
+	vars := map[string]interface{}{
+		"nodeId": githubql.ID(objectID),
+	}
+	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
+		return models.PullRequest{}, err
+	}
+	return query.Node.PullRequest, nil
 }
 
 // SetCommitStatus for a given commit.
@@ -137,6 +154,27 @@ func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 
 // AddComment in a PullRequest.
 func (m *Manager) AddComment(pr string, comment string) error {
+	id, err := strconv.Atoi(pr)
+	if err != nil {
+		return fmt.Errorf("failed to convert pr number to int: %s", err)
+	}
+	_, _, err = m.V3.Issues.CreateComment(
+		context.Background(),
+		m.Owner,
+		m.Repository,
+		id,
+		&github.IssueComment{
+			Body: github.String(comment),
+		},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CloneRepository ...
+func (m *Manager) CloneRepository(pr string, comment string) error {
 	id, err := strconv.Atoi(pr)
 	if err != nil {
 		return fmt.Errorf("failed to convert pr number to int: %s", err)

@@ -38,9 +38,8 @@ type Metadata struct {
 // Version for the resource. ID is the Github Global ID.
 type Version struct {
 	PR         string    `json:"pr"`
-	SHA        string    `json:"sha"`
-	ID         string    `json:"id"`
-	PushedDate time.Time `json:"pushed,omitempty"`
+	Commit     string    `json:"commit"`
+	PushedDate time.Time `json:"-"`
 }
 
 // CheckRequest ...
@@ -130,11 +129,10 @@ type PutResponse struct {
 	Metadata []Metadata `json:"metadata,omitempty"`
 }
 
-// PullRequest represents the GraphQL commit node.
+// PullRequestCommits represents the GraphQL node with PR/Commit.
 // https://developer.github.com/v4/object/pullrequest/
-type PullRequest struct {
-	Number  int
-	URL     string
+type PullRequestCommits struct {
+	PullRequest
 	Commits struct {
 		Edges []struct {
 			Node struct {
@@ -144,8 +142,8 @@ type PullRequest struct {
 	} `graphql:"commits(last:$commitsLast)"`
 }
 
-// GetCommits returns the commits in a PullRequest
-func (p *PullRequest) GetCommits() []Commit {
+// GetCommits returns the commits in a PullRequestAndCommits
+func (p *PullRequestCommits) GetCommits() []Commit {
 	var commits []Commit
 	for _, c := range p.Commits.Edges {
 		commits = append(commits, c.Node.Commit)
@@ -153,15 +151,22 @@ func (p *PullRequest) GetCommits() []Commit {
 	return commits
 }
 
+// PullRequest represents the GraphQL commit node.
+// https://developer.github.com/v4/object/commit/
+type PullRequest struct {
+	ID     string
+	Number int
+	URL    string
+}
+
 // Commit represents the GraphQL commit node.
 // https://developer.github.com/v4/object/commit/
 type Commit struct {
-	ID             string
-	OID            string
-	AbbreviatedOID string
-	PushedDate     githubql.DateTime
-	Message        string
-	Author         struct {
+	ID         string
+	OID        string
+	PushedDate githubql.DateTime
+	Message    string
+	Author     struct {
 		User struct {
 			Login string
 		}

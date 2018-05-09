@@ -35,7 +35,7 @@ func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to create manager: %s", err)
 	}
-	if err := manager.SetCommitStatus(version.SHA, request.Params.Context, request.Params.Status); err != nil {
+	if err := manager.SetCommitStatus(version.PR, request.Params.Context, request.Params.Status); err != nil {
 		return nil, fmt.Errorf("failed to set status: %s", err)
 	}
 
