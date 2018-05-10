@@ -50,7 +50,6 @@ type Manager struct {
 }
 
 // GetLastCommits gets the last commit on all open Pull requests (costs 1/5000).
-// TODO: Pagination.
 func (m *Manager) GetLastCommits() ([]models.PullRequestCommits, error) {
 	var query struct {
 		Repository struct {
@@ -157,7 +156,6 @@ func (m *Manager) SetCommitStatus(subjectID, ctx, status string) error {
 }
 
 // GetChangedFiles in a PullRequest (not supported by V4 API).
-// TODO: Pagination.
 func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 	var files []string
 
