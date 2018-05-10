@@ -137,7 +137,7 @@ func (m *Manager) SetCommitStatus(subjectID, ctx, status string) error {
 	// Format build page
 	build := os.Getenv("ATC_EXTERNAL_URL")
 	if build != "" {
-		build = path.Join(build, "builds", os.Getenv("BUILD_ID"))
+		build = strings.Join([]string{build, "builds", os.Getenv("BUILD_ID")}, "/")
 	}
 
 	_, _, err = m.V3.Repositories.CreateStatus(
