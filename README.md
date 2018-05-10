@@ -16,6 +16,13 @@ be made for use with webhooks, and hopefully be a bit simpler/bare bones than th
 #### `check`
 
 Produces new versions for all commits (after the last version) ordered by the push date.
+A version is represented as follows:
+
+- `pr`: The subject ID of the pull request.
+- `commit`: The subject ID of the last commit on the Pullrequest.
+- `pushed`: Timestamp of when the commit was pushed (and webhook triggered).
+
+If several commits are pushed to a given PR at the same time, the last commit will be the new version.
 
 #### `get`
 
