@@ -1,9 +1,9 @@
-githubql
+githubv4
 ========
 
-[![Build Status](https://travis-ci.org/shurcooL/githubql.svg?branch=master)](https://travis-ci.org/shurcooL/githubql) [![GoDoc](https://godoc.org/github.com/shurcooL/githubql?status.svg)](https://godoc.org/github.com/shurcooL/githubql)
+[![Build Status](https://travis-ci.org/shurcooL/githubv4.svg?branch=master)](https://travis-ci.org/shurcooL/githubv4) [![GoDoc](https://godoc.org/github.com/shurcooL/githubv4?status.svg)](https://godoc.org/github.com/shurcooL/githubv4)
 
-Package `githubql` is a client library for accessing GitHub GraphQL API v4 (https://developer.github.com/v4/).
+Package `githubv4` is a client library for accessing GitHub GraphQL API v4 (https://developer.github.com/v4/).
 
 If you're looking for a client library for GitHub REST API v3, the recommended package is [`github.com/google/go-github/github`](https://godoc.org/github.com/google/go-github/github).
 
@@ -19,10 +19,10 @@ Focus
 Installation
 ------------
 
-`githubql` requires Go version 1.8 or later.
+`githubv4` requires Go version 1.8 or later.
 
 ```bash
-go get -u github.com/shurcooL/githubql
+go get -u github.com/shurcooL/githubv4
 ```
 
 Usage
@@ -30,7 +30,7 @@ Usage
 
 ### Authentication
 
-GitHub GraphQL API v4 [requires authentication](https://developer.github.com/v4/guides/forming-calls/#authenticating-with-graphql). The `githubql` package does not directly handle authentication. Instead, when creating a new client, you're expected to pass an `http.Client` that performs authentication. The easiest and recommended way to do this is to use the [`golang.org/x/oauth2`](https://golang.org/x/oauth2) package. You'll need an OAuth token from GitHub (for example, a [personal API token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)) with the right scopes. Then:
+GitHub GraphQL API v4 [requires authentication](https://developer.github.com/v4/guides/forming-calls/#authenticating-with-graphql). The `githubv4` package does not directly handle authentication. Instead, when creating a new client, you're expected to pass an `http.Client` that performs authentication. The easiest and recommended way to do this is to use the [`golang.org/x/oauth2`](https://golang.org/x/oauth2) package. You'll need an OAuth token from GitHub (for example, a [personal API token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)) with the right scopes. Then:
 
 ```Go
 import "golang.org/x/oauth2"
@@ -41,8 +41,9 @@ func main() {
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
 
-	client := githubql.NewClient(httpClient)
+	client := githubv4.NewClient(httpClient)
 	// Use client...
+}
 ```
 
 ### Simple Query
@@ -65,8 +66,8 @@ You can define this variable:
 ```Go
 var query struct {
 	Viewer struct {
-		Login     githubql.String
-		CreatedAt githubql.DateTime
+		Login     githubv4.String
+		CreatedAt githubv4.DateTime
 	}
 }
 ```
@@ -84,6 +85,65 @@ fmt.Println("CreatedAt:", query.Viewer.CreatedAt)
 // Output:
 //     Login: gopher
 // CreatedAt: 2017-05-26 21:17:14 +0000 UTC
+```
+
+### Scalar Types
+
+For each scalar in the GitHub GraphQL schema listed at https://developer.github.com/v4/reference/scalar/, there is a corresponding Go type in package `githubv4`.
+
+You can use these types when writing queries:
+
+```Go
+var query struct {
+	Viewer struct {
+		Login          githubv4.String
+		CreatedAt      githubv4.DateTime
+		IsBountyHunter githubv4.Boolean
+		BioHTML        githubv4.HTML
+		WebsiteURL     githubv4.URI
+	}
+}
+// Call client.Query() and use results in query...
+```
+
+However, depending on how you're planning to use the results of your query, it's often more convenient to use other Go types.
+
+The `encoding/json` rules are used for converting individual JSON-encoded fields from a GraphQL response into Go values. See https://godoc.org/encoding/json#Unmarshal for details. The [`json.Unmarshaler`](https://godoc.org/encoding/json#Unmarshaler) interface is respected.
+
+That means you can simplify the earlier query by using predeclared Go types:
+
+```Go
+// import "time"
+
+var query struct {
+	Viewer struct {
+		Login          string    // E.g., "gopher".
+		CreatedAt      time.Time // E.g., time.Date(2017, 5, 26, 21, 17, 14, 0, time.UTC).
+		IsBountyHunter bool      // E.g., true.
+		BioHTML        string    // E.g., `I am learning <a href="https://graphql.org">GraphQL</a>!`.
+		WebsiteURL     string    // E.g., "https://golang.org".
+	}
+}
+// Call client.Query() and use results in query...
+```
+
+The [`DateTime`](https://developer.github.com/v4/reference/scalar/datetime/) scalar is described as "an ISO-8601 encoded UTC date string". If you wanted to fetch in that form without parsing it into a `time.Time`, you can use the `string` type. For example, this would work:
+
+```Go
+// import "html/template"
+
+type MyBoolean bool
+
+var query struct {
+	Viewer struct {
+		Login          string        // E.g., "gopher".
+		CreatedAt      string        // E.g., "2017-05-26T21:17:14Z".
+		IsBountyHunter MyBoolean     // E.g., MyBoolean(true).
+		BioHTML        template.HTML // E.g., template.HTML(`I am learning <a href="https://graphql.org">GraphQL</a>!`).
+		WebsiteURL     template.URL  // E.g., template.URL("https://golang.org").
+	}
+}
+// Call client.Query() and use results in query...
 ```
 
 ### Arguments and Variables
@@ -105,7 +165,7 @@ You can define this variable:
 ```Go
 var q struct {
 	Repository struct {
-		Description githubql.String
+		Description string
 	} `graphql:"repository(owner: \"octocat\", name: \"Hello-World\")"`
 }
 ```
@@ -130,17 +190,19 @@ However, that'll only work if the arguments are constant and known in advance. O
 func fetchRepoDescription(ctx context.Context, owner, name string) (string, error) {
 	var q struct {
 		Repository struct {
-			Description githubql.String
+			Description string
 		} `graphql:"repository(owner: $owner, name: $name)"`
 	}
 ```
 
-Then, define a `variables` map with their values:
+When sending variables to GraphQL, you need to use exact types that match GraphQL scalar types, otherwise the GraphQL server will return an error.
+
+So, define a `variables` map with their values that are converted to GraphQL scalar types:
 
 ```Go
 	variables := map[string]interface{}{
-		"owner": githubql.String(owner),
-		"name":  githubql.String(name),
+		"owner": githubv4.String(owner),
+		"name":  githubv4.String(name),
 	}
 ```
 
@@ -148,7 +210,7 @@ Finally, call `client.Query` providing `variables`:
 
 ```Go
 	err := client.Query(ctx, &q, variables)
-	return string(q.Repository.Description), err
+	return q.Repository.Description, err
 }
 ```
 
@@ -177,12 +239,12 @@ You can define this variable:
 ```Go
 var q struct {
 	RepositoryOwner struct {
-		Login        githubql.String
+		Login        string
 		Organization struct {
-			Description githubql.String
+			Description string
 		} `graphql:"... on Organization"`
 		User struct {
-			Bio githubql.String
+			Bio string
 		} `graphql:"... on User"`
 	} `graphql:"repositoryOwner(login: \"github\")"`
 }
@@ -193,16 +255,16 @@ Alternatively, you can define the struct types corresponding to inline fragments
 ```Go
 type (
 	OrganizationFragment struct {
-		Description githubql.String
+		Description string
 	}
 	UserFragment struct {
-		Bio githubql.String
+		Bio string
 	}
 )
 
 var q struct {
 	RepositoryOwner struct {
-		Login                githubql.String
+		Login                string
 		OrganizationFragment `graphql:"... on Organization"`
 		UserFragment         `graphql:"... on User"`
 	} `graphql:"repositoryOwner(login: \"github\")"`
@@ -232,12 +294,12 @@ Imagine you wanted to get a complete list of comments in an issue, and not just 
 
 ```Go
 type comment struct {
-	Body   githubql.String
+	Body   string
 	Author struct {
-		Login     githubql.String
-		AvatarURL githubql.URI `graphql:"avatarUrl(size: 72)"`
+		Login     string
+		AvatarURL string `graphql:"avatarUrl(size: 72)"`
 	}
-	ViewerCanReact githubql.Boolean
+	ViewerCanReact bool
 }
 var q struct {
 	Repository struct {
@@ -245,18 +307,18 @@ var q struct {
 			Comments struct {
 				Nodes    []comment
 				PageInfo struct {
-					EndCursor   githubql.String
-					HasNextPage githubql.Boolean
+					EndCursor   githubv4.String
+					HasNextPage bool
 				}
 			} `graphql:"comments(first: 100, after: $commentsCursor)"` // 100 per page.
 		} `graphql:"issue(number: $issueNumber)"`
 	} `graphql:"repository(owner: $repositoryOwner, name: $repositoryName)"`
 }
 variables := map[string]interface{}{
-	"repositoryOwner": githubql.String(owner),
-	"repositoryName":  githubql.String(name),
-	"issueNumber":     githubql.Int(issue),
-	"commentsCursor":  (*githubql.String)(nil), // Null after argument to get first page.
+	"repositoryOwner": githubv4.String(owner),
+	"repositoryName":  githubv4.String(name),
+	"issueNumber":     githubv4.Int(issue),
+	"commentsCursor":  (*githubv4.String)(nil), // Null after argument to get first page.
 }
 
 // Get comments from all pages.
@@ -270,7 +332,7 @@ for {
 	if !q.Repository.Issue.Comments.PageInfo.HasNextPage {
 		break
 	}
-	variables["commentsCursor"] = githubql.NewString(q.Repository.Issue.Comments.PageInfo.EndCursor)
+	variables["commentsCursor"] = githubv4.NewString(q.Repository.Issue.Comments.PageInfo.EndCursor)
 }
 ```
 
@@ -307,16 +369,16 @@ You can define:
 var m struct {
 	AddReaction struct {
 		Reaction struct {
-			Content githubql.ReactionContent
+			Content githubv4.ReactionContent
 		}
 		Subject struct {
-			ID githubql.ID
+			ID githubv4.ID
 		}
 	} `graphql:"addReaction(input: $input)"`
 }
-input := githubql.AddReactionInput{
+input := githubv4.AddReactionInput{
 	SubjectID: targetIssue.ID, // ID of the target issue from a previous query.
-	Content:   githubql.Hooray,
+	Content:   githubv4.ReactionContentHooray,
 }
 ```
 
@@ -338,7 +400,7 @@ Directories
 
 | Path                                                                                      | Synopsis                                                                            |
 |-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| [example/githubqldev](https://godoc.org/github.com/shurcooL/githubql/example/githubqldev) | githubqldev is a test program currently being used for developing githubql package. |
+| [example/githubv4dev](https://godoc.org/github.com/shurcooL/githubv4/example/githubv4dev) | githubv4dev is a test program currently being used for developing githubv4 package. |
 
 License
 -------

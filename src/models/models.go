@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shurcooL/githubql"
+	"github.com/shurcooL/githubv4"
 )
 
 // Source represents the configuration for the resource.
@@ -165,7 +165,7 @@ type PullRequest struct {
 type Commit struct {
 	ID         string
 	OID        string
-	PushedDate githubql.DateTime
+	PushedDate githubv4.DateTime
 	Message    string
 	Author     struct {
 		User struct {

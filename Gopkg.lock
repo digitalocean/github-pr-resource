@@ -21,9 +21,9 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/shurcooL/githubql"
+  name = "github.com/shurcooL/githubv4"
   packages = ["."]
-  revision = "d8297a7d5a840a2105de3f27796a6876d03b5da1"
+  revision = "19298c78142b5fe80c2cdaa2091bc51cbc3a94fc"
 
 [[projects]]
   branch = "master"
@@ -76,6 +76,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e47e6eb35de8b23c4e61e0136d558494db10a7d090fab48a07e1076b52e0f776"
+  inputs-digest = "09e43998d1f9f79f04ea89d9d45a510a64a626395e05d573fef183314c520bd0"
   solver-name = "gps-cdcl"
   solver-version = 1

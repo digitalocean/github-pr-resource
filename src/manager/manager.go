@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"github.com/itsdalmo/github-pr-resource/src/models"
-	"github.com/shurcooL/githubql"
+	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 )
 
@@ -26,7 +26,7 @@ func New(repository, token string) (*Manager, error) {
 	}
 	return &Manager{
 		V3:         github.NewClient(client),
-		V4:         githubql.NewClient(client),
+		V4:         githubv4.NewClient(client),
 		Owner:      owner,
 		Repository: repository,
 	}, nil
@@ -43,7 +43,7 @@ func parseRepository(s string) (string, string, error) {
 // Manager for handling requests to the Github V3 and V4 APIs.
 type Manager struct {
 	V3         *github.Client
-	V4         *githubql.Client
+	V4         *githubv4.Client
 	Repository string
 	Owner      string
 }
@@ -58,7 +58,7 @@ func (m *Manager) GetLastCommits() ([]models.PullRequestCommits, error) {
 					Node models.PullRequestCommits
 				}
 				PageInfo struct {
-					EndCursor   githubql.String
+					EndCursor   githubv4.String
 					HasNextPage bool
 				}
 			} `graphql:"pullRequests(first:$prFirst,states:$prStates, after:$prCursor)"`
@@ -66,12 +66,12 @@ func (m *Manager) GetLastCommits() ([]models.PullRequestCommits, error) {
 	}
 
 	vars := map[string]interface{}{
-		"repositoryOwner": githubql.String(m.Owner),
-		"repositoryName":  githubql.String(m.Repository),
-		"prFirst":         githubql.Int(100),
-		"prStates":        []githubql.PullRequestState{githubql.PullRequestStateOpen},
-		"prCursor":        (*githubql.String)(nil),
-		"commitsLast":     githubql.Int(1),
+		"repositoryOwner": githubv4.String(m.Owner),
+		"repositoryName":  githubv4.String(m.Repository),
+		"prFirst":         githubv4.Int(100),
+		"prStates":        []githubv4.PullRequestState{githubv4.PullRequestStateOpen},
+		"prCursor":        (*githubv4.String)(nil),
+		"commitsLast":     githubv4.Int(1),
 	}
 
 	var response []models.PullRequestCommits
@@ -99,7 +99,7 @@ func (m *Manager) GetCommitByID(objectID string) (models.Commit, error) {
 	}
 
 	vars := map[string]interface{}{
-		"nodeId": githubql.ID(objectID),
+		"nodeId": githubv4.ID(objectID),
 	}
 	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
 		return models.Commit{}, err
@@ -116,7 +116,7 @@ func (m *Manager) GetPullRequestByID(objectID string) (models.PullRequest, error
 	}
 
 	vars := map[string]interface{}{
-		"nodeId": githubql.ID(objectID),
+		"nodeId": githubv4.ID(objectID),
 	}
 	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
 		return models.PullRequest{}, err
@@ -177,13 +177,13 @@ func (m *Manager) AddComment(subjectID string, comment string) error {
 	var mutation struct {
 		AddComment struct {
 			Subject struct {
-				ID githubql.ID
+				ID githubv4.ID
 			}
 		} `graphql:"addComment(input: $input)"`
 	}
-	input := githubql.AddCommentInput{
+	input := githubv4.AddCommentInput{
 		SubjectID: subjectID,
-		Body:      githubql.String(comment),
+		Body:      githubv4.String(comment),
 	}
 	err := m.V4.Mutate(context.Background(), &mutation, input, nil)
 	return err
