@@ -64,12 +64,17 @@ func Run(request models.CheckRequest) (*models.CheckResponse, error) {
 		}
 	}
 
-	if len(response) == 0 {
-		if request.Version.PR != "" {
-			response = append(response, request.Version)
-		}
-	}
+	// Sort the commits by date
 	sort.Sort(response)
+
+	// If there are no new but an old version = return the old
+	if len(response) == 0 && request.Version.PR != "" {
+		response = append(response, request.Version)
+	}
+	// If there are new versions and no previous = return just the latest
+	if len(response) != 0 && request.Version.PR == "" {
+		response = models.CheckResponse{response[len(response)-1]}
+	}
 	return &response, nil
 }
 
