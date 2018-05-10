@@ -11,10 +11,11 @@ import (
 
 // Source represents the configuration for the resource.
 type Source struct {
-	Repository  string `json:"repository"`
-	AccessToken string `json:"access_token"`
-	Path        string `json:"path"`
-	IgnorePath  string `json:"ignore_path"`
+	Repository    string `json:"repository"`
+	AccessToken   string `json:"access_token"`
+	Path          string `json:"path"`
+	IgnorePath    string `json:"ignore_path"`
+	DisableCISkip string `json:"disable_ci_skip"`
 }
 
 // Validate the source configuration.
