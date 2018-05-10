@@ -48,7 +48,7 @@ resource will incur the following costs:
   - Minimum 1, max 1 per 100th open pull request.
   - When using `path`/`ignore_path`: Minimum 1 request per *new* commit, more if the commit contains more than 100 changed files.
   - NOTE: From my experiments it seems like requests to the V3 API does not count toward the rate limit of the V4 API and vice versa.
-- `in`: Minimum 1 (get information for the clone).
+- `in`: Fixed cost of 2. Fetches PR and commit from ID.
 - `out`: Minimum 1, max 3 (1 per `status`, `comment` and `comment_file`).
 
 ## Example
