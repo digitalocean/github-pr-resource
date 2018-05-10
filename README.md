@@ -21,7 +21,7 @@ A version is represented as follows:
 
 - `pr`: The subject ID of the pull request.
 - `commit`: The subject ID of the last commit on the Pullrequest.
-- `pushed`: Timestamp of when the commit was pushed (and webhook triggered).
+- `pushed`: Timestamp of when the commit was pushed (and webhook triggered). Used to filter subsequent checks.
 
 If several commits are pushed to a given PR at the same time, the last commit will be the new version.
 
@@ -44,8 +44,10 @@ Note that `comment` and `comment_file` will be added as separate comments.
 The Github API(s) have a rate limit of 5000 requests per hour (per user). This
 resource will incur the following costs:
 
-- `check`: Minimum 1, max 1 per 100th open pull request.
-- `in`: (TODO)
+- `check`:
+  - Minimum 1, max 1 per 100th open pull request.
+  - When using `path`/`ignore_path`: Minimum 1 request per *new* commit, more if the commit contains more than 100 changed files.
+- `in`: Minimum 1 (get information for the clone).
 - `out`: Minimum 1, max 3 (1 per `status`, `comment` and `comment_file`).
 
 ## Example

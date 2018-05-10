@@ -160,18 +160,28 @@ func (m *Manager) SetCommitStatus(subjectID, ctx, status string) error {
 // TODO: Pagination.
 func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 	var files []string
-	result, _, err := m.V3.PullRequests.ListFiles(
-		context.Background(),
-		m.Owner,
-		m.Repository,
-		pr,
-		nil,
-	)
-	if err != nil {
-		return nil, err
+
+	opt := &github.ListOptions{
+		PerPage: 100,
 	}
-	for _, f := range result {
-		files = append(files, *f.Filename)
+	for {
+		result, response, err := m.V3.PullRequests.ListFiles(
+			context.Background(),
+			m.Owner,
+			m.Repository,
+			pr,
+			opt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		for _, f := range result {
+			files = append(files, *f.Filename)
+		}
+		if response.NextPage == 0 {
+			break
+		}
+		opt.Page = response.NextPage
 	}
 	return files, nil
 }
