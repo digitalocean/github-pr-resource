@@ -96,9 +96,8 @@ type PutParameters struct {
 // Validate the put parameters.
 func (p *PutParameters) Validate() error {
 	if p.Status == "" {
-		return errors.New("status must be set")
+		return nil
 	}
-
 	// Make sure we are setting an allowed status
 	var allowedStatus bool
 
@@ -114,6 +113,7 @@ func (p *PutParameters) Validate() error {
 	if !allowedStatus {
 		return fmt.Errorf("unknown status: %s", p.Status)
 	}
+
 	return nil
 }
 

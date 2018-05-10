@@ -48,8 +48,8 @@ type Manager struct {
 	Owner      string
 }
 
-// GetLastCommits gets the last commit on all open Pull requests
-// COST: 1 * number of open pull requests
+// GetLastCommits gets the last commit on all open Pull requests (costs 1/5000).
+// TODO: Pagination.
 func (m *Manager) GetLastCommits(count int) ([]models.PullRequestCommits, error) {
 	var query struct {
 		Repository struct {
@@ -79,7 +79,7 @@ func (m *Manager) GetLastCommits(count int) ([]models.PullRequestCommits, error)
 	return response, nil
 }
 
-// GetCommitByID ... zero cost.
+// GetCommitByID ... (zero cost).
 func (m *Manager) GetCommitByID(objectID string) (models.Commit, error) {
 	var query struct {
 		Node struct {
@@ -96,7 +96,7 @@ func (m *Manager) GetCommitByID(objectID string) (models.Commit, error) {
 	return query.Node.Commit, nil
 }
 
-// GetPullRequestByID ... zero cost.
+// GetPullRequestByID ... (zero cost).
 func (m *Manager) GetPullRequestByID(objectID string) (models.PullRequest, error) {
 	var query struct {
 		Node struct {
@@ -113,28 +113,36 @@ func (m *Manager) GetPullRequestByID(objectID string) (models.PullRequest, error
 	return query.Node.PullRequest, nil
 }
 
-// SetCommitStatus for a given commit.
-func (m *Manager) SetCommitStatus(commitSHA, ctx, status string) error {
-	c := []string{"concourse-ci"}
-	if ctx != "" {
-		c = append(c, ctx)
+// SetCommitStatus for a given commit (not supported by V4 API).
+func (m *Manager) SetCommitStatus(subjectID, ctx, status string) error {
+	commit, err := m.GetCommitByID(subjectID)
+	if err != nil {
+		return err
 	}
-	_, _, err := m.V3.Repositories.CreateStatus(
+
+	// Create context
+	c := "concourse-ci"
+	if ctx != "" {
+		c = strings.Join([]string{c, ctx}, "/")
+	}
+
+	_, _, err = m.V3.Repositories.CreateStatus(
 		context.Background(),
 		m.Owner,
 		m.Repository,
-		commitSHA,
+		commit.OID,
 		&github.RepoStatus{
 			State:       github.String(strings.ToLower(status)),
 			TargetURL:   github.String(os.Getenv("ATC_EXTERNAL_URL")),
 			Description: github.String(fmt.Sprintf("Concourse CI build %s", status)),
-			Context:     github.String(strings.Join(c, "/")),
+			Context:     github.String(c),
 		},
 	)
 	return err
 }
 
-// GetChangedFiles in a PullRequest.
+// GetChangedFiles in a PullRequest (not supported by V4 API).
+// TODO: Pagination.
 func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 	var files []string
 	result, _, err := m.V3.PullRequests.ListFiles(
@@ -153,25 +161,21 @@ func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 	return files, nil
 }
 
-// AddComment in a PullRequest.
-func (m *Manager) AddComment(pr string, comment string) error {
-	id, err := strconv.Atoi(pr)
-	if err != nil {
-		return fmt.Errorf("failed to convert pr number to int: %s", err)
+// AddComment to a PullRequest or issue (cost 1).
+func (m *Manager) AddComment(subjectID string, comment string) error {
+	var mutation struct {
+		AddComment struct {
+			Subject struct {
+				ID githubql.ID
+			}
+		} `graphql:"addComment(input: $input)"`
 	}
-	_, _, err = m.V3.Issues.CreateComment(
-		context.Background(),
-		m.Owner,
-		m.Repository,
-		id,
-		&github.IssueComment{
-			Body: github.String(comment),
-		},
-	)
-	if err != nil {
-		return err
+	input := githubql.AddCommentInput{
+		SubjectID: subjectID,
+		Body:      githubql.String(comment),
 	}
-	return nil
+	err := m.V4.Mutate(context.Background(), &mutation, input, nil)
+	return err
 }
 
 // CloneRepository ...
