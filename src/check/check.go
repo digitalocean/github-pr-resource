@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path"
 	"sort"
-	"strconv"
 
 	"github.com/itsdalmo/github-pr-resource/src/manager"
 	"github.com/itsdalmo/github-pr-resource/src/models"
@@ -30,15 +29,8 @@ func Run(request models.CheckRequest) (*models.CheckResponse, error) {
 	for _, p := range pulls {
 		// We loop, but there should only be 0 or 1.
 		for _, c := range p.GetCommits() {
-			v := models.Version{
-				PR:         strconv.Itoa(p.Number),
-				SHA:        c.OID,
-				ID:         c.ID,
-				PushedDate: c.PushedDate.Time,
-			}
-
 			// Filter out commits that are too old.
-			if !v.PushedDate.After(request.Version.PushedDate) {
+			if !c.PushedDate.Time.After(request.Version.PushedDate) {
 				continue
 			}
 
@@ -63,6 +55,11 @@ func Run(request models.CheckRequest) (*models.CheckResponse, error) {
 					}
 				}
 			}
+			v := models.Version{
+				PR:         p.ID,
+				Commit:     c.ID,
+				PushedDate: c.PushedDate.Time,
+			}
 			response = append(response, v)
 		}
 	}
@@ -75,6 +72,8 @@ func Run(request models.CheckRequest) (*models.CheckResponse, error) {
 	sort.Sort(response)
 	return &response, nil
 }
+
+type commits []models.Commit
 
 // True if all files match the glob pattern.
 func allFilesMatch(files []string, glob string) bool {

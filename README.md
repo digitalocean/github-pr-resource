@@ -10,12 +10,20 @@ be made for use with webhooks, and hopefully be a bit simpler/bare bones than th
 - `access_token`: A Github Access Token with repository access (required for setting status on commits).
 - `path`: Only produce new versions if the PR includes changes to files that match a glob pattern.
 - `ignore_path`: Inverse of the above.
+- `disable_ci_skip`: Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message.
 
 ## Behaviour
 
 #### `check`
 
 Produces new versions for all commits (after the last version) ordered by the push date.
+A version is represented as follows:
+
+- `pr`: The subject ID of the pull request.
+- `commit`: The subject ID of the last commit on the Pullrequest.
+- `pushed`: Timestamp of when the commit was pushed (and webhook triggered).
+
+If several commits are pushed to a given PR at the same time, the last commit will be the new version.
 
 #### `get`
 
@@ -24,10 +32,12 @@ Produces new versions for all commits (after the last version) ordered by the pu
 #### `put`
 
 - `path`: The name given to the resource in a GET step.
-- `status`: One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.
+- `status`: *Optional*: One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.
 - `context`: *Optional*: A context to use for the status. (Prefixed with `concourse-ci`).
 - `comment`: *Optional*: A comment to add to the pull request.
 - `comment_file`: *Optional*: Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).
+
+Note that `comment` and `comment_file` will be added as separate comments.
 
 TODO
 

@@ -11,10 +11,11 @@ import (
 
 // Source represents the configuration for the resource.
 type Source struct {
-	Repository  string `json:"repository"`
-	AccessToken string `json:"access_token"`
-	Path        string `json:"path"`
-	IgnorePath  string `json:"ignore_path"`
+	Repository    string `json:"repository"`
+	AccessToken   string `json:"access_token"`
+	Path          string `json:"path"`
+	IgnorePath    string `json:"ignore_path"`
+	DisableCISkip string `json:"disable_ci_skip"`
 }
 
 // Validate the source configuration.
@@ -38,8 +39,7 @@ type Metadata struct {
 // Version for the resource. ID is the Github Global ID.
 type Version struct {
 	PR         string    `json:"pr"`
-	SHA        string    `json:"sha"`
-	ID         string    `json:"id"`
+	Commit     string    `json:"commit"`
 	PushedDate time.Time `json:"pushed,omitempty"`
 }
 
@@ -97,9 +97,8 @@ type PutParameters struct {
 // Validate the put parameters.
 func (p *PutParameters) Validate() error {
 	if p.Status == "" {
-		return errors.New("status must be set")
+		return nil
 	}
-
 	// Make sure we are setting an allowed status
 	var allowedStatus bool
 
@@ -115,6 +114,7 @@ func (p *PutParameters) Validate() error {
 	if !allowedStatus {
 		return fmt.Errorf("unknown status: %s", p.Status)
 	}
+
 	return nil
 }
 
@@ -130,11 +130,10 @@ type PutResponse struct {
 	Metadata []Metadata `json:"metadata,omitempty"`
 }
 
-// PullRequest represents the GraphQL commit node.
+// PullRequestCommits represents the GraphQL node with PR/Commit.
 // https://developer.github.com/v4/object/pullrequest/
-type PullRequest struct {
-	Number  int
-	URL     string
+type PullRequestCommits struct {
+	PullRequest
 	Commits struct {
 		Edges []struct {
 			Node struct {
@@ -144,8 +143,8 @@ type PullRequest struct {
 	} `graphql:"commits(last:$commitsLast)"`
 }
 
-// GetCommits returns the commits in a PullRequest
-func (p *PullRequest) GetCommits() []Commit {
+// GetCommits returns the commits in a PullRequestAndCommits
+func (p *PullRequestCommits) GetCommits() []Commit {
 	var commits []Commit
 	for _, c := range p.Commits.Edges {
 		commits = append(commits, c.Node.Commit)
@@ -153,15 +152,22 @@ func (p *PullRequest) GetCommits() []Commit {
 	return commits
 }
 
+// PullRequest represents the GraphQL commit node.
+// https://developer.github.com/v4/object/commit/
+type PullRequest struct {
+	ID     string
+	Number int
+	URL    string
+}
+
 // Commit represents the GraphQL commit node.
 // https://developer.github.com/v4/object/commit/
 type Commit struct {
-	ID             string
-	OID            string
-	AbbreviatedOID string
-	PushedDate     githubql.DateTime
-	Message        string
-	Author         struct {
+	ID         string
+	OID        string
+	PushedDate githubql.DateTime
+	Message    string
+	Author     struct {
 		User struct {
 			Login string
 		}
