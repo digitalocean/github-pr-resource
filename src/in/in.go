@@ -3,6 +3,7 @@ package in
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -38,24 +39,24 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
 	}
+	if pull.Mergeable != "MERGEABLE" {
+		return nil, errors.New("pull request has merge conflict")
+	}
 	metadata := newMetadata(pull, commit)
 
-	// Clone
+	// Clone the PR at the given commit
 	git := &Git{
 		Directory: filepath.Join(outputDir, "experiment", "repo"),
 		Output:    os.Stderr,
 	}
-	if err := git.Clone(
-		"master",
-		"https://github.com/itsdalmo/test-repository.git",
-	); err != nil {
-		return nil, err
+	if err := git.Clone(request.Source.Repository, pull.BaseRefName); err != nil {
+		return nil, fmt.Errorf("clone failed: %s", err)
 	}
-	if err := git.Fetch("itsdalmo-test-1", "1"); err != nil {
-		return nil, err
+	if err := git.Fetch(pull.HeadRefName, pull.Number); err != nil {
+		return nil, fmt.Errorf("fetch failed: %s", err)
 	}
-	if err := git.Checkout("2a125dab13a4c047dca178d49ada072617c691d6"); err != nil {
-		return nil, err
+	if err := git.Checkout(pull.PotentialMergeCommit.OID); err != nil {
+		return nil, fmt.Errorf("checkout failed: %s", err)
 	}
 
 	// Write version and metadata for reuse in PUT
@@ -82,68 +83,6 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 		Version:  request.Version,
 		Metadata: metadata,
 	}, nil
-}
-
-// Git ...
-type Git struct {
-	Directory string
-	Output    io.Writer
-}
-
-// Run ...
-func (g *Git) Run(args []string, dir string) error {
-	cmd := exec.Command("git", args...)
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to open stdout pipe: %s", err)
-	}
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("failed to start command: %s", err)
-	}
-	go func() {
-		s := bufio.NewScanner(stdout)
-		for s.Scan() {
-			fmt.Fprintln(g.Output, s.Text())
-		}
-	}()
-	return cmd.Wait()
-}
-
-// Clone ...
-func (g *Git) Clone(baseName, url string) error {
-	args := []string{
-		"clone",
-		"--branch",
-		baseName,
-		url,
-		g.Directory,
-	}
-	return g.Run(args, "")
-}
-
-// Fetch ...
-func (g *Git) Fetch(headName, branch string) error {
-	args := []string{
-		"fetch",
-		"-q",
-		"origin",
-		fmt.Sprintf("pull/%s/merge:pr-%s", branch, headName),
-	}
-	return g.Run(args, g.Directory)
-}
-
-// Checkout ...
-func (g *Git) Checkout(ref string) error {
-	args := []string{
-		"checkout",
-		"-b",
-		"pr",
-		ref,
-	}
-	return g.Run(args, g.Directory)
 }
 
 func newMetadata(pr models.PullRequest, commit models.Commit) []models.Metadata {
@@ -175,4 +114,66 @@ func newMetadata(pr models.PullRequest, commit models.Commit) []models.Metadata 
 	})
 
 	return m
+}
+
+// Git ...
+type Git struct {
+	Directory string
+	Output    io.Writer
+}
+
+// Run ...
+func (g *Git) Run(args []string, dir string) error {
+	cmd := exec.Command("git", args...)
+	if dir != "" {
+		cmd.Dir = dir
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("failed to open stdout pipe: %s", err)
+	}
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start command: %s", err)
+	}
+	go func() {
+		s := bufio.NewScanner(stdout)
+		for s.Scan() {
+			fmt.Fprintln(g.Output, s.Text())
+		}
+	}()
+	return cmd.Wait()
+}
+
+// Clone ...
+func (g *Git) Clone(repository, baseName string) error {
+	args := []string{
+		"clone",
+		"--branch",
+		baseName,
+		"https://github.com/" + repository + ".git",
+		g.Directory,
+	}
+	return g.Run(args, "")
+}
+
+// Fetch ...
+func (g *Git) Fetch(headName string, pr int) error {
+	args := []string{
+		"fetch",
+		"-q",
+		"origin",
+		fmt.Sprintf("pull/%s/merge:pr-%s", strconv.Itoa(pr), headName),
+	}
+	return g.Run(args, g.Directory)
+}
+
+// Checkout ...
+func (g *Git) Checkout(ref string) error {
+	args := []string{
+		"checkout",
+		"-b",
+		"pr",
+		ref,
+	}
+	return g.Run(args, g.Directory)
 }
