@@ -39,7 +39,14 @@ If several commits are pushed to a given PR at the same time, the last commit wi
 
 Note that `comment` and `comment_file` will be added as separate comments.
 
-TODO
+## Costs
+
+The Github API(s) have a rate limit of 5000 requests per hour (per user). This
+resource will incur the following costs:
+
+- `check`: Minimum 1, max 1 per 100th open pull request.
+- `in`: (TODO)
+- `out`: Minimum 1, max 3 (1 per `status`, `comment` and `comment_file`).
 
 ## Example
 

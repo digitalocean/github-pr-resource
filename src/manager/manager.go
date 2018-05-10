@@ -50,31 +50,42 @@ type Manager struct {
 
 // GetLastCommits gets the last commit on all open Pull requests (costs 1/5000).
 // TODO: Pagination.
-func (m *Manager) GetLastCommits(count int) ([]models.PullRequestCommits, error) {
+func (m *Manager) GetLastCommits() ([]models.PullRequestCommits, error) {
 	var query struct {
 		Repository struct {
 			PullRequests struct {
 				Edges []struct {
 					Node models.PullRequestCommits
 				}
-			} `graphql:"pullRequests(last:$pullrequestLast,states:$pullrequestStates)"`
+				PageInfo struct {
+					EndCursor   githubql.String
+					HasNextPage bool
+				}
+			} `graphql:"pullRequests(first:$prFirst,states:$prStates, after:$prCursor)"`
 		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
 	}
 
 	vars := map[string]interface{}{
-		"repositoryOwner":   githubql.String(m.Owner),
-		"repositoryName":    githubql.String(m.Repository),
-		"pullrequestLast":   githubql.Int(100),
-		"pullrequestStates": []githubql.PullRequestState{githubql.PullRequestStateOpen},
-		"commitsLast":       githubql.Int(count),
+		"repositoryOwner": githubql.String(m.Owner),
+		"repositoryName":  githubql.String(m.Repository),
+		"prFirst":         githubql.Int(100),
+		"prStates":        []githubql.PullRequestState{githubql.PullRequestStateOpen},
+		"prCursor":        (*githubql.String)(nil),
+		"commitsLast":     githubql.Int(1),
 	}
 
-	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
-		return nil, err
-	}
 	var response []models.PullRequestCommits
-	for _, p := range query.Repository.PullRequests.Edges {
-		response = append(response, p.Node)
+	for {
+		if err := m.V4.Query(context.Background(), &query, vars); err != nil {
+			return nil, err
+		}
+		for _, p := range query.Repository.PullRequests.Edges {
+			response = append(response, p.Node)
+		}
+		if !query.Repository.PullRequests.PageInfo.HasNextPage {
+			break
+		}
+		vars["prCursor"] = query.Repository.PullRequests.PageInfo.EndCursor
 	}
 	return response, nil
 }

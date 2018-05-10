@@ -21,7 +21,7 @@ func Run(request models.CheckRequest) (*models.CheckResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create manager: %s", err)
 	}
-	pulls, err := manager.GetLastCommits(1)
+	pulls, err := manager.GetLastCommits()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last commits: %s", err)
 	}
