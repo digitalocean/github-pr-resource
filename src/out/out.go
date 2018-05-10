@@ -18,16 +18,25 @@ func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error
 	if err := request.Params.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid parameters: %s", err)
 	}
+	path := filepath.Join(inputDir, request.Params.Path, ".git", "resource")
 
 	// Version available after a GET step.
 	var version models.Version
-	path := filepath.Join(inputDir, request.Params.Path, ".git", "resource", "version.json")
-
-	content, err := ioutil.ReadFile(path)
+	content, err := ioutil.ReadFile(filepath.Join(path, "version.json"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read version from path: %s", err)
 	}
 	if err := json.Unmarshal(content, &version); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal version from file: %s", err)
+	}
+
+	// Metadata available after a GET step.
+	var metadata []models.Metadata
+	content, err = ioutil.ReadFile(filepath.Join(path, "metadata.json"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read version from path: %s", err)
+	}
+	if err := json.Unmarshal(content, &metadata); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal version from file: %s", err)
 	}
 
@@ -68,6 +77,7 @@ func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error
 	}
 
 	return &models.PutResponse{
-		Version: version,
+		Version:  version,
+		Metadata: metadata,
 	}, nil
 }

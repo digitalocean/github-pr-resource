@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 
+	"github.com/itsdalmo/github-pr-resource/src/manager"
 	"github.com/itsdalmo/github-pr-resource/src/models"
 )
 
@@ -19,7 +21,26 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 		return nil, fmt.Errorf("invalid parameters: %s", err)
 	}
 
-	// Write version so we can reuse it in PUT.
+	manager, err := manager.New(request.Source.Repository, request.Source.AccessToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create manager: %s", err)
+	}
+
+	// Retrieve info for metadata/clone
+	commit, err := manager.GetCommitByID(request.Version.Commit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
+	}
+	pull, err := manager.GetPullRequestByID(request.Version.PR)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
+	}
+	metadata := newMetadata(pull, commit)
+
+	// Clone
+	// TODO
+
+	// Write version and metadata for reuse in PUT
 	path := filepath.Join(outputDir, ".git", "resource")
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %s", err)
@@ -31,18 +52,47 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 	if err := ioutil.WriteFile(filepath.Join(path, "version.json"), b, 0644); err != nil {
 		return nil, fmt.Errorf("failed to write version: %s", err)
 	}
+	b, err = json.Marshal(metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal metadata: %s", err)
+	}
+	if err := ioutil.WriteFile(filepath.Join(path, "metadata.json"), b, 0644); err != nil {
+		return nil, fmt.Errorf("failed to write metadata: %s", err)
+	}
 
 	return &models.GetResponse{
 		Version:  request.Version,
-		Metadata: nil,
+		Metadata: metadata,
 	}, nil
 }
 
-func commitMetadata(commit *models.Commit) []models.Metadata {
-	// var m []models.Metadata
-	// m = append(m, models.Metadata{
-	// 	Name:  "name",
-	// 	Value: "",
-	// })
-	return nil
+func newMetadata(pr models.PullRequest, commit models.Commit) []models.Metadata {
+	var m []models.Metadata
+
+	m = append(m, models.Metadata{
+		Name:  "pr",
+		Value: strconv.Itoa(pr.Number),
+	})
+
+	m = append(m, models.Metadata{
+		Name:  "url",
+		Value: pr.URL,
+	})
+
+	m = append(m, models.Metadata{
+		Name:  "sha",
+		Value: commit.OID,
+	})
+
+	m = append(m, models.Metadata{
+		Name:  "message",
+		Value: commit.Message,
+	})
+
+	m = append(m, models.Metadata{
+		Name:  "author",
+		Value: commit.Author.User.Login,
+	})
+
+	return m
 }
