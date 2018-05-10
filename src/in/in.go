@@ -1,7 +1,6 @@
 package in
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,7 +45,7 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 
 	// Clone the PR at the given commit
 	git := &Git{
-		Directory: filepath.Join(outputDir, "experiment", "repo"),
+		Directory: outputDir,
 		Output:    os.Stderr,
 	}
 	if err := git.Clone(request.Source.Repository, pull.BaseRefName); err != nil {
@@ -125,22 +124,14 @@ type Git struct {
 // Run ...
 func (g *Git) Run(args []string, dir string) error {
 	cmd := exec.Command("git", args...)
+	cmd.Stdout = g.Output
+	cmd.Stderr = g.Output
 	if dir != "" {
 		cmd.Dir = dir
-	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("failed to open stdout pipe: %s", err)
 	}
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %s", err)
 	}
-	go func() {
-		s := bufio.NewScanner(stdout)
-		for s.Scan() {
-			fmt.Fprintln(g.Output, s.Text())
-		}
-	}()
 	return cmd.Wait()
 }
 
