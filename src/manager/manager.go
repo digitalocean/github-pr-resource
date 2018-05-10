@@ -132,7 +132,13 @@ func (m *Manager) SetCommitStatus(subjectID, ctx, status string) error {
 	}
 
 	// Format context
-	ctx = path.Join("concourse-ci", ctx)
+	c := []string{"concourse-ci"}
+	if ctx == "" {
+		c = append(c, "status")
+	} else {
+		c = append(c, ctx)
+	}
+	ctx = strings.Join(c, "/")
 
 	// Format build page
 	build := os.Getenv("ATC_EXTERNAL_URL")

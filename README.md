@@ -33,7 +33,7 @@ If several commits are pushed to a given PR at the same time, the last commit wi
 
 - `path`: The name given to the resource in a GET step.
 - `status`: *Optional*: One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.
-- `context`: *Optional*: A context to use for the status. (Prefixed with `concourse-ci`).
+- `context`: *Optional*: A context to use for the status. (Prefixed with `concourse-ci`, defaults to `concourse-ci/status`).
 - `comment`: *Optional*: A comment to add to the pull request.
 - `comment_file`: *Optional*: Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).
 
