@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -131,10 +132,13 @@ func (m *Manager) SetCommitStatus(subjectID, ctx, status string) error {
 		return err
 	}
 
-	// Create context
-	c := "concourse-ci"
-	if ctx != "" {
-		c = strings.Join([]string{c, ctx}, "/")
+	// Format context
+	ctx = path.Join("concourse-ci", ctx)
+
+	// Format build page
+	build := os.Getenv("ATC_EXTERNAL_URL")
+	if build != "" {
+		build = path.Join(build, "builds", os.Getenv("BUILD_ID"))
 	}
 
 	_, _, err = m.V3.Repositories.CreateStatus(
@@ -144,9 +148,9 @@ func (m *Manager) SetCommitStatus(subjectID, ctx, status string) error {
 		commit.OID,
 		&github.RepoStatus{
 			State:       github.String(strings.ToLower(status)),
-			TargetURL:   github.String(os.Getenv("ATC_EXTERNAL_URL")),
+			TargetURL:   github.String(build),
 			Description: github.String(fmt.Sprintf("Concourse CI build %s", status)),
-			Context:     github.String(c),
+			Context:     github.String(ctx),
 		},
 	)
 	return err
