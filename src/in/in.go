@@ -54,8 +54,11 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 	if err := git.Fetch(pull.HeadRefName, pull.Number); err != nil {
 		return nil, fmt.Errorf("fetch failed: %s", err)
 	}
-	if err := git.Checkout(pull.PotentialMergeCommit.OID); err != nil {
+	if err := git.Checkout(commit.OID); err != nil {
 		return nil, fmt.Errorf("checkout failed: %s", err)
+	}
+	if err := git.Merge(pull.BaseRefName); err != nil {
+		return nil, fmt.Errorf("pull request has merge conflict: %s", err)
 	}
 
 	// Write version and metadata for reuse in PUT
@@ -153,7 +156,7 @@ func (g *Git) Fetch(headName string, pr int) error {
 		"fetch",
 		"-q",
 		"origin",
-		fmt.Sprintf("pull/%s/merge:pr-%s", strconv.Itoa(pr), headName),
+		fmt.Sprintf("pull/%s/head:pr-%s", strconv.Itoa(pr), headName),
 	}
 	return g.Run(args, g.Directory)
 }
@@ -165,6 +168,15 @@ func (g *Git) Checkout(ref string) error {
 		"-b",
 		"pr",
 		ref,
+	}
+	return g.Run(args, g.Directory)
+}
+
+// Merge ...
+func (g *Git) Merge(headName string) error {
+	args := []string{
+		"merge",
+		headName,
 	}
 	return g.Run(args, g.Directory)
 }
