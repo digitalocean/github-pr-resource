@@ -155,6 +155,12 @@ func (g *Git) Fetch(pr int) error {
 
 // Merge ...
 func (g *Git) Merge(commitSHA string) error {
+	if err := g.Cmd([]string{"config", "user.email", "concourse@local"}, g.Directory).Run(); err != nil {
+		return err
+	}
+	if err := g.Cmd([]string{"config", "user.name", "concourse-ci"}, g.Directory).Run(); err != nil {
+		return err
+	}
 	args := []string{"merge", commitSHA}
 	err := g.Cmd(args, g.Directory).Run()
 	return err
