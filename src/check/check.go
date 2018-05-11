@@ -10,7 +10,7 @@ import (
 )
 
 // Run (business logic)
-func Run(request models.CheckRequest) (*models.CheckResponse, error) {
+func Run(request models.CheckRequest) (models.CheckResponse, error) {
 	var response models.CheckResponse
 
 	if err := request.Source.Validate(); err != nil {
@@ -75,7 +75,7 @@ func Run(request models.CheckRequest) (*models.CheckResponse, error) {
 	if len(response) != 0 && request.Version.PR == "" {
 		response = models.CheckResponse{response[len(response)-1]}
 	}
-	return &response, nil
+	return response, nil
 }
 
 type commits []models.Commit
