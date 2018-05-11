@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -204,25 +203,4 @@ func (m *Manager) AddComment(subjectID string, comment string) error {
 	}
 	err := m.V4.Mutate(context.Background(), &mutation, input, nil)
 	return err
-}
-
-// CloneRepository ...
-func (m *Manager) CloneRepository(pr string, comment string) error {
-	id, err := strconv.Atoi(pr)
-	if err != nil {
-		return fmt.Errorf("failed to convert pr number to int: %s", err)
-	}
-	_, _, err = m.V3.Issues.CreateComment(
-		context.Background(),
-		m.Owner,
-		m.Repository,
-		id,
-		&github.IssueComment{
-			Body: github.String(comment),
-		},
-	)
-	if err != nil {
-		return err
-	}
-	return nil
 }
