@@ -44,9 +44,6 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 		Directory: outputDir,
 		Output:    os.Stderr,
 	}
-	if err := git.Config(); err != nil {
-		return nil, fmt.Errorf("failed to configure git: %s", err)
-	}
 	if err := git.Clone(request.Source.Repository, pull.BaseRefName); err != nil {
 		return nil, fmt.Errorf("clone failed: %s", err)
 	}
@@ -142,15 +139,6 @@ func (g *Git) Cmd(args []string, dir string) *exec.Cmd {
 	return cmd
 }
 
-// Config ...
-func (g *Git) Config() error {
-	if err := g.Cmd([]string{"config", "--global", "user.email", "concourse@local"}, g.Directory).Run(); err != nil {
-		return err
-	}
-	err := g.Cmd([]string{"config", "--global", "user.name", "concourse-ci"}, g.Directory).Run()
-	return err
-}
-
 // Clone ...
 func (g *Git) Clone(repository, baseName string) error {
 	args := []string{"clone", "--branch", baseName, "https://github.com/" + repository + ".git", g.Directory}
@@ -167,6 +155,12 @@ func (g *Git) Fetch(pr int) error {
 
 // Merge ...
 func (g *Git) Merge(commitSHA string) error {
+	if err := g.Cmd([]string{"config", "user.email", "concourse@local"}, g.Directory).Run(); err != nil {
+		return err
+	}
+	if err := g.Cmd([]string{"config", "user.name", "concourse-ci"}, g.Directory).Run(); err != nil {
+		return err
+	}
 	args := []string{"merge", commitSHA}
 	err := g.Cmd(args, g.Directory).Run()
 	return err
