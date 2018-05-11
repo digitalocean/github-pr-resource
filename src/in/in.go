@@ -3,14 +3,12 @@ package in
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 
+	"github.com/itsdalmo/github-pr-resource/src/git"
 	"github.com/itsdalmo/github-pr-resource/src/manager"
 	"github.com/itsdalmo/github-pr-resource/src/models"
 )
@@ -39,23 +37,15 @@ func Run(request models.GetRequest, outputDir string) (*models.GetResponse, erro
 		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
 	}
 
+	g := git.New(request.Source.Repository, outputDir, os.Stderr)
+
 	// Clone the PR at the given commit
-	git := &Git{
-		Directory: outputDir,
-		Output:    os.Stderr,
+	if err := g.CloneAndMerge(pull, commit); err != nil {
+		return nil, err
 	}
-	if err := git.Clone(request.Source.Repository, pull.BaseRefName); err != nil {
-		return nil, fmt.Errorf("clone failed: %s", err)
-	}
-	sha, err := git.RevParse(pull.BaseRefName)
+	sha, err := g.RevParseBase(pull)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get base ref: %s", err)
-	}
-	if err := git.Fetch(pull.Number); err != nil {
-		return nil, fmt.Errorf("fetch failed: %s", err)
-	}
-	if err := git.Merge(commit.OID); err != nil {
-		return nil, fmt.Errorf("merge failed: %s", err)
+		return nil, err
 	}
 	metadata := newMetadata(pull, commit, sha)
 
@@ -119,61 +109,4 @@ func newMetadata(pr models.PullRequest, commit models.Commit, baseSHA string) []
 	})
 
 	return m
-}
-
-// Git ...
-type Git struct {
-	Repository string
-	Directory  string
-	Output     io.Writer
-}
-
-// Cmd ...
-func (g *Git) Cmd(args []string, dir string) *exec.Cmd {
-	cmd := exec.Command("git", args...)
-	cmd.Stdout = g.Output
-	cmd.Stderr = g.Output
-	if dir != "" {
-		cmd.Dir = dir
-	}
-	return cmd
-}
-
-// Clone ...
-func (g *Git) Clone(repository, baseName string) error {
-	args := []string{"clone", "--branch", baseName, "https://github.com/" + repository + ".git", g.Directory}
-	err := g.Cmd(args, "").Run()
-	return err
-}
-
-// Fetch ... (in case its a remote branch)
-func (g *Git) Fetch(pr int) error {
-	args := []string{"fetch", "-q", "origin", fmt.Sprintf("pull/%s/head", strconv.Itoa(pr))}
-	err := g.Cmd(args, g.Directory).Run()
-	return err
-}
-
-// Merge ...
-func (g *Git) Merge(commitSHA string) error {
-	if err := g.Cmd([]string{"config", "user.email", "concourse@local"}, g.Directory).Run(); err != nil {
-		return err
-	}
-	if err := g.Cmd([]string{"config", "user.name", "concourse-ci"}, g.Directory).Run(); err != nil {
-		return err
-	}
-	args := []string{"merge", commitSHA}
-	err := g.Cmd(args, g.Directory).Run()
-	return err
-}
-
-// RevParse ...
-func (g *Git) RevParse(refName string) (string, error) {
-	args := []string{"rev-parse", "--verify", refName}
-	cmd := exec.Command("git", args...)
-	cmd.Dir = g.Directory
-	sha, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(sha)), nil
 }
