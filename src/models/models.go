@@ -155,16 +155,12 @@ func (p *PullRequestCommits) GetCommits() []Commit {
 // PullRequest represents the GraphQL commit node.
 // https://developer.github.com/v4/object/commit/
 type PullRequest struct {
-	ID                   string
-	Number               int
-	URL                  string
-	Mergeable            string
-	BaseRefName          string
-	HeadRefName          string
-	PotentialMergeCommit struct {
-		OID string
-	}
-	Repository struct {
+	ID          string
+	Number      int
+	URL         string
+	BaseRefName string
+	HeadRefName string
+	Repository  struct {
 		ResourcePath string
 	}
 }
