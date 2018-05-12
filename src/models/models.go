@@ -149,7 +149,6 @@ func (p *PullRequestCommits) GetLastCommit() (Commit, bool) {
 	for _, c := range p.Commits.Edges {
 		commits = append(commits, c.Node.Commit)
 	}
-	fmt.Println(len(commits))
 	switch n := len(commits); n {
 	case 0:
 		return Commit{}, false
