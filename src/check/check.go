@@ -78,8 +78,6 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 	return response, nil
 }
 
-type commits []models.Commit
-
 // True if all files match the glob pattern.
 func allFilesMatch(files []string, glob string) bool {
 	for _, file := range files {
