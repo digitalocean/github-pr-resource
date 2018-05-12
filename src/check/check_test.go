@@ -9,6 +9,7 @@ import (
 
 func TestContainsSkipCI(t *testing.T) {
 	cases := map[string]bool{
+		"(":                        false,
 		"none":                     false,
 		"[ci skip]":                true,
 		"[skip ci]":                true,

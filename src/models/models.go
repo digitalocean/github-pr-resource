@@ -149,11 +149,12 @@ func (p *PullRequestCommits) GetLastCommit() (Commit, bool) {
 	for _, c := range p.Commits.Edges {
 		commits = append(commits, c.Node.Commit)
 	}
+	fmt.Println(len(commits))
 	switch n := len(commits); n {
 	case 0:
 		return Commit{}, false
 	case 1:
-		return commits[0], false
+		return commits[0], true
 	default:
 		panic("unexpected number of commits retrieved. expected 0 or 1")
 	}

@@ -92,7 +92,7 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 
 // ContainsSkipCI returns true if a string contains [ci skip] or [skip ci].
 func ContainsSkipCI(s string) bool {
-	re := regexp.MustCompile("(?i)[(ci skip|skip ci)]")
+	re := regexp.MustCompile("(?i)\\[(ci skip|skip ci)\\]")
 	return re.MatchString(s)
 }
 
