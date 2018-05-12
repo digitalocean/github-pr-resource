@@ -39,7 +39,7 @@ func Run(request models.GetRequest, outputDir string) (models.GetResponse, error
 		return response, fmt.Errorf("failed to retrieve pull request: %s", err)
 	}
 
-	g := git.New(request.Source.Repository, outputDir, os.Stderr)
+	g := git.New(request.Source.Repository, request.Source.AccessToken, outputDir, os.Stderr)
 
 	// Clone the PR at the given commit
 	if err := g.CloneAndMerge(pull, commit); err != nil {

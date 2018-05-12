@@ -11,11 +11,12 @@ import (
 )
 
 // New ...
-func New(repository, dir string, output io.Writer) *Git {
+func New(repository, token, dir string, output io.Writer) *Git {
 	return &Git{
-		Repository: repository,
-		Directory:  dir,
-		Output:     output,
+		Repository:  repository,
+		AccessToken: token,
+		Directory:   dir,
+		Output:      output,
 	}
 }
 
