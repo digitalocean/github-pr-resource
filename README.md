@@ -11,11 +11,14 @@ It is based on [jtarchie/github-pullrequest-resource](https://github.com/jtarchi
 
 ## Source Configuration
 
-- `repository`: `owner/repository-name` this resource should target.
-- `access_token`: A Github Access Token with repository access (required for setting status on commits).
-- `path`: Only produce new versions if the PR includes changes to files that match a [path.Match](https://golang.org/pkg/path/#Match) pattern.
-- `ignore_path`: Inverse of the above.
-- `disable_ci_skip`: Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title.
+|     Parameter     | Required |          Example           |                                                             Description                                                              |
+| ----------------- | -------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `repository`      | Yes      | `itsdalmo/test-repository` | The repository to target                                                                                                             |
+| `access_token`    | Yes      |                            | A Github Access Token with repository access (required for setting status on commits).                                               |
+| `path`            | No       | `terraform/*.tf`           | Only produce new versions if the PR includes changes to files that match a [path.Match](https://golang.org/pkg/path/#Match) pattern. |
+| `ignore_path`     | No       | `.ci/*`                    | Inverse of the above.                                                                                                                |
+| `disable_ci_skip` | No       | `true` (string)            | Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title.                             |
+
 
 ## Behaviour
 
@@ -44,13 +47,13 @@ empty commit to the PR*.
 
 #### `put`
 
-- `path`: The name given to the resource in a GET step.
-- `status`: *Optional*: One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.
-- `context`: *Optional*: A context to use for the status. (Prefixed with `concourse-ci`, defaults to `concourse-ci/status`).
-- `comment`: *Optional*: A comment to add to the pull request.
-- `comment_file`: *Optional*: Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).
-
-Note that `comment` and `comment_file` will be added as separate comments.
+|   Parameter    | Required |         Example         |                                             Description                                             |
+| -------------- | -------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `path`         | Yes      | `pull-request`          | The name given to the resource in a GET step.                                                       |
+| `status`       | No       | `SUCCESS`               | Set a status on a commit. One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.                       |
+| `context`      | No       | `unit-test`             | A context to use for the status. (Prefixed with `concourse-ci`, defaults to `concourse-ci/status`). |
+| `comment`      | No       | `hello world!`          | A comment to add to the pull request.                                                               |
+| `comment_file` | No       | `my-output/comment.txt` | Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).     |
 
 ## Example
 
