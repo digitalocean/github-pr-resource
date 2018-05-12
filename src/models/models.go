@@ -143,13 +143,20 @@ type PullRequestCommits struct {
 	} `graphql:"commits(last:$commitsLast)"`
 }
 
-// GetCommits returns the commits in a PullRequestAndCommits
-func (p *PullRequestCommits) GetCommits() []Commit {
+// GetLastCommit returns the last commit in a PullRequestAndCommits
+func (p *PullRequestCommits) GetLastCommit() (Commit, bool) {
 	var commits []Commit
 	for _, c := range p.Commits.Edges {
 		commits = append(commits, c.Node.Commit)
 	}
-	return commits
+	switch n := len(commits); n {
+	case 0:
+		return Commit{}, false
+	case 1:
+		return commits[0], false
+	default:
+		panic("unexpected number of commits retrieved. expected 0 or 1")
+	}
 }
 
 // PullRequest represents the GraphQL commit node.
@@ -157,12 +164,10 @@ func (p *PullRequestCommits) GetCommits() []Commit {
 type PullRequest struct {
 	ID          string
 	Number      int
+	Title       string
 	URL         string
 	BaseRefName string
 	HeadRefName string
-	Repository  struct {
-		ResourcePath string
-	}
 }
 
 // Commit represents the GraphQL commit node.
