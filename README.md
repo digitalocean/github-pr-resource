@@ -1,8 +1,13 @@
-## Github PR resource (WIP)
+## Github PR resource
 
 Concourse resource for Github Pull Requests written in Go and based on the [Github GraphQL API](https://developer.github.com/v4/object/commit/).
-Using [the original](https://github.com/jtarchie/github-pullrequest-resource) as inspiration, but will
-be made for use with webhooks, and hopefully be a bit simpler/bare bones than the original.
+It is based on [jtarchie/github-pullrequest-resource](https://github.com/jtarchie/github-pullrequest-resource), with some important differences:
+
+- Uses the GraphQL API for `check`, which means that a `check` only requires 1 API call per 100th open pull request.
+- Because `check` uses GraphQL we can afford (see [costs](#costs)) to not use any caching, which means this resource also plays nice with webhooks.
+- `get` always clones master and merges the PR up until a given (by version) commit.
+- Does not require two `get` steps to `fetch_merge` and still set status on the correct commit using `put`.
+- ... not as many features (yet!).
 
 ## Source Configuration
 
@@ -10,7 +15,7 @@ be made for use with webhooks, and hopefully be a bit simpler/bare bones than th
 - `access_token`: A Github Access Token with repository access (required for setting status on commits).
 - `path`: Only produce new versions if the PR includes changes to files that match a [path.Match](https://golang.org/pkg/path/#Match) pattern.
 - `ignore_path`: Inverse of the above.
-- `disable_ci_skip`: Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message.
+- `disable_ci_skip`: Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title.
 
 ## Behaviour
 
@@ -47,21 +52,7 @@ empty commit to the PR*.
 
 Note that `comment` and `comment_file` will be added as separate comments.
 
-## Costs
-
-The Github API(s) have a rate limit of 5000 requests per hour (per user). This
-resource will incur the following costs:
-
-- `check`:
-  - Minimum 1, max 1 per 100th open pull request.
-  - When using `path`/`ignore_path`: Minimum 1 request per *new* commit, more if the commit contains more than 100 changed files.
-  - NOTE: From my experiments it seems like requests to the V3 API does not count toward the rate limit of the V4 API and vice versa.
-- `in`: Fixed cost of 2. Fetches PR and commit from ID.
-- `out`: Minimum 1, max 3 (1 per `status`, `comment` and `comment_file`).
-
 ## Example
-
-The following (incomplete) example would build a new AMI using Packer:
 
 ```yaml
 resource_types:
@@ -71,15 +62,63 @@ resource_types:
     repository: itsdalmo/github-pr-resource
 
 resources:
-- name: test-repository-pr
-  type: pull-request 
+- name: pull-request
+  type: pull-request
+  check_every: 24h
+  webhook_token: ((webhook-token))
   source:
     repository: itsdalmo/test-repository
-    access_token: ((github-access-token))
     context: concourse-ci/status
+    access_token: ((github-access-token))
 
 jobs:
-- name: test-pr
+- name: test
   plan:
-  - get: test-repository-pr
+  - get: pull-request
+    trigger: true
+    version: every
+  - put: pull-request
+    params:
+      path: pull-request
+      status: pending
+  - task: unit-test
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: alpine/git, tag: "latest"}
+      inputs:
+        - name: pull-request
+      run:
+        path: /bin/sh
+        args:
+          - -xce
+          - |
+            cd pull-request
+            git log --graph --all --color --pretty=format:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s"
+    on_failure:
+      put: pull-request
+      params:
+        path: pull-request
+        status: failure
+  - put: pull-request
+    params:
+      path: pull-request
+      status: success
 ```
+
+## Costs
+
+The Github API(s) have a rate limit of 5000 requests per hour (per user). This resource will incur the following costs:
+
+- `check`: Minimum 1, max 1 per 100th *open* pull request.
+- `in`: Fixed cost of 2. Fetches PR and Commit from global ID (passed in via version).
+- `out`: Minimum 1, max 3 (1 for each of `status`, `comment` and `comment_file`).
+
+E.g., typical use for a repository with 125 open pull requests will incur the following costs for every commit:
+
+- `check`: 2 (paginate 125 PR's with 100 per page)
+- `in`: 2 (fetch commit and PR from global ID's)
+- `out`: 1 (set status on the commit)
+
+With a rate limit of 5000 per hour, it could handle 1000 commits between all of the 125 open pull requests in the span of that hour.
