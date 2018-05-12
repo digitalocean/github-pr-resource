@@ -27,7 +27,15 @@ If several commits are pushed to a given PR at the same time, the last commit wi
 
 #### `get`
 
-- `fetch_merge`: *Optional*: Fetches the branch and merges master into it. Defaults to `true`. 
+Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
+into master. This ensures that we are both testing and setting status on the exact commit that was requested in
+input. Because the base of the PR is not locked to a specific commit in versions emitted from `check`, a fresh
+`get` will always use the latest commit in master and *report the SHA of said commit in the metadata*.
+
+Note that, should you retrigger a build in the hopes of testing the last commit to a PR against a newer version of
+the base, Concourse will reuse the volume (i.e. not trigger a new `get`) if it still exists, which can produce
+unexpected results (#5). As such, re-testing a PR against a newer version of the base is best done by *pushing an 
+empty commit to the PR*.
 
 #### `put`
 
