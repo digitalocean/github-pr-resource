@@ -8,7 +8,7 @@ be made for use with webhooks, and hopefully be a bit simpler/bare bones than th
 
 - `repository`: `owner/repository-name` this resource should target.
 - `access_token`: A Github Access Token with repository access (required for setting status on commits).
-- `path`: Only produce new versions if the PR includes changes to files that match a glob pattern.
+- `path`: Only produce new versions if the PR includes changes to files that match a [path.Match](https://golang.org/pkg/path/#Match) pattern.
 - `ignore_path`: Inverse of the above.
 - `disable_ci_skip`: Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message.
 
