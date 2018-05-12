@@ -71,7 +71,6 @@ resources:
   webhook_token: ((webhook-token))
   source:
     repository: itsdalmo/test-repository
-    context: concourse-ci/status
     access_token: ((github-access-token))
 
 jobs:
