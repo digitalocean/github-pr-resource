@@ -13,7 +13,7 @@ It is based on [jtarchie/github-pullrequest-resource](https://github.com/jtarchi
 
 |     Parameter     | Required |          Example           |                                                             Description                                                              |
 | ----------------- | -------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `repository`      | Yes      | `itsdalmo/test-repository` | The repository to target                                                                                                             |
+| `repository`      | Yes      | `itsdalmo/test-repository` | The repository to target.                                                                                                            |
 | `access_token`    | Yes      |                            | A Github Access Token with repository access (required for setting status on commits).                                               |
 | `path`            | No       | `terraform/*.tf`           | Only produce new versions if the PR includes changes to files that match a [path.Match](https://golang.org/pkg/path/#Match) pattern. |
 | `ignore_path`     | No       | `.ci/*`                    | Inverse of the above.                                                                                                                |
@@ -98,7 +98,8 @@ jobs:
           - -xce
           - |
             cd pull-request
-            git log --graph --all --color --pretty=format:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s"
+            git log --graph --all --color --pretty=format:"%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%s" > log.txt
+            cat log.txt
     on_failure:
       put: pull-request
       params:
