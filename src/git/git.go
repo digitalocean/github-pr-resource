@@ -11,30 +11,37 @@ import (
 )
 
 // New ...
-func New(repository, dir string, output io.Writer) *Git {
+func New(repository, token, dir string, output io.Writer) *Git {
 	return &Git{
-		Repository: repository,
-		Directory:  dir,
-		Output:     output,
+		Repository:  repository,
+		AccessToken: token,
+		Directory:   dir,
+		Output:      output,
 	}
 }
 
 // Git ...
 type Git struct {
-	Repository string
-	Directory  string
-	Output     io.Writer
+	Repository  string
+	AccessToken string
+	Directory   string
+	Output      io.Writer
+}
+
+// Auth ...
+func (g *Git) Auth() string {
+	if g.AccessToken != "" {
+		return g.AccessToken + "@"
+	}
+	return ""
 }
 
 func (g *Git) command(subcommand string, args []string) *exec.Cmd {
 	args = append([]string{subcommand}, args...)
 	cmd := exec.Command("git", args...)
+	cmd.Dir = g.Directory
 	cmd.Stdout = g.Output
 	cmd.Stderr = g.Output
-	// Only doing this for local tests to work. In concourse the output directory will already exist.
-	if subcommand != "clone" {
-		cmd.Dir = g.Directory
-	}
 	return cmd
 }
 
@@ -42,9 +49,16 @@ func (g *Git) command(subcommand string, args []string) *exec.Cmd {
 func (g *Git) CloneAndMerge(pr models.PullRequest, commit models.Commit) error {
 	var args []string
 
-	args = []string{"--branch", pr.BaseRefName, "https://github.com/" + g.Repository + ".git", g.Directory}
-	if err := g.command("clone", args).Run(); err != nil {
-		return fmt.Errorf("clone failed: %s", err)
+	if err := g.command("init", args).Run(); err != nil {
+		return fmt.Errorf("init failed: %s", err)
+	}
+	args = []string{"add", "origin", fmt.Sprintf("https://%sgithub.com/%s.git", g.Auth(), g.Repository)}
+	if err := g.command("remote", args).Run(); err != nil {
+		return fmt.Errorf("failed to add origin: %s", err)
+	}
+	args = []string{"origin", pr.BaseRefName}
+	if err := g.command("pull", args).Run(); err != nil {
+		return fmt.Errorf("pull failed: %s", err)
 	}
 	args = []string{"user.name", "concourse-ci"}
 	if err := g.command("config", args).Run(); err != nil {
@@ -62,7 +76,7 @@ func (g *Git) CloneAndMerge(pr models.PullRequest, commit models.Commit) error {
 	if err := g.command("checkout", args).Run(); err != nil {
 		return fmt.Errorf("failed to checkout new branch: %s", err)
 	}
-	args = []string{"origin", commit.OID}
+	args = []string{commit.OID}
 	if err := g.command("merge", args).Run(); err != nil {
 		return fmt.Errorf("merge failed: %s", err)
 	}
