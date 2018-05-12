@@ -28,8 +28,16 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 	}
 
 	for _, p := range pulls {
+		// [ci skip]/[skip ci] in Pull request title
+		if request.Source.DisableCISkip != "true" && ContainsSkipCI(p.Title) {
+			continue
+		}
 		c, ok := p.GetLastCommit()
 		if !ok {
+			continue
+		}
+		// [ci skip]/[skip ci] in Commit message
+		if request.Source.DisableCISkip != "true" && ContainsSkipCI(c.Message) {
 			continue
 		}
 		// Filter out commits that are too old.
