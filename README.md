@@ -1,13 +1,15 @@
 ## Github PR resource
 
-Concourse resource for Github Pull Requests written in Go and based on the [Github GraphQL API](https://developer.github.com/v4/object/commit/).
-It is based on [jtarchie/github-pullrequest-resource](https://github.com/jtarchie/github-pullrequest-resource), with some important differences:
+[![Build Status](https://travis-ci.org/itsdalmo/github-pr-resource.svg?branch=master)](https://travis-ci.org/itsdalmo/github-pr-resource)
+[![Go Report Card](https://goreportcard.com/badge/github.com/itsdalmo/github-pr-resource)](https://goreportcard.com/report/github.com/itsdalmo/github-pr-resource)
 
-- Uses the GraphQL API for `check`, which means that a `check` only requires 1 API call per 100th open pull request.
-- Because `check` uses GraphQL we can afford (see [costs](#costs)) to not use any caching, which means this resource also plays nice with webhooks.
-- `get` always clones master and merges the PR up until a given (by version) commit.
-- Does not require two `get` steps to `fetch_merge` and still set status on the correct commit using `put`.
-- ... not as many features (yet!).
+A Concourse resource for pull requests on Github. Written in Go and based on the [Github V4 (GraphQL) API](https://developer.github.com/v4/object/commit/).
+Inspired by [the original](https://github.com/jtarchie/github-pullrequest-resource), with some important differences:
+
+- Github V4: `check` only requires 1 API call per 100th *open* pull request. (See [#costs](#costs) for more information).
+- Fetch/merge: `get` will always merge a specific commit from the Pull request into the latest base.
+- Metadata: `get` and `put` provides information about which commit (SHA) was used from both the PR and base.
+- Webhooks: Does not implement any chacing thanks to GraphQL, which means it works well with webhooks.
 
 ## Source Configuration
 
