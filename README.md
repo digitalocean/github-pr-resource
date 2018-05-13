@@ -9,7 +9,7 @@ Inspired by [the original](https://github.com/jtarchie/github-pullrequest-resour
 - Github V4: `check` only requires 1 API call per 100th *open* pull request. (See [#costs](#costs) for more information).
 - Fetch/merge: `get` will always merge a specific commit from the Pull request into the latest base.
 - Metadata: `get` and `put` provides information about which commit (SHA) was used from both the PR and base.
-- Webhooks: Does not implement any chacing thanks to GraphQL, which means it works well with webhooks.
+- Webhooks: Does not implement any caching thanks to GraphQL, which means it works well with webhooks.
 
 ## Source Configuration
 
