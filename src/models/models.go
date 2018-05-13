@@ -2,8 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/shurcooL/githubv4"
@@ -23,145 +21,51 @@ func (s *Source) Validate() error {
 	if s.AccessToken == "" {
 		return errors.New("access_token must be set")
 	}
-	// TODO: Regexp this one?
 	if s.Repository == "" {
 		return errors.New("repository must be set")
 	}
 	return nil
 }
 
-// Metadata for the resource.
-type Metadata struct {
+// Metadata output from get/put steps.
+type Metadata []*MetadataField
+
+// Add a MetadataField to the Metadata.
+func (m *Metadata) Add(name, value string) {
+	*m = append(*m, &MetadataField{Name: name, Value: value})
+}
+
+// MetadataField ...
+type MetadataField struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
-// Version for the resource. ID is the Github Global ID.
+// Version communicated with Concourse. ID is the Github Global ID.
 type Version struct {
 	PR         string    `json:"pr"`
 	Commit     string    `json:"commit"`
 	PushedDate time.Time `json:"pushed,omitempty"`
 }
 
-// CheckRequest ...
-type CheckRequest struct {
-	Source  Source  `json:"source"`
-	Version Version `json:"version"`
-}
-
-// CheckResponse ...
-type CheckResponse []Version
-
-func (p CheckResponse) Len() int {
-	return len(p)
-}
-
-func (p CheckResponse) Less(i, j int) bool {
-	return p[j].PushedDate.After(p[i].PushedDate)
-}
-
-func (p CheckResponse) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-// GetParameters for the resource.
-type GetParameters struct{}
-
-// Validate the get parameters.
-func (p *GetParameters) Validate() error {
-	return nil
-}
-
-// GetRequest ...
-type GetRequest struct {
-	Source  Source        `json:"source"`
-	Version Version       `json:"version"`
-	Params  GetParameters `json:"params"`
-}
-
-// GetResponse ...
-type GetResponse struct {
-	Version  Version    `json:"version"`
-	Metadata []Metadata `json:"metadata,omitempty"`
-}
-
-// PutParameters for the resource.
-type PutParameters struct {
-	Path        string `json:"path"`
-	Context     string `json:"context"`
-	Status      string `json:"status"`
-	CommentFile string `json:"comment_file"`
-	Comment     string `json:"comment"`
-}
-
-// Validate the put parameters.
-func (p *PutParameters) Validate() error {
-	if p.Status == "" {
-		return nil
-	}
-	// Make sure we are setting an allowed status
-	var allowedStatus bool
-
-	status := strings.ToLower(p.Status)
-	allowed := []string{"success", "pending", "failure", "error"}
-
-	for _, a := range allowed {
-		if status == a {
-			allowedStatus = true
-		}
-	}
-
-	if !allowedStatus {
-		return fmt.Errorf("unknown status: %s", p.Status)
-	}
-
-	return nil
-}
-
-// PutRequest ...
-type PutRequest struct {
-	Source Source        `json:"source"`
-	Params PutParameters `json:"params"`
-}
-
-// PutResponse ...
-type PutResponse struct {
-	Version  Version    `json:"version"`
-	Metadata []Metadata `json:"metadata,omitempty"`
-}
-
-// PullRequestCommits represents the GraphQL node with PR/Commit.
-// https://developer.github.com/v4/object/pullrequest/
-type PullRequestCommits struct {
-	PullRequest
-	Commits struct {
-		Edges []struct {
-			Node struct {
-				Commit Commit
-			}
-		}
-	} `graphql:"commits(last:$commitsLast)"`
-}
-
-// GetLastCommit returns the last commit in a PullRequestAndCommits
-func (p *PullRequestCommits) GetLastCommit() (Commit, bool) {
-	var commits []Commit
-	for _, c := range p.Commits.Edges {
-		commits = append(commits, c.Node.Commit)
-	}
-	switch n := len(commits); n {
-	case 0:
-		return Commit{}, false
-	case 1:
-		return commits[0], true
-	default:
-		panic("unexpected number of commits retrieved. expected 0 or 1")
+// NewVersion constructs a new Version.
+func NewVersion(c *PullRequest) Version {
+	return Version{
+		PR:         c.ID,
+		Commit:     c.Tip.ID,
+		PushedDate: c.Tip.PushedDate.Time,
 	}
 }
 
-// PullRequest represents the GraphQL commit node.
-// https://developer.github.com/v4/object/commit/
+// PullRequest represents a pull request and includes the tip (commit).
 type PullRequest struct {
+	*PullRequestObject
+	Tip *CommitObject
+}
+
+// PullRequestObject represents the GraphQL commit node.
+// https://developer.github.com/v4/object/commit/
+type PullRequestObject struct {
 	ID          string
 	Number      int
 	Title       string
@@ -170,9 +74,9 @@ type PullRequest struct {
 	HeadRefName string
 }
 
-// Commit represents the GraphQL commit node.
+// CommitObject represents the GraphQL commit node.
 // https://developer.github.com/v4/object/commit/
-type Commit struct {
+type CommitObject struct {
 	ID         string
 	OID        string
 	PushedDate githubv4.DateTime

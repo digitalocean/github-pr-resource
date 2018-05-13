@@ -17,7 +17,7 @@ test:
 	go vet -v ./...
 	go test -race -v ./...
 
-e2e:
+e2e: test
 	@echo "== Integration =="
 	go test -race -v ./... -tags=e2e
 

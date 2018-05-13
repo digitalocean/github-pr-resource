@@ -13,17 +13,17 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// New Manager
-func New(repository, token string) (*Manager, error) {
+// NewGithubManager ...
+func NewGithubManager(s *models.Source) (*GithubManager, error) {
 	oauth := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
+		&oauth2.Token{AccessToken: s.AccessToken},
 	)
 	client := oauth2.NewClient(context.Background(), oauth)
-	owner, repository, err := parseRepository(repository)
+	owner, repository, err := parseRepository(s.Repository)
 	if err != nil {
 		return nil, err
 	}
-	return &Manager{
+	return &GithubManager{
 		V3:         github.NewClient(client),
 		V4:         githubv4.NewClient(client),
 		Owner:      owner,
@@ -31,35 +31,36 @@ func New(repository, token string) (*Manager, error) {
 	}, nil
 }
 
-func parseRepository(s string) (string, string, error) {
-	parts := strings.Split(s, "/")
-	if len(parts) != 2 {
-		return "", "", errors.New("malformed repository")
-	}
-	return parts[0], parts[1], nil
-}
-
-// Manager for handling requests to the Github V3 and V4 APIs.
-type Manager struct {
+// GithubManager for handling requests to the Github V3 and V4 APIs.
+type GithubManager struct {
 	V3         *github.Client
 	V4         *githubv4.Client
 	Repository string
 	Owner      string
 }
 
-// GetLastCommits gets the last commit on all open Pull requests (costs 1/5000).
-func (m *Manager) GetLastCommits() ([]models.PullRequestCommits, error) {
+// ListOpenPullRequests gets the last commit on all open pull requests.
+func (m *GithubManager) ListOpenPullRequests() ([]*models.PullRequest, error) {
 	var query struct {
 		Repository struct {
 			PullRequests struct {
 				Edges []struct {
-					Node models.PullRequestCommits
+					Node struct {
+						models.PullRequestObject
+						Commits struct {
+							Edges []struct {
+								Node struct {
+									Commit models.CommitObject
+								}
+							}
+						} `graphql:"commits(last:$commitsLast)"`
+					}
 				}
 				PageInfo struct {
 					EndCursor   githubv4.String
 					HasNextPage bool
 				}
-			} `graphql:"pullRequests(first:$prFirst,states:$prStates, after:$prCursor)"`
+			} `graphql:"pullRequests(first:$prFirst,states:$prStates,after:$prCursor)"`
 		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
 	}
 
@@ -72,13 +73,18 @@ func (m *Manager) GetLastCommits() ([]models.PullRequestCommits, error) {
 		"commitsLast":     githubv4.Int(1),
 	}
 
-	var response []models.PullRequestCommits
+	var response []*models.PullRequest
 	for {
 		if err := m.V4.Query(context.Background(), &query, vars); err != nil {
 			return nil, err
 		}
 		for _, p := range query.Repository.PullRequests.Edges {
-			response = append(response, p.Node)
+			for _, c := range p.Node.Commits.Edges {
+				response = append(response, &models.PullRequest{
+					PullRequestObject: &p.Node.PullRequestObject,
+					Tip:               &c.Node.Commit,
+				})
+			}
 		}
 		if !query.Repository.PullRequests.PageInfo.HasNextPage {
 			break
@@ -88,79 +94,8 @@ func (m *Manager) GetLastCommits() ([]models.PullRequestCommits, error) {
 	return response, nil
 }
 
-// GetCommitByID ... (zero cost).
-func (m *Manager) GetCommitByID(objectID string) (models.Commit, error) {
-	var query struct {
-		Node struct {
-			Commit models.Commit `graphql:"... on Commit"`
-		} `graphql:"node(id:$nodeId)"`
-	}
-
-	vars := map[string]interface{}{
-		"nodeId": githubv4.ID(objectID),
-	}
-	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
-		return models.Commit{}, err
-	}
-	return query.Node.Commit, nil
-}
-
-// GetPullRequestByID ... (zero cost).
-func (m *Manager) GetPullRequestByID(objectID string) (models.PullRequest, error) {
-	var query struct {
-		Node struct {
-			PullRequest models.PullRequest `graphql:"... on PullRequest"`
-		} `graphql:"node(id:$nodeId)"`
-	}
-
-	vars := map[string]interface{}{
-		"nodeId": githubv4.ID(objectID),
-	}
-	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
-		return models.PullRequest{}, err
-	}
-	return query.Node.PullRequest, nil
-}
-
-// SetCommitStatus for a given commit (not supported by V4 API).
-func (m *Manager) SetCommitStatus(subjectID, ctx, status string) error {
-	commit, err := m.GetCommitByID(subjectID)
-	if err != nil {
-		return err
-	}
-
-	// Format context
-	c := []string{"concourse-ci"}
-	if ctx == "" {
-		c = append(c, "status")
-	} else {
-		c = append(c, ctx)
-	}
-	ctx = strings.Join(c, "/")
-
-	// Format build page
-	build := os.Getenv("ATC_EXTERNAL_URL")
-	if build != "" {
-		build = strings.Join([]string{build, "builds", os.Getenv("BUILD_ID")}, "/")
-	}
-
-	_, _, err = m.V3.Repositories.CreateStatus(
-		context.Background(),
-		m.Owner,
-		m.Repository,
-		commit.OID,
-		&github.RepoStatus{
-			State:       github.String(strings.ToLower(status)),
-			TargetURL:   github.String(build),
-			Description: github.String(fmt.Sprintf("Concourse CI build %s", status)),
-			Context:     github.String(ctx),
-		},
-	)
-	return err
-}
-
-// GetChangedFiles in a PullRequest (not supported by V4 API).
-func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
+// ListModifiedFiles in a pull request (not supported by V4 API).
+func (m *GithubManager) ListModifiedFiles(prNumber int) ([]string, error) {
 	var files []string
 
 	opt := &github.ListOptions{
@@ -171,7 +106,7 @@ func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 			context.Background(),
 			m.Owner,
 			m.Repository,
-			pr,
+			prNumber,
 			opt,
 		)
 		if err != nil {
@@ -188,8 +123,8 @@ func (m *Manager) GetChangedFiles(pr int) ([]string, error) {
 	return files, nil
 }
 
-// AddComment to a PullRequest or issue (cost 1).
-func (m *Manager) AddComment(subjectID string, comment string) error {
+// PostComment to a pull request or issue.
+func (m *GithubManager) PostComment(objectID, comment string) error {
 	var mutation struct {
 		AddComment struct {
 			Subject struct {
@@ -198,9 +133,88 @@ func (m *Manager) AddComment(subjectID string, comment string) error {
 		} `graphql:"addComment(input: $input)"`
 	}
 	input := githubv4.AddCommentInput{
-		SubjectID: subjectID,
+		SubjectID: objectID,
 		Body:      githubv4.String(comment),
 	}
 	err := m.V4.Mutate(context.Background(), &mutation, input, nil)
 	return err
+}
+
+// GetPullRequestByID ...
+func (m *GithubManager) GetPullRequestByID(objectID string) (*models.PullRequestObject, error) {
+	var query struct {
+		Node struct {
+			PullRequest models.PullRequestObject `graphql:"... on PullRequest"`
+		} `graphql:"node(id:$nodeId)"`
+	}
+
+	vars := map[string]interface{}{
+		"nodeId": githubv4.ID(objectID),
+	}
+	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
+		return nil, err
+	}
+	return &query.Node.PullRequest, nil
+}
+
+// GetCommitByID ...
+func (m *GithubManager) GetCommitByID(objectID string) (*models.CommitObject, error) {
+	var query struct {
+		Node struct {
+			Commit models.CommitObject `graphql:"... on Commit"`
+		} `graphql:"node(id:$nodeId)"`
+	}
+
+	vars := map[string]interface{}{
+		"nodeId": githubv4.ID(objectID),
+	}
+	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
+		return nil, err
+	}
+	return &query.Node.Commit, nil
+}
+
+// UpdateCommitStatus for a given commit (not supported by V4 API).
+func (m *GithubManager) UpdateCommitStatus(objectID, statusContext, status string) error {
+	commit, err := m.GetCommitByID(objectID)
+	if err != nil {
+		return err
+	}
+
+	// Format context
+	c := []string{"concourse-ci"}
+	if statusContext == "" {
+		c = append(c, "status")
+	} else {
+		c = append(c, statusContext)
+	}
+	statusContext = strings.Join(c, "/")
+
+	// Format build page
+	build := os.Getenv("ATC_EXTERNAL_URL")
+	if build != "" {
+		build = strings.Join([]string{build, "builds", os.Getenv("BUILD_ID")}, "/")
+	}
+
+	_, _, err = m.V3.Repositories.CreateStatus(
+		context.Background(),
+		m.Owner,
+		m.Repository,
+		commit.OID,
+		&github.RepoStatus{
+			State:       github.String(strings.ToLower(status)),
+			TargetURL:   github.String(build),
+			Description: github.String(fmt.Sprintf("Concourse CI build %s", status)),
+			Context:     github.String(statusContext),
+		},
+	)
+	return err
+}
+
+func parseRepository(s string) (string, string, error) {
+	parts := strings.Split(s, "/")
+	if len(parts) != 2 {
+		return "", "", errors.New("malformed repository")
+	}
+	return parts[0], parts[1], nil
 }

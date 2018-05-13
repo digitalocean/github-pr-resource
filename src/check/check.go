@@ -11,18 +11,18 @@ import (
 )
 
 // Run (business logic)
-func Run(request models.CheckRequest) (models.CheckResponse, error) {
-	var response models.CheckResponse
+func Run(request Request) (Response, error) {
+	var response Response
 
 	if err := request.Source.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid configuration: %s", err)
 	}
 
-	manager, err := manager.New(request.Source.Repository, request.Source.AccessToken)
+	manager, err := manager.NewGithubManager(&request.Source)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create manager: %s", err)
 	}
-	pulls, err := manager.GetLastCommits()
+	pulls, err := manager.ListOpenPullRequests()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last commits: %s", err)
 	}
@@ -32,30 +32,29 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 		if request.Source.DisableCISkip != "true" && ContainsSkipCI(p.Title) {
 			continue
 		}
-		c, ok := p.GetLastCommit()
-		if !ok {
-			continue
-		}
 		// [ci skip]/[skip ci] in Commit message
-		if request.Source.DisableCISkip != "true" && ContainsSkipCI(c.Message) {
+		if request.Source.DisableCISkip != "true" && ContainsSkipCI(p.Tip.Message) {
 			continue
 		}
 		// Filter out commits that are too old.
-		if !c.PushedDate.Time.After(request.Version.PushedDate) {
+		if !p.Tip.PushedDate.Time.After(request.Version.PushedDate) {
 			continue
 		}
 
 		// Filter on files if path or ignore_path is specified
 		if request.Source.Path != "" || request.Source.IgnorePath != "" {
-			files, err := manager.GetChangedFiles(p.Number)
+			files, err := manager.ListModifiedFiles(p.Number)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get changed files: %s", err)
+				return nil, fmt.Errorf("failed to list modified files: %s", err)
 			}
 
 			// Ignore path is provided and ALL files match it.
 			if glob := request.Source.IgnorePath; glob != "" {
-				// If there are no files changed in a commit there is nothing to ignore
-				if len(files) > 0 && AllFilesMatch(files, glob) {
+				match, err := AllFilesMatch(files, glob)
+				if err != nil {
+					return nil, fmt.Errorf("failed to filter ignored path (%s): %s", glob, err)
+				}
+				if match {
 					continue
 				}
 			}
@@ -63,17 +62,16 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 			// Path is provided but no files match it.
 			if glob := request.Source.Path; glob != "" {
 				// If there are no files in a commit they cannot possibly match the glob.
-				if len(files) == 0 || !AnyFilesMatch(files, glob) {
+				match, err := AnyFilesMatch(files, glob)
+				if err != nil {
+					return nil, fmt.Errorf("failed to filter path (%s): %s", glob, err)
+				}
+				if match {
 					continue
 				}
 			}
 		}
-		v := models.Version{
-			PR:         p.ID,
-			Commit:     c.ID,
-			PushedDate: c.PushedDate.Time,
-		}
-		response = append(response, v)
+		response = append(response, models.NewVersion(p))
 	}
 
 	// Sort the commits by date
@@ -85,7 +83,7 @@ func Run(request models.CheckRequest) (models.CheckResponse, error) {
 	}
 	// If there are new versions and no previous = return just the latest
 	if len(response) != 0 && request.Version.PR == "" {
-		response = models.CheckResponse{response[len(response)-1]}
+		response = Response{response[len(response)-1]}
 	}
 	return response, nil
 }
@@ -97,29 +95,37 @@ func ContainsSkipCI(s string) bool {
 }
 
 // AllFilesMatch returns true if all files match the glob.
-func AllFilesMatch(files []string, glob string) bool {
+func AllFilesMatch(files []string, glob string) (bool, error) {
+	// If there are no files changed in a commit there is nothing to ignore
+	if len(files) == 0 {
+		return false, nil
+	}
 	for _, file := range files {
 		match, err := path.Match(glob, file)
 		if err != nil {
-			panic(err)
+			return false, err
 		}
 		if !match {
-			return false
+			return false, nil
 		}
 	}
-	return true
+	return true, nil
 }
 
 // AnyFilesMatch returns true if ANY files match the glob.
-func AnyFilesMatch(files []string, glob string) bool {
+func AnyFilesMatch(files []string, glob string) (bool, error) {
+	// If there are no files in a commit they cannot possibly match the glob.
+	if len(files) == 0 {
+		return false, nil
+	}
 	for _, file := range files {
 		match, err := path.Match(glob, file)
 		if err != nil {
-			panic(err)
+			return false, err
 		}
 		if match {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
