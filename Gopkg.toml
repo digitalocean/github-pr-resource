@@ -36,3 +36,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/shurcooL/githubv4"
+
+[[constraint]]
+  name = "github.com/ryanuber/go-glob"
+  version = "0.1.0"

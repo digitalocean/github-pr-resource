@@ -28,7 +28,7 @@ func TestContainsSkipCI(t *testing.T) {
 }
 
 func TestAllFilesMatch(t *testing.T) {
-	pattern := "test/*.txt"
+	pattern := "*.txt"
 	cases := []struct {
 		Test     string
 		Files    []string
@@ -37,7 +37,7 @@ func TestAllFilesMatch(t *testing.T) {
 		{
 			Test: "files that should match",
 			Files: []string{
-				"test/file1.txt",
+				"file1.txt",
 				"test/file2.txt",
 			},
 			Expected: true,
@@ -53,10 +53,7 @@ func TestAllFilesMatch(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.Test, func(t *testing.T) {
-			actual, err := check.AllFilesMatch(c.Files, pattern)
-			if err != nil {
-				t.Errorf("unexpected error: %s", err)
-			}
+			actual := check.AllFilesMatch(c.Files, pattern)
 			if actual != c.Expected {
 				t.Errorf("expected '%s' to return %v, but got %v", pattern, c.Expected, actual)
 			}
@@ -65,7 +62,7 @@ func TestAllFilesMatch(t *testing.T) {
 }
 
 func TestAnyFilesMatch(t *testing.T) {
-	pattern := "test/*.go"
+	pattern := "**/*.go"
 	cases := []struct {
 		Test     string
 		Files    []string
@@ -90,10 +87,7 @@ func TestAnyFilesMatch(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.Test, func(t *testing.T) {
-			actual, err := check.AnyFilesMatch(c.Files, pattern)
-			if err != nil {
-				t.Errorf("unexpected error: %s", err)
-			}
+			actual := check.AnyFilesMatch(c.Files, pattern)
 			if actual != c.Expected {
 				t.Errorf("expected '%s' to match any of these files:\n%s", pattern, strings.Join(c.Files, ", "))
 			}

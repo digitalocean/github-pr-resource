@@ -9,11 +9,11 @@ import (
 
 // Source represents the configuration for the resource.
 type Source struct {
-	Repository    string `json:"repository"`
-	AccessToken   string `json:"access_token"`
-	Path          string `json:"path"`
-	IgnorePath    string `json:"ignore_path"`
-	DisableCISkip string `json:"disable_ci_skip"`
+	Repository    string   `json:"repository"`
+	AccessToken   string   `json:"access_token"`
+	Paths         []string `json:"path"`
+	IgnorePaths   []string `json:"ignore_path"`
+	DisableCISkip string   `json:"disable_ci_skip"`
 }
 
 // Validate the source configuration.
@@ -49,18 +49,18 @@ type Version struct {
 }
 
 // NewVersion constructs a new Version.
-func NewVersion(c *PullRequest) Version {
+func NewVersion(p *PullRequest) Version {
 	return Version{
-		PR:         c.ID,
-		Commit:     c.Tip.ID,
-		PushedDate: c.Tip.PushedDate.Time,
+		PR:         p.ID,
+		Commit:     p.Tip.ID,
+		PushedDate: p.Tip.PushedDate.Time,
 	}
 }
 
 // PullRequest represents a pull request and includes the tip (commit).
 type PullRequest struct {
-	*PullRequestObject
-	Tip *CommitObject
+	PullRequestObject
+	Tip CommitObject
 }
 
 // PullRequestObject represents the GraphQL commit node.

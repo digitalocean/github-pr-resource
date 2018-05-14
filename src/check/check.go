@@ -2,12 +2,12 @@ package check
 
 import (
 	"fmt"
-	"path"
 	"regexp"
 	"sort"
 
 	"github.com/itsdalmo/github-pr-resource/src/manager"
 	"github.com/itsdalmo/github-pr-resource/src/models"
+	glob "github.com/ryanuber/go-glob"
 )
 
 // Run (business logic)
@@ -27,6 +27,7 @@ func Run(request Request) (Response, error) {
 		return nil, fmt.Errorf("failed to get last commits: %s", err)
 	}
 
+Loop:
 	for _, p := range pulls {
 		// [ci skip]/[skip ci] in Pull request title
 		if request.Source.DisableCISkip != "true" && ContainsSkipCI(p.Title) {
@@ -41,34 +42,41 @@ func Run(request Request) (Response, error) {
 			continue
 		}
 
-		// Filter on files if path or ignore_path is specified
-		if request.Source.Path != "" || request.Source.IgnorePath != "" {
-			files, err := manager.ListModifiedFiles(p.Number)
+		// Fetch files once if paths/ignore_paths are specified.
+		var files []string
+
+		if len(request.Source.Paths) > 0 || len(request.Source.IgnorePaths) > 0 {
+			files, err = manager.ListModifiedFiles(p.Number)
 			if err != nil {
 				return nil, fmt.Errorf("failed to list modified files: %s", err)
 			}
+		}
 
-			// Ignore path is provided and ALL files match it.
-			if glob := request.Source.IgnorePath; glob != "" {
-				match, err := AllFilesMatch(files, glob)
-				if err != nil {
-					return nil, fmt.Errorf("failed to filter ignored path (%s): %s", glob, err)
-				}
-				if match {
-					continue
+		// Skip version if none of the patterns match any files.
+		if len(request.Source.Paths) > 0 {
+			var keep bool
+			for _, pattern := range request.Source.Paths {
+				if AnyFilesMatch(files, pattern) {
+					keep = true
+					break
 				}
 			}
+			if !keep {
+				continue Loop
+			}
+		}
 
-			// Path is provided but no files match it.
-			if glob := request.Source.Path; glob != "" {
-				// If there are no files in a commit they cannot possibly match the glob.
-				match, err := AnyFilesMatch(files, glob)
-				if err != nil {
-					return nil, fmt.Errorf("failed to filter path (%s): %s", glob, err)
+		// Skip version any pattern matches all of the files.
+		if len(request.Source.IgnorePaths) > 0 {
+			var ignore bool
+			for _, pattern := range request.Source.IgnorePaths {
+				if AllFilesMatch(files, pattern) {
+					ignore = true
+					break
 				}
-				if match {
-					continue
-				}
+			}
+			if ignore {
+				continue Loop
 			}
 		}
 		response = append(response, models.NewVersion(p))
@@ -95,37 +103,29 @@ func ContainsSkipCI(s string) bool {
 }
 
 // AllFilesMatch returns true if all files match the glob.
-func AllFilesMatch(files []string, glob string) (bool, error) {
+func AllFilesMatch(files []string, pattern string) bool {
 	// If there are no files changed in a commit there is nothing to ignore
 	if len(files) == 0 {
-		return false, nil
+		return false
 	}
 	for _, file := range files {
-		match, err := path.Match(glob, file)
-		if err != nil {
-			return false, err
-		}
-		if !match {
-			return false, nil
+		if !glob.Glob(pattern, file) {
+			return false
 		}
 	}
-	return true, nil
+	return true
 }
 
 // AnyFilesMatch returns true if ANY files match the glob.
-func AnyFilesMatch(files []string, glob string) (bool, error) {
+func AnyFilesMatch(files []string, pattern string) bool {
 	// If there are no files in a commit they cannot possibly match the glob.
 	if len(files) == 0 {
-		return false, nil
+		return false
 	}
 	for _, file := range files {
-		match, err := path.Match(glob, file)
-		if err != nil {
-			return false, err
-		}
-		if match {
-			return true, nil
+		if glob.Glob(pattern, file) {
+			return true
 		}
 	}
-	return false, nil
+	return false
 }
