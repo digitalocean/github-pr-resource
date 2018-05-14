@@ -13,13 +13,13 @@ Inspired by [the original](https://github.com/jtarchie/github-pullrequest-resour
 
 ## Source Configuration
 
-|     Parameter     | Required |          Example           |                                                             Description                                                              |
-| ----------------- | -------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `repository`      | Yes      | `itsdalmo/test-repository` | The repository to target.                                                                                                            |
-| `access_token`    | Yes      |                            | A Github Access Token with repository access (required for setting status on commits).                                               |
-| `path`            | No       | `terraform/*.tf`           | Only produce new versions if the PR includes changes to files that match a [path.Match](https://golang.org/pkg/path/#Match) pattern. |
-| `ignore_path`     | No       | `.ci/*`                    | Inverse of the above.                                                                                                                |
-| `disable_ci_skip` | No       | `true` (string)            | Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title.                             |
+|     Parameter     | Required |          Example           |                                               Description                                                |
+| ----------------- | -------- | -------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `repository`      | Yes      | `itsdalmo/test-repository` | The repository to target.                                                                                |
+| `access_token`    | Yes      |                            | A Github Access Token with repository access (required for setting status on commits).                   |
+| `paths`           | No       | `terraform/**/*.tf`        | Only produce new versions if the PR includes changes to files that match one or more glob pattern.       |
+| `ignore_paths`    | No       | `.ci/*`                    | Inverse of the above.                                                                                    |
+| `disable_ci_skip` | No       | `true` (string)            | Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title. |
 
 
 ## Behaviour
