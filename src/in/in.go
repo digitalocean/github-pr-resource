@@ -33,7 +33,7 @@ func Run(request Request, outputDir string) (*Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
 	}
-	pull := &models.PullRequest{PullRequestObject: pr, Tip: commit}
+	pull := &models.PullRequest{PullRequestObject: *pr, Tip: *commit}
 
 	g := git.New(request.Source.Repository, request.Source.AccessToken, outputDir, os.Stderr)
 

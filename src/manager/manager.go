@@ -81,8 +81,8 @@ func (m *GithubManager) ListOpenPullRequests() ([]*models.PullRequest, error) {
 		for _, p := range query.Repository.PullRequests.Edges {
 			for _, c := range p.Node.Commits.Edges {
 				response = append(response, &models.PullRequest{
-					PullRequestObject: &p.Node.PullRequestObject,
-					Tip:               &c.Node.Commit,
+					PullRequestObject: p.Node.PullRequestObject,
+					Tip:               c.Node.Commit,
 				})
 			}
 		}
