@@ -2,12 +2,12 @@ package check
 
 import (
 	"fmt"
-	"path"
 	"regexp"
 	"sort"
 
 	"github.com/itsdalmo/github-pr-resource/src/manager"
 	"github.com/itsdalmo/github-pr-resource/src/models"
+	glob "github.com/ryanuber/go-glob"
 )
 
 // Run (business logic)
@@ -50,11 +50,7 @@ func Run(request Request) (Response, error) {
 
 			// Ignore path is provided and ALL files match it.
 			if glob := request.Source.IgnorePath; glob != "" {
-				match, err := AllFilesMatch(files, glob)
-				if err != nil {
-					return nil, fmt.Errorf("failed to filter ignored path (%s): %s", glob, err)
-				}
-				if match {
+				if AllFilesMatch(files, glob) {
 					continue
 				}
 			}
@@ -62,11 +58,7 @@ func Run(request Request) (Response, error) {
 			// Path is provided but no files match it.
 			if glob := request.Source.Path; glob != "" {
 				// If there are no files in a commit they cannot possibly match the glob.
-				match, err := AnyFilesMatch(files, glob)
-				if err != nil {
-					return nil, fmt.Errorf("failed to filter path (%s): %s", glob, err)
-				}
-				if match {
+				if AnyFilesMatch(files, glob) {
 					continue
 				}
 			}
@@ -95,37 +87,29 @@ func ContainsSkipCI(s string) bool {
 }
 
 // AllFilesMatch returns true if all files match the glob.
-func AllFilesMatch(files []string, glob string) (bool, error) {
+func AllFilesMatch(files []string, pattern string) bool {
 	// If there are no files changed in a commit there is nothing to ignore
 	if len(files) == 0 {
-		return false, nil
+		return false
 	}
 	for _, file := range files {
-		match, err := path.Match(glob, file)
-		if err != nil {
-			return false, err
-		}
-		if !match {
-			return false, nil
+		if !glob.Glob(pattern, file) {
+			return false
 		}
 	}
-	return true, nil
+	return true
 }
 
 // AnyFilesMatch returns true if ANY files match the glob.
-func AnyFilesMatch(files []string, glob string) (bool, error) {
+func AnyFilesMatch(files []string, pattern string) bool {
 	// If there are no files in a commit they cannot possibly match the glob.
 	if len(files) == 0 {
-		return false, nil
+		return false
 	}
 	for _, file := range files {
-		match, err := path.Match(glob, file)
-		if err != nil {
-			return false, err
-		}
-		if match {
-			return true, nil
+		if glob.Glob(pattern, file) {
+			return true
 		}
 	}
-	return false, nil
+	return false
 }
