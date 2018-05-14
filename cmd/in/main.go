@@ -6,11 +6,10 @@ import (
 	"os"
 
 	"github.com/itsdalmo/github-pr-resource/src/in"
-	"github.com/itsdalmo/github-pr-resource/src/models"
 )
 
 func main() {
-	var request models.GetRequest
+	var request in.Request
 	if err := json.NewDecoder(os.Stdin).Decode(&request); err != nil {
 		log.Fatalf("failed to unmarshal request: %s", err)
 	}

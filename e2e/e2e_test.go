@@ -13,6 +13,7 @@ import (
 	"github.com/itsdalmo/github-pr-resource/src/check"
 	"github.com/itsdalmo/github-pr-resource/src/in"
 	"github.com/itsdalmo/github-pr-resource/src/models"
+	"github.com/itsdalmo/github-pr-resource/src/out"
 )
 
 const (
@@ -21,7 +22,7 @@ const (
 )
 
 func TestCheck(t *testing.T) {
-	input := models.CheckRequest{
+	input := check.Request{
 		Source: models.Source{
 			Repository:  "itsdalmo/test-repository",
 			AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
@@ -51,8 +52,8 @@ func TestCheck(t *testing.T) {
 	})
 }
 
-func TestIn(t *testing.T) {
-	input := models.GetRequest{
+func TestInAndOut(t *testing.T) {
+	inRequest := in.Request{
 		Source: models.Source{
 			Repository:  "itsdalmo/test-repository",
 			AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
@@ -62,7 +63,14 @@ func TestIn(t *testing.T) {
 			Commit:     latestCommitID,
 			PushedDate: time.Time{},
 		},
-		Params: models.GetParameters{},
+		Params: in.Parameters{},
+	}
+	outRequest := out.Request{
+		Source: models.Source{
+			Repository:  "itsdalmo/test-repository",
+			AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+		},
+		Params: out.Parameters{},
 	}
 
 	expectedVersion := strings.TrimSpace(`
@@ -80,7 +88,7 @@ func TestIn(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	t.Run("in/get works", func(t *testing.T) {
-		output, err := in.Run(input, dir)
+		output, err := in.Run(inRequest, dir)
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
@@ -97,7 +105,7 @@ func TestIn(t *testing.T) {
 			t.Fatalf("failed to read 'version.json': %s", err)
 		}
 		if string(v) != expectedVersion {
-			t.Errorf("expected version:\n%s\nGot:\n%s\n", string(v), expectedVersion)
+			t.Errorf("expected version:\n%s\nGot:\n%s\n", expectedVersion, string(v))
 		}
 
 		mFile := filepath.Join(dir, ".git", "resource", "metadata.json")
@@ -106,7 +114,20 @@ func TestIn(t *testing.T) {
 			t.Fatalf("failed to read 'metadata.json': %s", err)
 		}
 		if string(m) != expectedMetadata {
-			t.Errorf("expected metadata:\n%s\nGot:\n%s\n", string(m), expectedMetadata)
+			t.Errorf("expected metadata:\n%s\nGot:\n%s\n", expectedMetadata, string(m))
+		}
+	})
+
+	t.Run("out/put works", func(t *testing.T) {
+		output, err := out.Run(outRequest, dir)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if output.Version.PR != latestPullrequestID {
+			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", latestPullrequestID, output.Version.PR)
+		}
+		if output.Version.Commit != latestCommitID {
+			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", latestCommitID, output.Version.Commit)
 		}
 	})
 }

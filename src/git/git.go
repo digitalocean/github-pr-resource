@@ -45,8 +45,8 @@ func (g *Git) command(subcommand string, args []string) *exec.Cmd {
 	return cmd
 }
 
-// CloneAndMerge a given commit in the Pullrequest into the latest version of base.
-func (g *Git) CloneAndMerge(pr models.PullRequest, commit models.Commit) error {
+// CloneAndMerge merges the tip of a pull request into the tip of base.
+func (g *Git) CloneAndMerge(pr *models.PullRequest) error {
 	var args []string
 
 	if err := g.command("init", args).Run(); err != nil {
@@ -76,7 +76,7 @@ func (g *Git) CloneAndMerge(pr models.PullRequest, commit models.Commit) error {
 	if err := g.command("checkout", args).Run(); err != nil {
 		return fmt.Errorf("failed to checkout new branch: %s", err)
 	}
-	args = []string{commit.OID}
+	args = []string{pr.Tip.OID}
 	if err := g.command("merge", args).Run(); err != nil {
 		return fmt.Errorf("merge failed: %s", err)
 	}
@@ -84,7 +84,7 @@ func (g *Git) CloneAndMerge(pr models.PullRequest, commit models.Commit) error {
 }
 
 // RevParseBase retrieves the SHA of the base branch.
-func (g *Git) RevParseBase(pr models.PullRequest) (string, error) {
+func (g *Git) RevParseBase(pr *models.PullRequest) (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--verify", pr.BaseRefName)
 	cmd.Dir = g.Directory
 	sha, err := cmd.CombinedOutput()

@@ -53,7 +53,10 @@ func TestAllFilesMatch(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.Test, func(t *testing.T) {
-			actual := check.AllFilesMatch(c.Files, pattern)
+			actual, err := check.AllFilesMatch(c.Files, pattern)
+			if err != nil {
+				t.Errorf("unexpected error: %s", err)
+			}
 			if actual != c.Expected {
 				t.Errorf("expected '%s' to return %v, but got %v", pattern, c.Expected, actual)
 			}
@@ -87,7 +90,10 @@ func TestAnyFilesMatch(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.Test, func(t *testing.T) {
-			actual := check.AnyFilesMatch(c.Files, pattern)
+			actual, err := check.AnyFilesMatch(c.Files, pattern)
+			if err != nil {
+				t.Errorf("unexpected error: %s", err)
+			}
 			if actual != c.Expected {
 				t.Errorf("expected '%s' to match any of these files:\n%s", pattern, strings.Join(c.Files, ", "))
 			}

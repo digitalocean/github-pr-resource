@@ -11,7 +11,7 @@ import (
 )
 
 // Run (business logic)
-func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error) {
+func Run(request Request, inputDir string) (*Response, error) {
 	if err := request.Source.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid configuration: %s", err)
 	}
@@ -31,30 +31,30 @@ func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error
 	}
 
 	// Metadata available after a GET step.
-	var metadata []models.Metadata
+	var metadata models.Metadata
 	content, err = ioutil.ReadFile(filepath.Join(path, "metadata.json"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read version from path: %s", err)
+		return nil, fmt.Errorf("failed to read metadata from path: %s", err)
 	}
 	if err := json.Unmarshal(content, &metadata); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal version from file: %s", err)
+		return nil, fmt.Errorf("failed to unmarshal metadata from file: %s", err)
 	}
 
-	manager, err := manager.New(request.Source.Repository, request.Source.AccessToken)
+	m, err := manager.NewGithubManager(&request.Source)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create manager: %s", err)
 	}
 
 	// Set status if specified
 	if status := request.Params.Status; status != "" {
-		if err := manager.SetCommitStatus(version.Commit, request.Params.Context, status); err != nil {
+		if err := m.UpdateCommitStatus(version.Commit, request.Params.Context, status); err != nil {
 			return nil, fmt.Errorf("failed to set status: %s", err)
 		}
 	}
 
 	// Set comment if specified
 	if comment := request.Params.Comment; comment != "" {
-		err = manager.AddComment(version.PR, comment)
+		err = m.PostComment(version.PR, comment)
 		if err != nil {
 			return nil, fmt.Errorf("failed to post comment: %s", err)
 		}
@@ -69,14 +69,14 @@ func Run(request models.PutRequest, inputDir string) (*models.PutResponse, error
 		}
 		comment := string(content)
 		if comment != "" {
-			err = manager.AddComment(version.PR, comment)
+			err = m.PostComment(version.PR, comment)
 			if err != nil {
 				return nil, fmt.Errorf("failed to post comment: %s", err)
 			}
 		}
 	}
 
-	return &models.PutResponse{
+	return &Response{
 		Version:  version,
 		Metadata: metadata,
 	}, nil
