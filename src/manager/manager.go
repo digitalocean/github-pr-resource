@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -15,17 +16,46 @@ import (
 
 // NewGithubManager ...
 func NewGithubManager(s *models.Source) (*GithubManager, error) {
-	oauth := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: s.AccessToken},
-	)
-	client := oauth2.NewClient(context.Background(), oauth)
 	owner, repository, err := parseRepository(s.Repository)
 	if err != nil {
 		return nil, err
 	}
+
+	client := oauth2.NewClient(context.TODO(), oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: s.AccessToken},
+	))
+
+	var v3 *github.Client
+	if s.V3Endpoint != "" {
+		endpoint, err := url.Parse(s.V3Endpoint)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse v3 endpoint: %s", err)
+		}
+		v3, err = github.NewEnterpriseClient(endpoint.String(), endpoint.String(), client)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		v3 = github.NewClient(client)
+	}
+
+	var v4 *githubv4.Client
+	if s.V4Endpoint != "" {
+		endpoint, err := url.Parse(s.V4Endpoint)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse v4 endpoint: %s", err)
+		}
+		v4 = githubv4.NewEnterpriseClient(endpoint.String(), client)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		v4 = githubv4.NewClient(client)
+	}
+
 	return &GithubManager{
-		V3:         github.NewClient(client),
-		V4:         githubv4.NewClient(client),
+		V3:         v3,
+		V4:         v4,
 		Owner:      owner,
 		Repository: repository,
 	}, nil
@@ -75,7 +105,7 @@ func (m *GithubManager) ListOpenPullRequests() ([]*models.PullRequest, error) {
 
 	var response []*models.PullRequest
 	for {
-		if err := m.V4.Query(context.Background(), &query, vars); err != nil {
+		if err := m.V4.Query(context.TODO(), &query, vars); err != nil {
 			return nil, err
 		}
 		for _, p := range query.Repository.PullRequests.Edges {
@@ -103,7 +133,7 @@ func (m *GithubManager) ListModifiedFiles(prNumber int) ([]string, error) {
 	}
 	for {
 		result, response, err := m.V3.PullRequests.ListFiles(
-			context.Background(),
+			context.TODO(),
 			m.Owner,
 			m.Repository,
 			prNumber,
@@ -136,7 +166,7 @@ func (m *GithubManager) PostComment(objectID, comment string) error {
 		SubjectID: objectID,
 		Body:      githubv4.String(comment),
 	}
-	err := m.V4.Mutate(context.Background(), &mutation, input, nil)
+	err := m.V4.Mutate(context.TODO(), &mutation, input, nil)
 	return err
 }
 
@@ -151,7 +181,7 @@ func (m *GithubManager) GetPullRequestByID(objectID string) (*models.PullRequest
 	vars := map[string]interface{}{
 		"nodeId": githubv4.ID(objectID),
 	}
-	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
+	if err := m.V4.Query(context.TODO(), &query, vars); err != nil {
 		return nil, err
 	}
 	return &query.Node.PullRequest, nil
@@ -168,7 +198,7 @@ func (m *GithubManager) GetCommitByID(objectID string) (*models.CommitObject, er
 	vars := map[string]interface{}{
 		"nodeId": githubv4.ID(objectID),
 	}
-	if err := m.V4.Query(context.Background(), &query, vars); err != nil {
+	if err := m.V4.Query(context.TODO(), &query, vars); err != nil {
 		return nil, err
 	}
 	return &query.Node.Commit, nil
@@ -197,7 +227,7 @@ func (m *GithubManager) UpdateCommitStatus(objectID, statusContext, status strin
 	}
 
 	_, _, err = m.V3.Repositories.CreateStatus(
-		context.Background(),
+		context.TODO(),
 		m.Owner,
 		m.Repository,
 		commit.OID,

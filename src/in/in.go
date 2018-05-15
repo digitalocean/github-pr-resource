@@ -35,7 +35,10 @@ func Run(request Request, outputDir string) (*Response, error) {
 	}
 	pull := &models.PullRequest{PullRequestObject: *pr, Tip: *commit}
 
-	g := git.New(request.Source.Repository, request.Source.AccessToken, outputDir, os.Stderr)
+	g, err := git.New(&request.Source, pull.Repository.URL, outputDir, os.Stderr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new git client: %s", err)
+	}
 
 	// Clone the PR at the given commit
 	if err := g.CloneAndMerge(pull); err != nil {

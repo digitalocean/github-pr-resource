@@ -3,6 +3,7 @@ package git
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -11,29 +12,25 @@ import (
 )
 
 // New ...
-func New(repository, token, dir string, output io.Writer) *Git {
-	return &Git{
-		Repository:  repository,
-		AccessToken: token,
-		Directory:   dir,
-		Output:      output,
+func New(source *models.Source, commitURL string, dir string, output io.Writer) (*Git, error) {
+	endpoint, err := url.Parse(commitURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse commit url: %s", err)
 	}
+	endpoint.User = url.UserPassword("x-oauth-basic", source.AccessToken)
+
+	return &Git{
+		URL:       endpoint,
+		Directory: dir,
+		Output:    output,
+	}, nil
 }
 
 // Git ...
 type Git struct {
-	Repository  string
-	AccessToken string
-	Directory   string
-	Output      io.Writer
-}
-
-// Auth ...
-func (g *Git) Auth() string {
-	if g.AccessToken != "" {
-		return g.AccessToken + "@"
-	}
-	return ""
+	URL       *url.URL
+	Directory string
+	Output    io.Writer
 }
 
 func (g *Git) command(subcommand string, args []string) *exec.Cmd {
@@ -52,7 +49,7 @@ func (g *Git) CloneAndMerge(pr *models.PullRequest) error {
 	if err := g.command("init", args).Run(); err != nil {
 		return fmt.Errorf("init failed: %s", err)
 	}
-	args = []string{"add", "origin", fmt.Sprintf("https://%sgithub.com/%s.git", g.Auth(), g.Repository)}
+	args = []string{"add", "origin", g.URL.String() + ".git"}
 	if err := g.command("remote", args).Run(); err != nil {
 		return fmt.Errorf("failed to add origin: %s", err)
 	}
