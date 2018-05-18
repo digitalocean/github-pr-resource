@@ -40,12 +40,26 @@ func Run(request Request, outputDir string) (*Response, error) {
 		return nil, fmt.Errorf("failed to create new git client: %s", err)
 	}
 
-	// Clone the PR at the given commit
-	if err := g.CloneAndMerge(pull); err != nil {
+	// Clone the repository and fetch the PR
+	if err := g.Init(); err != nil {
 		return nil, err
 	}
-	baseSHA, err := g.RevParseBase(pull)
+	if err := g.Pull(); err != nil {
+		return nil, err
+	}
+	if err := g.Fetch(pull.Number); err != nil {
+		return nil, err
+	}
+
+	// Create a branch from the base ref and merge PR into it
+	baseSHA, err := g.RevParse(pull.BaseRefName)
 	if err != nil {
+		return nil, err
+	}
+	if err := g.Checkout(baseSHA); err != nil {
+		return nil, err
+	}
+	if err := g.Merge(pull.Tip.OID); err != nil {
 		return nil, err
 	}
 

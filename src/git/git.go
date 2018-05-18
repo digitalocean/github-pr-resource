@@ -3,6 +3,7 @@ package git
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/url"
 	"os/exec"
 	"strconv"
@@ -33,56 +34,75 @@ type Git struct {
 	Output    io.Writer
 }
 
-func (g *Git) command(subcommand string, args []string) *exec.Cmd {
-	args = append([]string{subcommand}, args...)
-	cmd := exec.Command("git", args...)
+func (g *Git) command(name string, arg ...string) *exec.Cmd {
+	cmd := exec.Command(name, arg...)
 	cmd.Dir = g.Directory
 	cmd.Stdout = g.Output
 	cmd.Stderr = g.Output
 	return cmd
 }
 
-// CloneAndMerge merges the tip of a pull request into the tip of base.
-func (g *Git) CloneAndMerge(pr *models.PullRequest) error {
-	var args []string
-
-	if err := g.command("init", args).Run(); err != nil {
+// Init ...
+func (g *Git) Init() error {
+	if err := g.command("git", "init").Run(); err != nil {
 		return fmt.Errorf("init failed: %s", err)
 	}
-	args = []string{"add", "origin", g.URL.String() + ".git"}
-	if err := g.command("remote", args).Run(); err != nil {
-		return fmt.Errorf("failed to add origin: %s", err)
-	}
-	args = []string{"origin", pr.BaseRefName}
-	if err := g.command("pull", args).Run(); err != nil {
-		return fmt.Errorf("pull failed: %s", err)
-	}
-	args = []string{"user.name", "concourse-ci"}
-	if err := g.command("config", args).Run(); err != nil {
+	if err := g.command("git", "config", "user.name", "concourse-ci").Run(); err != nil {
 		return fmt.Errorf("failed to configure git user: %s", err)
 	}
-	args = []string{"user.email", "concourse@local"}
-	if err := g.command("config", args).Run(); err != nil {
+	if err := g.command("git", "config", "user.email", "concourse@local").Run(); err != nil {
 		return fmt.Errorf("failed to configure git email: %s", err)
 	}
-	args = []string{"-q", "origin", fmt.Sprintf("pull/%s/head", strconv.Itoa(pr.Number))}
-	if err := g.command("fetch", args).Run(); err != nil {
+	return nil
+}
+
+// Pull ...
+func (g *Git) Pull() error {
+	cmd := g.command("git", "pull", g.URL.String()+".git")
+
+	// Discard output to have zero chance of logging the access token.
+	cmd.Stdout = ioutil.Discard
+	cmd.Stderr = ioutil.Discard
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("pull failed: %s", err)
+	}
+	return nil
+}
+
+// Fetch ...
+func (g *Git) Fetch(prNumber int) error {
+	cmd := g.command("git", "fetch", g.URL.String(), fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber)))
+
+	// Discard output to have zero chance of logging the access token.
+	cmd.Stdout = ioutil.Discard
+	cmd.Stderr = ioutil.Discard
+
+	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("fetch failed: %s", err)
 	}
-	args = []string{"-b", "pr", pr.BaseRefName}
-	if err := g.command("checkout", args).Run(); err != nil {
+	return nil
+}
+
+// Checkout ...
+func (g *Git) Checkout(name string) error {
+	if err := g.command("git", "checkout", "-b", name).Run(); err != nil {
 		return fmt.Errorf("failed to checkout new branch: %s", err)
 	}
-	args = []string{pr.Tip.OID}
-	if err := g.command("merge", args).Run(); err != nil {
+	return nil
+}
+
+// Merge ...
+func (g *Git) Merge(sha string) error {
+	if err := g.command("git", "merge", sha, "--no-stat").Run(); err != nil {
 		return fmt.Errorf("merge failed: %s", err)
 	}
 	return nil
 }
 
-// RevParseBase retrieves the SHA of the base branch.
-func (g *Git) RevParseBase(pr *models.PullRequest) (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--verify", pr.BaseRefName)
+// RevParse retrieves the SHA of the given branch.
+func (g *Git) RevParse(branch string) (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--verify", branch)
 	cmd.Dir = g.Directory
 	sha, err := cmd.CombinedOutput()
 	if err != nil {
