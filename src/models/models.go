@@ -11,6 +11,8 @@ import (
 type Source struct {
 	Repository    string   `json:"repository"`
 	AccessToken   string   `json:"access_token"`
+	V3Endpoint    string   `json:"v3_endpoint"`
+	V4Endpoint    string   `json:"v4_endpoint"`
 	Paths         []string `json:"path"`
 	IgnorePaths   []string `json:"ignore_path"`
 	DisableCISkip string   `json:"disable_ci_skip"`
@@ -23,6 +25,12 @@ func (s *Source) Validate() error {
 	}
 	if s.Repository == "" {
 		return errors.New("repository must be set")
+	}
+	if s.V3Endpoint != "" && s.V4Endpoint == "" {
+		return errors.New("v4_endpoint must be set together with v3_endpoint")
+	}
+	if s.V4Endpoint != "" && s.V3Endpoint == "" {
+		return errors.New("v3_endpoint must be set together with v4_endpoint")
 	}
 	return nil
 }
@@ -72,6 +80,9 @@ type PullRequestObject struct {
 	URL         string
 	BaseRefName string
 	HeadRefName string
+	Repository  struct {
+		URL string
+	}
 }
 
 // CommitObject represents the GraphQL commit node.

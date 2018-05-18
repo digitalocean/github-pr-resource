@@ -39,7 +39,7 @@ func TestCheck(t *testing.T) {
 
 		output, err := check.Run(input)
 		if err != nil {
-			t.Errorf("unexpected error: %s", err)
+			t.Fatalf("unexpected error: %s", err)
 		}
 		if n := len(output); n != 1 {
 			t.Fatalf("expected 1 new version, got: %d", n)
@@ -69,7 +69,7 @@ func TestCheck(t *testing.T) {
 
 		output, err := check.Run(input)
 		if err != nil {
-			t.Errorf("unexpected error: %s", err)
+			t.Fatalf("unexpected error: %s", err)
 		}
 		if n := len(output); n != 1 {
 			t.Fatalf("expected 1 new version, got: %d", n)
@@ -99,7 +99,7 @@ func TestCheck(t *testing.T) {
 
 		output, err := check.Run(input)
 		if err != nil {
-			t.Errorf("unexpected error: %s", err)
+			t.Fatalf("unexpected error: %s", err)
 		}
 		if n := len(output); n != 1 {
 			t.Fatalf("expected 1 new version, got: %d", n)
@@ -112,12 +112,45 @@ func TestCheck(t *testing.T) {
 			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", targetCommitID, v.Commit)
 		}
 	})
+
+	t.Run("check works with a custom endpoint", func(t *testing.T) {
+		input := check.Request{
+			Source: models.Source{
+				Repository:  "itsdalmo/test-repository",
+				V3Endpoint:  "https://api.github.com/",
+				V4Endpoint:  "https://api.github.com/graphql",
+				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+			},
+			Version: models.Version{
+				PR:         "",
+				Commit:     "",
+				PushedDate: time.Time{},
+			},
+		}
+
+		output, err := check.Run(input)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if n := len(output); n != 1 {
+			t.Fatalf("expected 1 new version, got: %d", n)
+		}
+		v := output[0]
+		if v.PR != latestPullRequestID {
+			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", latestPullRequestID, v.PR)
+		}
+		if v.Commit != latestCommitID {
+			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", latestCommitID, v.Commit)
+		}
+	})
 }
 
 func TestInAndOut(t *testing.T) {
 	inRequest := in.Request{
 		Source: models.Source{
 			Repository:  "itsdalmo/test-repository",
+			V3Endpoint:  "https://api.github.com/",
+			V4Endpoint:  "https://api.github.com/graphql",
 			AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 		},
 		Version: models.Version{
@@ -130,6 +163,8 @@ func TestInAndOut(t *testing.T) {
 	outRequest := out.Request{
 		Source: models.Source{
 			Repository:  "itsdalmo/test-repository",
+			V3Endpoint:  "https://api.github.com/",
+			V4Endpoint:  "https://api.github.com/graphql",
 			AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 		},
 		Params: out.Parameters{},
@@ -152,7 +187,7 @@ func TestInAndOut(t *testing.T) {
 	t.Run("in/get works", func(t *testing.T) {
 		output, err := in.Run(inRequest, dir)
 		if err != nil {
-			t.Errorf("unexpected error: %s", err)
+			t.Fatalf("unexpected error: %s", err)
 		}
 		if output.Version.PR != targetPullRequestID {
 			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", targetPullRequestID, output.Version.PR)
@@ -183,7 +218,7 @@ func TestInAndOut(t *testing.T) {
 	t.Run("out/put works", func(t *testing.T) {
 		output, err := out.Run(outRequest, dir)
 		if err != nil {
-			t.Errorf("unexpected error: %s", err)
+			t.Fatalf("unexpected error: %s", err)
 		}
 		if output.Version.PR != targetPullRequestID {
 			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", targetPullRequestID, output.Version.PR)
