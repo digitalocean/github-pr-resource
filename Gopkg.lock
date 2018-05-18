@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/golang/mock"
+  packages = ["gomock"]
+  revision = "c34cdb4725f4c3844d095133c6e40e448b86589b"
+  version = "v1.1.1"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
@@ -82,6 +88,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1eb352d52dc9528ca56c577970b4f2925f2446740b86415610bef3e6f99434a1"
+  inputs-digest = "68d8b7869eeaca841b270689f0d33960a12f0f4813f98cf92c13fef1601104a3"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/itsdalmo/github-pr-resource/src/in"
+	"github.com/itsdalmo/github-pr-resource"
 )
 
 func main() {
-	var request in.Request
+	var request resource.GetRequest
 	if err := json.NewDecoder(os.Stdin).Decode(&request); err != nil {
 		log.Fatalf("failed to unmarshal request: %s", err)
 	}
@@ -18,8 +18,18 @@ func main() {
 		log.Fatalf("missing arguments")
 	}
 	outputDir := os.Args[1]
-
-	response, err := in.Run(request, outputDir)
+	if err := request.Source.Validate(); err != nil {
+		log.Fatalf("invalid source configuration: %s", err)
+	}
+	git, err := resource.NewGitClient(&request.Source, outputDir, os.Stderr)
+	if err != nil {
+		log.Fatalf("failed to create git client: %s", err)
+	}
+	github, err := resource.NewGithubClient(&request.Source)
+	if err != nil {
+		log.Fatalf("failed to create github manager: %s", err)
+	}
+	response, err := resource.Get(request, github, git, outputDir)
 	if err != nil {
 		log.Fatalf("get failed: %s", err)
 	}

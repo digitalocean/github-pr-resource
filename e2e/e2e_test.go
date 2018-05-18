@@ -6,225 +6,213 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
+	"reflect"
 	"testing"
 	"time"
 
-	"github.com/itsdalmo/github-pr-resource/src/check"
-	"github.com/itsdalmo/github-pr-resource/src/in"
-	"github.com/itsdalmo/github-pr-resource/src/models"
-	"github.com/itsdalmo/github-pr-resource/src/out"
+	"github.com/itsdalmo/github-pr-resource"
 )
 
-const (
+var (
 	targetCommitID      = "MDY6Q29tbWl0MTMyNTc2MjQ1OmE1MTE0ZjZhYjg5ZjRiNzM2NjU1NjQyYTExZThkMTVjZTM2M2Q4ODI="
 	targetPullRequestID = "MDExOlB1bGxSZXF1ZXN0MTg3Mzg4MDE0"
+	targetDateTime      = time.Date(2018, time.May, 11, 8, 43, 58, 0, time.UTC)
 	latestCommitID      = "MDY6Q29tbWl0MTMyNTc2MjQ1Ojg5MGE3ZTRmMGQ1YjA1YmRhOGVhMjFiOTFmNDYwNGUzZTAzMTM1ODE="
 	latestPullRequestID = "MDExOlB1bGxSZXF1ZXN0MTg3Nzg4NjAy"
+	latestDateTime      = time.Date(2018, time.May, 14, 10, 52, 12, 0, time.UTC)
 )
 
-func TestCheck(t *testing.T) {
-	t.Run("initial check works", func(t *testing.T) {
-		input := check.Request{
-			Source: models.Source{
+func TestCheckE2E(t *testing.T) {
+
+	tests := []struct {
+		description string
+		source      resource.Source
+		version     resource.Version
+		expected    resource.CheckResponse
+	}{
+		{
+			description: "check returns the latest version if there is no previous",
+			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 			},
-			Version: models.Version{
-				PR:         "",
-				Commit:     "",
-				PushedDate: time.Time{},
+			version: resource.Version{},
+			expected: resource.CheckResponse{
+				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
 			},
-		}
+		},
 
-		output, err := check.Run(input)
-		if err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-		if n := len(output); n != 1 {
-			t.Fatalf("expected 1 new version, got: %d", n)
-		}
-		v := output[0]
-		if v.PR != latestPullRequestID {
-			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", latestPullRequestID, v.PR)
-		}
-		if v.Commit != latestCommitID {
-			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", latestCommitID, v.Commit)
-		}
-	})
-
-	t.Run("ignore paths work (latest commit only changes txt)", func(t *testing.T) {
-		input := check.Request{
-			Source: models.Source{
+		{
+			description: "check returns the previous version when its still latest",
+			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
-				IgnorePaths: []string{"*.txt"},
 			},
-			Version: models.Version{
-				PR:         "",
-				Commit:     "",
-				PushedDate: time.Time{},
+			version: resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
+			expected: resource.CheckResponse{
+				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
 			},
-		}
+		},
 
-		output, err := check.Run(input)
-		if err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-		if n := len(output); n != 1 {
-			t.Fatalf("expected 1 new version, got: %d", n)
-		}
-		v := output[0]
-		if v.PR != targetPullRequestID {
-			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", targetPullRequestID, v.PR)
-		}
-		if v.Commit != targetCommitID {
-			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", targetCommitID, v.Commit)
-		}
-	})
+		{
+			description: "check returns all new versions since the last",
+			source: resource.Source{
+				Repository:  "itsdalmo/test-repository",
+				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+			},
+			version: resource.Version{PR: targetPullRequestID, Commit: targetCommitID, PushedDate: targetDateTime},
+			expected: resource.CheckResponse{
+				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
+			},
+		},
 
-	t.Run("paths work (latest commit does not change readme)", func(t *testing.T) {
-		input := check.Request{
-			Source: models.Source{
+		{
+			description: "check will only return versions that match the specified paths",
+			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 				Paths:       []string{"*.md"},
 			},
-			Version: models.Version{
-				PR:         "",
-				Commit:     "",
-				PushedDate: time.Time{},
+			version: resource.Version{},
+			expected: resource.CheckResponse{
+				resource.Version{PR: targetPullRequestID, Commit: targetCommitID, PushedDate: targetDateTime},
 			},
-		}
+		},
 
-		output, err := check.Run(input)
-		if err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-		if n := len(output); n != 1 {
-			t.Fatalf("expected 1 new version, got: %d", n)
-		}
-		v := output[0]
-		if v.PR != targetPullRequestID {
-			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", targetPullRequestID, v.PR)
-		}
-		if v.Commit != targetCommitID {
-			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", targetCommitID, v.Commit)
-		}
-	})
-
-	t.Run("check works with a custom endpoint", func(t *testing.T) {
-		input := check.Request{
-			Source: models.Source{
+		{
+			description: "check will skip versions which only match the ignore paths",
+			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
+				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+				IgnorePaths: []string{"*.txt"},
+			},
+			version: resource.Version{},
+			expected: resource.CheckResponse{
+				resource.Version{PR: targetPullRequestID, Commit: targetCommitID, PushedDate: targetDateTime},
+			},
+		},
+
+		{
+			description: "check works with custom endpoints",
+			source: resource.Source{
+				Repository:  "itsdalmo/test-repository",
+				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 				V3Endpoint:  "https://api.github.com/",
 				V4Endpoint:  "https://api.github.com/graphql",
-				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 			},
-			Version: models.Version{
-				PR:         "",
-				Commit:     "",
-				PushedDate: time.Time{},
+			version: resource.Version{},
+			expected: resource.CheckResponse{
+				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
 			},
-		}
+		},
+	}
 
-		output, err := check.Run(input)
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if n := len(output); n != 1 {
-			t.Fatalf("expected 1 new version, got: %d", n)
-		}
-		v := output[0]
-		if v.PR != latestPullRequestID {
-			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", latestPullRequestID, v.PR)
-		}
-		if v.Commit != latestCommitID {
-			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", latestCommitID, v.Commit)
-		}
-	})
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			github, err := resource.NewGithubClient(&tc.source)
+			if err != nil {
+				t.Fatalf("failed to create github client: %s", err)
+			}
+
+			input := resource.CheckRequest{Source: tc.source, Version: tc.version}
+			output, err := resource.Check(input, github)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if got, want := output, tc.expected; !reflect.DeepEqual(got, want) {
+				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
+			}
+		})
+	}
 }
 
-func TestInAndOut(t *testing.T) {
-	inRequest := in.Request{
-		Source: models.Source{
-			Repository:  "itsdalmo/test-repository",
-			V3Endpoint:  "https://api.github.com/",
-			V4Endpoint:  "https://api.github.com/graphql",
-			AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
-		},
-		Version: models.Version{
-			PR:         targetPullRequestID,
-			Commit:     targetCommitID,
-			PushedDate: time.Time{},
-		},
-		Params: in.Parameters{},
-	}
-	outRequest := out.Request{
-		Source: models.Source{
-			Repository:  "itsdalmo/test-repository",
-			V3Endpoint:  "https://api.github.com/",
-			V4Endpoint:  "https://api.github.com/graphql",
-			AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
-		},
-		Params: out.Parameters{},
-	}
-
-	expectedVersion := strings.TrimSpace(`
-{"pr":"MDExOlB1bGxSZXF1ZXN0MTg3Mzg4MDE0","commit":"MDY6Q29tbWl0MTMyNTc2MjQ1OmE1MTE0ZjZhYjg5ZjRiNzM2NjU1NjQyYTExZThkMTVjZTM2M2Q4ODI=","pushed":"0001-01-01T00:00:00Z"}
-	`)
-
-	expectedMetadata := strings.TrimSpace(`
-[{"name":"pr","value":"4"},{"name":"url","value":"https://github.com/itsdalmo/test-repository/pull/4"},{"name":"head_sha","value":"a5114f6ab89f4b736655642a11e8d15ce363d882"},{"name":"base_sha","value":"93eeeedb8a16e6662062d1eca5655108977cc59a"},{"name":"message","value":"Push 2."},{"name":"author","value":"itsdalmo"}]
-	`)
-
+func TestGetAndPutE2E(t *testing.T) {
+	// Create temporary directory
 	dir, err := ioutil.TempDir("", "github-pr-resource")
 	if err != nil {
 		t.Fatalf("failed to create temporary directory")
 	}
 	defer os.RemoveAll(dir)
 
-	t.Run("in/get works", func(t *testing.T) {
-		output, err := in.Run(inRequest, dir)
-		if err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-		if output.Version.PR != targetPullRequestID {
-			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", targetPullRequestID, output.Version.PR)
-		}
-		if output.Version.Commit != targetCommitID {
-			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", targetCommitID, output.Version.Commit)
-		}
+	tests := []struct {
+		description    string
+		source         resource.Source
+		version        resource.Version
+		getParameters  resource.GetParameters
+		putParameters  resource.PutParameters
+		directory      string
+		versionString  string
+		metadataString string
+	}{
+		{
+			description: "get and put works",
+			source: resource.Source{
+				Repository:  "itsdalmo/test-repository",
+				V3Endpoint:  "https://api.github.com/",
+				V4Endpoint:  "https://api.github.com/graphql",
+				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+			},
+			version: resource.Version{
+				PR:         targetPullRequestID,
+				Commit:     targetCommitID,
+				PushedDate: time.Time{},
+			},
+			directory:      dir,
+			getParameters:  resource.GetParameters{},
+			putParameters:  resource.PutParameters{},
+			versionString:  `{"pr":"MDExOlB1bGxSZXF1ZXN0MTg3Mzg4MDE0","commit":"MDY6Q29tbWl0MTMyNTc2MjQ1OmE1MTE0ZjZhYjg5ZjRiNzM2NjU1NjQyYTExZThkMTVjZTM2M2Q4ODI=","pushed":"0001-01-01T00:00:00Z"}`,
+			metadataString: `[{"name":"pr","value":"4"},{"name":"url","value":"https://github.com/itsdalmo/test-repository/pull/4"},{"name":"head_sha","value":"a5114f6ab89f4b736655642a11e8d15ce363d882"},{"name":"base_sha","value":"93eeeedb8a16e6662062d1eca5655108977cc59a"},{"name":"message","value":"Push 2."},{"name":"author","value":"itsdalmo"}]`,
+		},
+	}
 
-		vFile := filepath.Join(dir, ".git", "resource", "version.json")
-		v, err := ioutil.ReadFile(vFile)
-		if err != nil {
-			t.Fatalf("failed to read 'version.json': %s", err)
-		}
-		if string(v) != expectedVersion {
-			t.Errorf("expected version:\n%s\nGot:\n%s\n", expectedVersion, string(v))
-		}
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			github, err := resource.NewGithubClient(&tc.source)
+			if err != nil {
+				t.Fatalf("failed to create github client: %s", err)
+			}
+			git, err := resource.NewGitClient(&tc.source, tc.directory, ioutil.Discard)
+			if err != nil {
+				t.Fatalf("failed to create git client: %s", err)
+			}
 
-		mFile := filepath.Join(dir, ".git", "resource", "metadata.json")
-		m, err := ioutil.ReadFile(mFile)
-		if err != nil {
-			t.Fatalf("failed to read 'metadata.json': %s", err)
-		}
-		if string(m) != expectedMetadata {
-			t.Errorf("expected metadata:\n%s\nGot:\n%s\n", expectedMetadata, string(m))
-		}
-	})
+			// Get (output and files)
+			getRequest := resource.GetRequest{Source: tc.source, Version: tc.version, Params: tc.getParameters}
+			getOutput, err := resource.Get(getRequest, github, git, tc.directory)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if got, want := getOutput.Version, tc.version; !reflect.DeepEqual(got, want) {
+				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
+			}
 
-	t.Run("out/put works", func(t *testing.T) {
-		output, err := out.Run(outRequest, dir)
-		if err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-		if output.Version.PR != targetPullRequestID {
-			t.Errorf("expected pull request to have id:\n%s\nGot:\n%s\n", targetPullRequestID, output.Version.PR)
-		}
-		if output.Version.Commit != targetCommitID {
-			t.Errorf("expected commit to have id:\n%s\nGot:\n%s\n", targetCommitID, output.Version.Commit)
-		}
-	})
+			version := readTestFile(t, filepath.Join(tc.directory, ".git", "resource", "version.json"))
+			if got, want := version, tc.versionString; got != want {
+				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
+			}
+
+			metadata := readTestFile(t, filepath.Join(tc.directory, ".git", "resource", "metadata.json"))
+			if got, want := metadata, tc.metadataString; got != want {
+				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
+			}
+
+			// Put
+			putRequest := resource.PutRequest{Source: tc.source, Params: tc.putParameters}
+			putOutput, err := resource.Put(putRequest, github, tc.directory)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if got, want := putOutput.Version, tc.version; !reflect.DeepEqual(got, want) {
+				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
+			}
+		})
+	}
+}
+
+func readTestFile(t *testing.T, path string) string {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read: %s: %s", path, err)
+	}
+	return string(b)
 }
