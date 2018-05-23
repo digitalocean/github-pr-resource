@@ -28,7 +28,7 @@ Loop:
 			continue
 		}
 		// Filter out commits that are too old.
-		if !p.Tip.PushedDate.Time.After(request.Version.PushedDate) {
+		if !p.Tip.CommittedDate.Time.After(request.Version.CommittedDate) {
 			continue
 		}
 
@@ -122,7 +122,7 @@ func (r CheckResponse) Len() int {
 }
 
 func (r CheckResponse) Less(i, j int) bool {
-	return r[j].PushedDate.After(r[i].PushedDate)
+	return r[j].CommittedDate.After(r[i].CommittedDate)
 }
 
 func (r CheckResponse) Swap(i, j int) {

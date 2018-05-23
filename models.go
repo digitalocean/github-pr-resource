@@ -51,17 +51,17 @@ type MetadataField struct {
 
 // Version communicated with Concourse. ID is the Github Global ID.
 type Version struct {
-	PR         string    `json:"pr"`
-	Commit     string    `json:"commit"`
-	PushedDate time.Time `json:"pushed,omitempty"`
+	PR            string    `json:"pr"`
+	Commit        string    `json:"commit"`
+	CommittedDate time.Time `json:"committed,omitempty"`
 }
 
 // NewVersion constructs a new Version.
 func NewVersion(p *PullRequest) Version {
 	return Version{
-		PR:         p.ID,
-		Commit:     p.Tip.ID,
-		PushedDate: p.Tip.PushedDate.Time,
+		PR:            p.ID,
+		Commit:        p.Tip.ID,
+		CommittedDate: p.Tip.CommittedDate.Time,
 	}
 }
 
@@ -88,11 +88,11 @@ type PullRequestObject struct {
 // CommitObject represents the GraphQL commit node.
 // https://developer.github.com/v4/object/commit/
 type CommitObject struct {
-	ID         string
-	OID        string
-	PushedDate githubv4.DateTime
-	Message    string
-	Author     struct {
+	ID            string
+	OID           string
+	CommittedDate githubv4.DateTime
+	Message       string
+	Author        struct {
 		User struct {
 			Login string
 		}
