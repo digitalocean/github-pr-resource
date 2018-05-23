@@ -5,6 +5,10 @@ SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 default: test
 
+generate:
+	@echo "== Go Generate =="
+	go generate ./...
+
 build: test
 	@echo "== Build =="
 	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o check -v cmd/check/main.go
@@ -37,4 +41,4 @@ docker:
 	@echo "== Docker build =="
 	docker build -t $(DOCKER_REPO):dev .
 
-.PHONY: default build test docker e2e clean lint
+.PHONY: default generate build test docker e2e clean lint

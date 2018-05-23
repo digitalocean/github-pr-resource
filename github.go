@@ -1,4 +1,4 @@
-package manager
+package resource
 
 import (
 	"context"
@@ -9,13 +9,31 @@ import (
 	"strings"
 
 	"github.com/google/go-github/github"
-	"github.com/itsdalmo/github-pr-resource/src/models"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 )
 
-// NewGithubManager ...
-func NewGithubManager(s *models.Source) (*GithubManager, error) {
+// Github for testing purposes.
+//go:generate mockgen -destination=mocks/mock_github.go -package=mocks github.com/itsdalmo/github-pr-resource Github
+type Github interface {
+	ListOpenPullRequests() ([]*PullRequest, error)
+	ListModifiedFiles(int) ([]string, error)
+	PostComment(string, string) error
+	GetPullRequestByID(string) (*PullRequestObject, error)
+	GetCommitByID(string) (*CommitObject, error)
+	UpdateCommitStatus(string, string, string) error
+}
+
+// GithubClient for handling requests to the Github V3 and V4 APIs.
+type GithubClient struct {
+	V3         *github.Client
+	V4         *githubv4.Client
+	Repository string
+	Owner      string
+}
+
+// NewGithubClient ...
+func NewGithubClient(s *Source) (*GithubClient, error) {
 	owner, repository, err := parseRepository(s.Repository)
 	if err != nil {
 		return nil, err
@@ -53,7 +71,7 @@ func NewGithubManager(s *models.Source) (*GithubManager, error) {
 		v4 = githubv4.NewClient(client)
 	}
 
-	return &GithubManager{
+	return &GithubClient{
 		V3:         v3,
 		V4:         v4,
 		Owner:      owner,
@@ -61,26 +79,18 @@ func NewGithubManager(s *models.Source) (*GithubManager, error) {
 	}, nil
 }
 
-// GithubManager for handling requests to the Github V3 and V4 APIs.
-type GithubManager struct {
-	V3         *github.Client
-	V4         *githubv4.Client
-	Repository string
-	Owner      string
-}
-
 // ListOpenPullRequests gets the last commit on all open pull requests.
-func (m *GithubManager) ListOpenPullRequests() ([]*models.PullRequest, error) {
+func (m *GithubClient) ListOpenPullRequests() ([]*PullRequest, error) {
 	var query struct {
 		Repository struct {
 			PullRequests struct {
 				Edges []struct {
 					Node struct {
-						models.PullRequestObject
+						PullRequestObject
 						Commits struct {
 							Edges []struct {
 								Node struct {
-									Commit models.CommitObject
+									Commit CommitObject
 								}
 							}
 						} `graphql:"commits(last:$commitsLast)"`
@@ -103,14 +113,14 @@ func (m *GithubManager) ListOpenPullRequests() ([]*models.PullRequest, error) {
 		"commitsLast":     githubv4.Int(1),
 	}
 
-	var response []*models.PullRequest
+	var response []*PullRequest
 	for {
 		if err := m.V4.Query(context.TODO(), &query, vars); err != nil {
 			return nil, err
 		}
 		for _, p := range query.Repository.PullRequests.Edges {
 			for _, c := range p.Node.Commits.Edges {
-				response = append(response, &models.PullRequest{
+				response = append(response, &PullRequest{
 					PullRequestObject: p.Node.PullRequestObject,
 					Tip:               c.Node.Commit,
 				})
@@ -125,7 +135,7 @@ func (m *GithubManager) ListOpenPullRequests() ([]*models.PullRequest, error) {
 }
 
 // ListModifiedFiles in a pull request (not supported by V4 API).
-func (m *GithubManager) ListModifiedFiles(prNumber int) ([]string, error) {
+func (m *GithubClient) ListModifiedFiles(prNumber int) ([]string, error) {
 	var files []string
 
 	opt := &github.ListOptions{
@@ -154,7 +164,7 @@ func (m *GithubManager) ListModifiedFiles(prNumber int) ([]string, error) {
 }
 
 // PostComment to a pull request or issue.
-func (m *GithubManager) PostComment(objectID, comment string) error {
+func (m *GithubClient) PostComment(objectID, comment string) error {
 	var mutation struct {
 		AddComment struct {
 			Subject struct {
@@ -171,10 +181,10 @@ func (m *GithubManager) PostComment(objectID, comment string) error {
 }
 
 // GetPullRequestByID ...
-func (m *GithubManager) GetPullRequestByID(objectID string) (*models.PullRequestObject, error) {
+func (m *GithubClient) GetPullRequestByID(objectID string) (*PullRequestObject, error) {
 	var query struct {
 		Node struct {
-			PullRequest models.PullRequestObject `graphql:"... on PullRequest"`
+			PullRequest PullRequestObject `graphql:"... on PullRequest"`
 		} `graphql:"node(id:$nodeId)"`
 	}
 
@@ -188,10 +198,10 @@ func (m *GithubManager) GetPullRequestByID(objectID string) (*models.PullRequest
 }
 
 // GetCommitByID ...
-func (m *GithubManager) GetCommitByID(objectID string) (*models.CommitObject, error) {
+func (m *GithubClient) GetCommitByID(objectID string) (*CommitObject, error) {
 	var query struct {
 		Node struct {
-			Commit models.CommitObject `graphql:"... on Commit"`
+			Commit CommitObject `graphql:"... on Commit"`
 		} `graphql:"node(id:$nodeId)"`
 	}
 
@@ -205,7 +215,7 @@ func (m *GithubManager) GetCommitByID(objectID string) (*models.CommitObject, er
 }
 
 // UpdateCommitStatus for a given commit (not supported by V4 API).
-func (m *GithubManager) UpdateCommitStatus(objectID, statusContext, status string) error {
+func (m *GithubClient) UpdateCommitStatus(objectID, statusContext, status string) error {
 	commit, err := m.GetCommitByID(objectID)
 	if err != nil {
 		return err

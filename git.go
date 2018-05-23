@@ -1,4 +1,4 @@
-package git
+package resource
 
 import (
 	"fmt"
@@ -8,33 +8,36 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"github.com/itsdalmo/github-pr-resource/src/models"
 )
 
-// New ...
-func New(source *models.Source, commitURL string, dir string, output io.Writer) (*Git, error) {
-	endpoint, err := url.Parse(commitURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse commit url: %s", err)
-	}
-	endpoint.User = url.UserPassword("x-oauth-basic", source.AccessToken)
+// Git interface for testing purposes.
+//go:generate mockgen -destination=mocks/mock_git.go -package=mocks github.com/itsdalmo/github-pr-resource Git
+type Git interface {
+	Init() error
+	Pull(string) error
+	Fetch(string, int) error
+	Checkout(string) error
+	Merge(string) error
+	RevParse(string) (string, error)
+}
 
-	return &Git{
-		URL:       endpoint,
-		Directory: dir,
-		Output:    output,
+// NewGitClient ...
+func NewGitClient(source *Source, dir string, output io.Writer) (*GitClient, error) {
+	return &GitClient{
+		AccessToken: source.AccessToken,
+		Directory:   dir,
+		Output:      output,
 	}, nil
 }
 
-// Git ...
-type Git struct {
-	URL       *url.URL
-	Directory string
-	Output    io.Writer
+// GitClient ...
+type GitClient struct {
+	AccessToken string
+	Directory   string
+	Output      io.Writer
 }
 
-func (g *Git) command(name string, arg ...string) *exec.Cmd {
+func (g *GitClient) command(name string, arg ...string) *exec.Cmd {
 	cmd := exec.Command(name, arg...)
 	cmd.Dir = g.Directory
 	cmd.Stdout = g.Output
@@ -43,7 +46,7 @@ func (g *Git) command(name string, arg ...string) *exec.Cmd {
 }
 
 // Init ...
-func (g *Git) Init() error {
+func (g *GitClient) Init() error {
 	if err := g.command("git", "init").Run(); err != nil {
 		return fmt.Errorf("init failed: %s", err)
 	}
@@ -57,8 +60,12 @@ func (g *Git) Init() error {
 }
 
 // Pull ...
-func (g *Git) Pull() error {
-	cmd := g.command("git", "pull", g.URL.String()+".git")
+func (g *GitClient) Pull(uri string) error {
+	endpoint, err := g.Endpoint(uri)
+	if err != nil {
+		return err
+	}
+	cmd := g.command("git", "pull", endpoint+".git")
 
 	// Discard output to have zero chance of logging the access token.
 	cmd.Stdout = ioutil.Discard
@@ -71,8 +78,12 @@ func (g *Git) Pull() error {
 }
 
 // Fetch ...
-func (g *Git) Fetch(prNumber int) error {
-	cmd := g.command("git", "fetch", g.URL.String(), fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber)))
+func (g *GitClient) Fetch(uri string, prNumber int) error {
+	endpoint, err := g.Endpoint(uri)
+	if err != nil {
+		return err
+	}
+	cmd := g.command("git", "fetch", endpoint, fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber)))
 
 	// Discard output to have zero chance of logging the access token.
 	cmd.Stdout = ioutil.Discard
@@ -85,7 +96,7 @@ func (g *Git) Fetch(prNumber int) error {
 }
 
 // Checkout ...
-func (g *Git) Checkout(name string) error {
+func (g *GitClient) Checkout(name string) error {
 	if err := g.command("git", "checkout", "-b", name).Run(); err != nil {
 		return fmt.Errorf("failed to checkout new branch: %s", err)
 	}
@@ -93,7 +104,7 @@ func (g *Git) Checkout(name string) error {
 }
 
 // Merge ...
-func (g *Git) Merge(sha string) error {
+func (g *GitClient) Merge(sha string) error {
 	if err := g.command("git", "merge", sha, "--no-stat").Run(); err != nil {
 		return fmt.Errorf("merge failed: %s", err)
 	}
@@ -101,7 +112,7 @@ func (g *Git) Merge(sha string) error {
 }
 
 // RevParse retrieves the SHA of the given branch.
-func (g *Git) RevParse(branch string) (string, error) {
+func (g *GitClient) RevParse(branch string) (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--verify", branch)
 	cmd.Dir = g.Directory
 	sha, err := cmd.CombinedOutput()
@@ -109,4 +120,14 @@ func (g *Git) RevParse(branch string) (string, error) {
 		return "", err
 	}
 	return strings.TrimSpace(string(sha)), nil
+}
+
+// Endpoint takes an uri and produces an endpoint with the login information baked in.
+func (g *GitClient) Endpoint(uri string) (string, error) {
+	endpoint, err := url.Parse(uri)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse commit url: %s", err)
+	}
+	endpoint.User = url.UserPassword("x-oauth-basic", g.AccessToken)
+	return endpoint.String(), nil
 }

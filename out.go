@@ -1,27 +1,22 @@
-package out
+package resource
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-
-	"github.com/itsdalmo/github-pr-resource/src/manager"
-	"github.com/itsdalmo/github-pr-resource/src/models"
+	"strings"
 )
 
-// Run (business logic)
-func Run(request Request, inputDir string) (*Response, error) {
-	if err := request.Source.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid configuration: %s", err)
-	}
+// Put (business logic)
+func Put(request PutRequest, manager Github, inputDir string) (*PutResponse, error) {
 	if err := request.Params.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid parameters: %s", err)
 	}
 	path := filepath.Join(inputDir, request.Params.Path, ".git", "resource")
 
 	// Version available after a GET step.
-	var version models.Version
+	var version Version
 	content, err := ioutil.ReadFile(filepath.Join(path, "version.json"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read version from path: %s", err)
@@ -31,7 +26,7 @@ func Run(request Request, inputDir string) (*Response, error) {
 	}
 
 	// Metadata available after a GET step.
-	var metadata models.Metadata
+	var metadata Metadata
 	content, err = ioutil.ReadFile(filepath.Join(path, "metadata.json"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read metadata from path: %s", err)
@@ -40,21 +35,16 @@ func Run(request Request, inputDir string) (*Response, error) {
 		return nil, fmt.Errorf("failed to unmarshal metadata from file: %s", err)
 	}
 
-	m, err := manager.NewGithubManager(&request.Source)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create manager: %s", err)
-	}
-
 	// Set status if specified
 	if status := request.Params.Status; status != "" {
-		if err := m.UpdateCommitStatus(version.Commit, request.Params.Context, status); err != nil {
+		if err := manager.UpdateCommitStatus(version.Commit, request.Params.Context, status); err != nil {
 			return nil, fmt.Errorf("failed to set status: %s", err)
 		}
 	}
 
 	// Set comment if specified
 	if comment := request.Params.Comment; comment != "" {
-		err = m.PostComment(version.PR, comment)
+		err = manager.PostComment(version.PR, comment)
 		if err != nil {
 			return nil, fmt.Errorf("failed to post comment: %s", err)
 		}
@@ -69,15 +59,60 @@ func Run(request Request, inputDir string) (*Response, error) {
 		}
 		comment := string(content)
 		if comment != "" {
-			err = m.PostComment(version.PR, comment)
+			err = manager.PostComment(version.PR, comment)
 			if err != nil {
 				return nil, fmt.Errorf("failed to post comment: %s", err)
 			}
 		}
 	}
 
-	return &Response{
+	return &PutResponse{
 		Version:  version,
 		Metadata: metadata,
 	}, nil
+}
+
+// PutRequest ...
+type PutRequest struct {
+	Source Source        `json:"source"`
+	Params PutParameters `json:"params"`
+}
+
+// PutResponse ...
+type PutResponse struct {
+	Version  Version  `json:"version"`
+	Metadata Metadata `json:"metadata,omitempty"`
+}
+
+// PutParameters for the resource.
+type PutParameters struct {
+	Path        string `json:"path"`
+	Context     string `json:"context"`
+	Status      string `json:"status"`
+	CommentFile string `json:"comment_file"`
+	Comment     string `json:"comment"`
+}
+
+// Validate the put parameters.
+func (p *PutParameters) Validate() error {
+	if p.Status == "" {
+		return nil
+	}
+	// Make sure we are setting an allowed status
+	var allowedStatus bool
+
+	status := strings.ToLower(p.Status)
+	allowed := []string{"success", "pending", "failure", "error"}
+
+	for _, a := range allowed {
+		if status == a {
+			allowedStatus = true
+		}
+	}
+
+	if !allowedStatus {
+		return fmt.Errorf("unknown status: %s", p.Status)
+	}
+
+	return nil
 }

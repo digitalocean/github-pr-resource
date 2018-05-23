@@ -1,27 +1,17 @@
-package check
+package resource
 
 import (
 	"fmt"
 	"regexp"
 	"sort"
 
-	"github.com/itsdalmo/github-pr-resource/src/manager"
-	"github.com/itsdalmo/github-pr-resource/src/models"
-	glob "github.com/ryanuber/go-glob"
+	"github.com/ryanuber/go-glob"
 )
 
-// Run (business logic)
-func Run(request Request) (Response, error) {
-	var response Response
+// Check (business logic)
+func Check(request CheckRequest, manager Github) (CheckResponse, error) {
+	var response CheckResponse
 
-	if err := request.Source.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid configuration: %s", err)
-	}
-
-	manager, err := manager.NewGithubManager(&request.Source)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create manager: %s", err)
-	}
 	pulls, err := manager.ListOpenPullRequests()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last commits: %s", err)
@@ -52,34 +42,28 @@ Loop:
 			}
 		}
 
-		// Skip version if none of the patterns match any files.
+		// Skip version if no files match the specified paths.
 		if len(request.Source.Paths) > 0 {
-			var keep bool
+			var wanted []string
 			for _, pattern := range request.Source.Paths {
-				if AnyFilesMatch(files, pattern) {
-					keep = true
-					break
-				}
+				wanted = append(wanted, FilterPath(files, pattern)...)
 			}
-			if !keep {
+			if len(wanted) == 0 {
 				continue Loop
 			}
 		}
 
-		// Skip version any pattern matches all of the files.
+		// Skip version if all files are ignored.
 		if len(request.Source.IgnorePaths) > 0 {
-			var ignore bool
+			wanted := files
 			for _, pattern := range request.Source.IgnorePaths {
-				if AllFilesMatch(files, pattern) {
-					ignore = true
-					break
-				}
+				wanted = FilterIgnorePath(wanted, pattern)
 			}
-			if ignore {
+			if len(wanted) == 0 {
 				continue Loop
 			}
 		}
-		response = append(response, models.NewVersion(p))
+		response = append(response, NewVersion(p))
 	}
 
 	// Sort the commits by date
@@ -91,7 +75,7 @@ Loop:
 	}
 	// If there are new versions and no previous = return just the latest
 	if len(response) != 0 && request.Version.PR == "" {
-		response = Response{response[len(response)-1]}
+		response = CheckResponse{response[len(response)-1]}
 	}
 	return response, nil
 }
@@ -102,30 +86,45 @@ func ContainsSkipCI(s string) bool {
 	return re.MatchString(s)
 }
 
-// AllFilesMatch returns true if all files match the glob.
-func AllFilesMatch(files []string, pattern string) bool {
-	// If there are no files changed in a commit there is nothing to ignore
-	if len(files) == 0 {
-		return false
-	}
+// FilterIgnorePath ...
+func FilterIgnorePath(files []string, pattern string) []string {
+	var out []string
 	for _, file := range files {
 		if !glob.Glob(pattern, file) {
-			return false
+			out = append(out, file)
 		}
 	}
-	return true
+	return out
 }
 
-// AnyFilesMatch returns true if ANY files match the glob.
-func AnyFilesMatch(files []string, pattern string) bool {
-	// If there are no files in a commit they cannot possibly match the glob.
-	if len(files) == 0 {
-		return false
-	}
+// FilterPath ...
+func FilterPath(files []string, pattern string) []string {
+	var out []string
 	for _, file := range files {
 		if glob.Glob(pattern, file) {
-			return true
+			out = append(out, file)
 		}
 	}
-	return false
+	return out
+}
+
+// CheckRequest ...
+type CheckRequest struct {
+	Source  Source  `json:"source"`
+	Version Version `json:"version"`
+}
+
+// CheckResponse ...
+type CheckResponse []Version
+
+func (r CheckResponse) Len() int {
+	return len(r)
+}
+
+func (r CheckResponse) Less(i, j int) bool {
+	return r[j].PushedDate.After(r[i].PushedDate)
+}
+
+func (r CheckResponse) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
 }
