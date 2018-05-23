@@ -35,14 +35,14 @@ func TestGet(t *testing.T) {
 				AccessToken: "oauthtoken",
 			},
 			version: resource.Version{
-				PR:         "pr1",
-				Commit:     "commit1",
-				PushedDate: time.Time{},
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{},
 			pullRequest:    createTestPR(1),
 			commit:         createTestCommit(1),
-			versionString:  `{"pr":"pr1","commit":"commit1","pushed":"0001-01-01T00:00:00Z"}`,
+			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_sha","value":"oid1"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
 		},
 	}
@@ -114,10 +114,10 @@ func createTestCommit(count int) resource.CommitObject {
 	d := time.Now().AddDate(0, 0, -count)
 
 	return resource.CommitObject{
-		ID:         fmt.Sprintf("commit%s", n),
-		OID:        fmt.Sprintf("oid%s", n),
-		PushedDate: githubv4.DateTime{Time: d},
-		Message:    fmt.Sprintf("commit message%s", n),
+		ID:            fmt.Sprintf("commit%s", n),
+		OID:           fmt.Sprintf("oid%s", n),
+		CommittedDate: githubv4.DateTime{Time: d},
+		Message:       fmt.Sprintf("commit message%s", n),
 		Author: struct{ User struct{ Login string } }{
 			User: struct{ Login string }{
 				Login: fmt.Sprintf("login%s", n),

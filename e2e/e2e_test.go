@@ -16,10 +16,10 @@ import (
 var (
 	targetCommitID      = "MDY6Q29tbWl0MTMyNTc2MjQ1OmE1MTE0ZjZhYjg5ZjRiNzM2NjU1NjQyYTExZThkMTVjZTM2M2Q4ODI="
 	targetPullRequestID = "MDExOlB1bGxSZXF1ZXN0MTg3Mzg4MDE0"
-	targetDateTime      = time.Date(2018, time.May, 11, 8, 43, 58, 0, time.UTC)
+	targetDateTime      = time.Date(2018, time.May, 11, 8, 43, 48, 0, time.UTC)
 	latestCommitID      = "MDY6Q29tbWl0MTMyNTc2MjQ1Ojg5MGE3ZTRmMGQ1YjA1YmRhOGVhMjFiOTFmNDYwNGUzZTAzMTM1ODE="
 	latestPullRequestID = "MDExOlB1bGxSZXF1ZXN0MTg3Nzg4NjAy"
-	latestDateTime      = time.Date(2018, time.May, 14, 10, 52, 12, 0, time.UTC)
+	latestDateTime      = time.Date(2018, time.May, 14, 10, 51, 58, 0, time.UTC)
 )
 
 func TestCheckE2E(t *testing.T) {
@@ -38,7 +38,7 @@ func TestCheckE2E(t *testing.T) {
 			},
 			version: resource.Version{},
 			expected: resource.CheckResponse{
-				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
+				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, CommittedDate: latestDateTime},
 			},
 		},
 
@@ -48,9 +48,9 @@ func TestCheckE2E(t *testing.T) {
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 			},
-			version: resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
+			version: resource.Version{PR: latestPullRequestID, Commit: latestCommitID, CommittedDate: latestDateTime},
 			expected: resource.CheckResponse{
-				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
+				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, CommittedDate: latestDateTime},
 			},
 		},
 
@@ -60,9 +60,9 @@ func TestCheckE2E(t *testing.T) {
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 			},
-			version: resource.Version{PR: targetPullRequestID, Commit: targetCommitID, PushedDate: targetDateTime},
+			version: resource.Version{PR: targetPullRequestID, Commit: targetCommitID, CommittedDate: targetDateTime},
 			expected: resource.CheckResponse{
-				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
+				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, CommittedDate: latestDateTime},
 			},
 		},
 
@@ -75,7 +75,7 @@ func TestCheckE2E(t *testing.T) {
 			},
 			version: resource.Version{},
 			expected: resource.CheckResponse{
-				resource.Version{PR: targetPullRequestID, Commit: targetCommitID, PushedDate: targetDateTime},
+				resource.Version{PR: targetPullRequestID, Commit: targetCommitID, CommittedDate: targetDateTime},
 			},
 		},
 
@@ -88,7 +88,7 @@ func TestCheckE2E(t *testing.T) {
 			},
 			version: resource.Version{},
 			expected: resource.CheckResponse{
-				resource.Version{PR: targetPullRequestID, Commit: targetCommitID, PushedDate: targetDateTime},
+				resource.Version{PR: targetPullRequestID, Commit: targetCommitID, CommittedDate: targetDateTime},
 			},
 		},
 
@@ -102,7 +102,7 @@ func TestCheckE2E(t *testing.T) {
 			},
 			version: resource.Version{},
 			expected: resource.CheckResponse{
-				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, PushedDate: latestDateTime},
+				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, CommittedDate: latestDateTime},
 			},
 		},
 	}
@@ -153,14 +153,14 @@ func TestGetAndPutE2E(t *testing.T) {
 				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
 			},
 			version: resource.Version{
-				PR:         targetPullRequestID,
-				Commit:     targetCommitID,
-				PushedDate: time.Time{},
+				PR:            targetPullRequestID,
+				Commit:        targetCommitID,
+				CommittedDate: time.Time{},
 			},
 			directory:      dir,
 			getParameters:  resource.GetParameters{},
 			putParameters:  resource.PutParameters{},
-			versionString:  `{"pr":"MDExOlB1bGxSZXF1ZXN0MTg3Mzg4MDE0","commit":"MDY6Q29tbWl0MTMyNTc2MjQ1OmE1MTE0ZjZhYjg5ZjRiNzM2NjU1NjQyYTExZThkMTVjZTM2M2Q4ODI=","pushed":"0001-01-01T00:00:00Z"}`,
+			versionString:  `{"pr":"MDExOlB1bGxSZXF1ZXN0MTg3Mzg4MDE0","commit":"MDY6Q29tbWl0MTMyNTc2MjQ1OmE1MTE0ZjZhYjg5ZjRiNzM2NjU1NjQyYTExZThkMTVjZTM2M2Q4ODI=","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"4"},{"name":"url","value":"https://github.com/itsdalmo/test-repository/pull/4"},{"name":"head_sha","value":"a5114f6ab89f4b736655642a11e8d15ce363d882"},{"name":"base_sha","value":"93eeeedb8a16e6662062d1eca5655108977cc59a"},{"name":"message","value":"Push 2."},{"name":"author","value":"itsdalmo"}]`,
 		},
 	}
