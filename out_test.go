@@ -34,7 +34,7 @@ func TestPut(t *testing.T) {
 			},
 			parameters:  resource.PutParameters{},
 			pullRequest: createTestPR(1),
-			commit:      createTestCommit(1),
+			commit:      createTestCommit(1, false),
 		},
 
 		{
@@ -52,7 +52,7 @@ func TestPut(t *testing.T) {
 				Status: "success",
 			},
 			pullRequest: createTestPR(1),
-			commit:      createTestCommit(1),
+			commit:      createTestCommit(1, false),
 		},
 
 		{
@@ -71,7 +71,7 @@ func TestPut(t *testing.T) {
 				Context: "build",
 			},
 			pullRequest: createTestPR(1),
-			commit:      createTestCommit(1),
+			commit:      createTestCommit(1, false),
 		},
 
 		{
@@ -89,7 +89,7 @@ func TestPut(t *testing.T) {
 				Comment: "comment",
 			},
 			pullRequest: createTestPR(1),
-			commit:      createTestCommit(1),
+			commit:      createTestCommit(1, false),
 		},
 	}
 

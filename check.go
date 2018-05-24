@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 
 	"github.com/ryanuber/go-glob"
 )
@@ -16,15 +17,22 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last commits: %s", err)
 	}
+	var disableSkipCI bool
+	if request.Source.DisableCISkip != "" {
+		disableSkipCI, err = strconv.ParseBool(request.Source.DisableCISkip)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse disable_ci_skip: %s", err)
+		}
+	}
 
 Loop:
 	for _, p := range pulls {
 		// [ci skip]/[skip ci] in Pull request title
-		if request.Source.DisableCISkip != "true" && ContainsSkipCI(p.Title) {
+		if !disableSkipCI && ContainsSkipCI(p.Title) {
 			continue
 		}
 		// [ci skip]/[skip ci] in Commit message
-		if request.Source.DisableCISkip != "true" && ContainsSkipCI(p.Tip.Message) {
+		if !disableSkipCI && ContainsSkipCI(p.Tip.Message) {
 			continue
 		}
 		// Filter out commits that are too old.

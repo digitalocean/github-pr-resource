@@ -41,7 +41,7 @@ func TestGet(t *testing.T) {
 			},
 			parameters:     resource.GetParameters{},
 			pullRequest:    createTestPR(1),
-			commit:         createTestCommit(1),
+			commit:         createTestCommit(1, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_sha","value":"oid1"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
 		},
@@ -109,15 +109,19 @@ func createTestPR(count int) resource.PullRequestObject {
 	}
 }
 
-func createTestCommit(count int) resource.CommitObject {
+func createTestCommit(count int, skipCI bool) resource.CommitObject {
 	n := strconv.Itoa(count)
 	d := time.Now().AddDate(0, 0, -count)
+	m := fmt.Sprintf("commit message%s", n)
+	if skipCI {
+		m = "[skip ci]" + m
+	}
 
 	return resource.CommitObject{
 		ID:            fmt.Sprintf("commit%s", n),
 		OID:           fmt.Sprintf("oid%s", n),
 		CommittedDate: githubv4.DateTime{Time: d},
-		Message:       fmt.Sprintf("commit message%s", n),
+		Message:       m,
 		Author: struct{ User struct{ Login string } }{
 			User: struct{ Login string }{
 				Login: fmt.Sprintf("login%s", n),
