@@ -38,6 +38,13 @@ A version is represented as follows:
 
 If several commits are pushed to a given PR at the same time, the last commit will be the new version.
 
+**Note on webhooks:**
+This resource does not implement any caching, so it should work well with webhooks (should be subscribed to `push` events).
+One thing to keep in mind however, is that pull requests that are opened from a fork and commits to said fork will not
+generate notifications over the webhook. So if you have a repository with little traffic and expect pull requests from forks,
+ you'll need to discover those versions with `check_every: 1m` for instance. `check` in this resource is not a costly operation,
+ so normally you should not have to worry about the rate limit.
+
 #### `get`
 
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
