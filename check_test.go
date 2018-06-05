@@ -87,7 +87,7 @@ func TestCheck(t *testing.T) {
 			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: "oauthtoken",
-				Paths:       []string{"terraform/**/*.tf"},
+				Paths:       []string{"terraform/*/*.tf", "terraform/*/*/*.tf"},
 			},
 			version:      resource.NewVersion(testPullRequests[3]),
 			pullRequests: testPullRequests,
@@ -232,12 +232,11 @@ func TestFilterPath(t *testing.T) {
 			},
 			want: []string{
 				"file1.txt",
-				"test/file2.txt",
 			},
 		},
 		{
-			description: "works with doublestar",
-			pattern:     "**/*.txt",
+			description: "works with wildcard",
+			pattern:     "test/*",
 			files: []string{
 				"file1.txt",
 				"test/file2.txt",
@@ -248,7 +247,7 @@ func TestFilterPath(t *testing.T) {
 		},
 		{
 			description: "excludes unmatched files",
-			pattern:     "*.txt",
+			pattern:     "*/*.txt",
 			files: []string{
 				"test/file1.go",
 				"test/file2.txt",
@@ -260,7 +259,10 @@ func TestFilterPath(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.description, func(t *testing.T) {
-			got := resource.FilterPath(tc.files, tc.pattern)
+			got, err := resource.FilterPath(tc.files, tc.pattern)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
 			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%s\n", got, tc.want)
 			}
@@ -282,11 +284,13 @@ func TestFilterIgnorePath(t *testing.T) {
 				"file1.txt",
 				"test/file2.txt",
 			},
-			want: nil,
+			want: []string{
+				"test/file2.txt",
+			},
 		},
 		{
-			description: "works with doublestar",
-			pattern:     "**/*.txt",
+			description: "works with wildcard",
+			pattern:     "test/*",
 			files: []string{
 				"file1.txt",
 				"test/file2.txt",
@@ -297,7 +301,7 @@ func TestFilterIgnorePath(t *testing.T) {
 		},
 		{
 			description: "includes unmatched files",
-			pattern:     "*.txt",
+			pattern:     "*/*.txt",
 			files: []string{
 				"test/file1.go",
 				"test/file2.txt",
@@ -309,7 +313,10 @@ func TestFilterIgnorePath(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.description, func(t *testing.T) {
-			got := resource.FilterIgnorePath(tc.files, tc.pattern)
+			got, err := resource.FilterIgnorePath(tc.files, tc.pattern)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
 			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%s\n", got, tc.want)
 			}
