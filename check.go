@@ -2,11 +2,10 @@ package resource
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
-
-	"github.com/ryanuber/go-glob"
 )
 
 // Check (business logic)
@@ -54,7 +53,11 @@ Loop:
 		if len(request.Source.Paths) > 0 {
 			var wanted []string
 			for _, pattern := range request.Source.Paths {
-				wanted = append(wanted, FilterPath(files, pattern)...)
+				w, err := FilterPath(files, pattern)
+				if err != nil {
+					return nil, fmt.Errorf("path match failed: %s", err)
+				}
+				wanted = append(wanted, w...)
 			}
 			if len(wanted) == 0 {
 				continue Loop
@@ -65,7 +68,10 @@ Loop:
 		if len(request.Source.IgnorePaths) > 0 {
 			wanted := files
 			for _, pattern := range request.Source.IgnorePaths {
-				wanted = FilterIgnorePath(wanted, pattern)
+				wanted, err = FilterIgnorePath(wanted, pattern)
+				if err != nil {
+					return nil, fmt.Errorf("ignore path match failed: %s", err)
+				}
 			}
 			if len(wanted) == 0 {
 				continue Loop
@@ -95,25 +101,33 @@ func ContainsSkipCI(s string) bool {
 }
 
 // FilterIgnorePath ...
-func FilterIgnorePath(files []string, pattern string) []string {
+func FilterIgnorePath(files []string, pattern string) ([]string, error) {
 	var out []string
 	for _, file := range files {
-		if !glob.Glob(pattern, file) {
+		match, err := filepath.Match(pattern, file)
+		if err != nil {
+			return nil, err
+		}
+		if !match {
 			out = append(out, file)
 		}
 	}
-	return out
+	return out, nil
 }
 
 // FilterPath ...
-func FilterPath(files []string, pattern string) []string {
+func FilterPath(files []string, pattern string) ([]string, error) {
 	var out []string
 	for _, file := range files {
-		if glob.Glob(pattern, file) {
+		match, err := filepath.Match(pattern, file)
+		if err != nil {
+			return nil, err
+		}
+		if match {
 			out = append(out, file)
 		}
 	}
-	return out
+	return out, nil
 }
 
 // CheckRequest ...

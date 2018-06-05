@@ -26,12 +26,6 @@
   revision = "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
 
 [[projects]]
-  name = "github.com/ryanuber/go-glob"
-  packages = ["."]
-  revision = "572520ed46dbddaed19ea3d9541bdd0494163693"
-  version = "v0.1"
-
-[[projects]]
   branch = "master"
   name = "github.com/shurcooL/githubv4"
   packages = ["."]
@@ -88,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "68d8b7869eeaca841b270689f0d33960a12f0f4813f98cf92c13fef1601104a3"
+  inputs-digest = "a5e2f708a3903fadd7bf26609d9079ffe4a151ec1d4725eccb53a739b1b2b6d7"
   solver-name = "gps-cdcl"
   solver-version = 1
