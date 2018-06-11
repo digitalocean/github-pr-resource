@@ -29,12 +29,12 @@ Note: If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way
 
 #### `check`
 
-Produces new versions for all commits (after the last version) ordered by the push date.
+Produces new versions for all commits (after the last version) ordered by the committed date.
 A version is represented as follows:
 
-- `pr`: The subject ID of the pull request.
-- `commit`: The subject ID of the last commit on the Pullrequest.
-- `pushed`: Timestamp of when the commit was pushed (and webhook triggered). Used to filter subsequent checks.
+- `pr`: The pull request number.
+- `commit`: The commit SHA.
+- `committed`: Timestamp of when the commit was committed. Used to filter subsequent checks.
 
 If several commits are pushed to a given PR at the same time, the last commit will be the new version.
 
@@ -127,13 +127,13 @@ jobs:
 The Github API(s) have a rate limit of 5000 requests per hour (per user). This resource will incur the following costs:
 
 - `check`: Minimum 1, max 1 per 100th *open* pull request.
-- `in`: Fixed cost of 2. Fetches PR and Commit from global ID (passed in via version).
+- `in`: Fixed cost of 1. Fetches the pull request at the given commit.
 - `out`: Minimum 1, max 3 (1 for each of `status`, `comment` and `comment_file`).
 
 E.g., typical use for a repository with 125 open pull requests will incur the following costs for every commit:
 
 - `check`: 2 (paginate 125 PR's with 100 per page)
-- `in`: 2 (fetch commit and PR from global ID's)
+- `in`: 1 (fetch the pull request at the given commit ref)
 - `out`: 1 (set status on the commit)
 
-With a rate limit of 5000 per hour, it could handle 1000 commits between all of the 125 open pull requests in the span of that hour.
+With a rate limit of 5000 per hour, it could handle 1250 commits between all of the 125 open pull requests in the span of that hour.
