@@ -33,30 +33,17 @@ func (m *MockGithub) EXPECT() *MockGithubMockRecorder {
 	return m.recorder
 }
 
-// GetCommitByID mocks base method
-func (m *MockGithub) GetCommitByID(arg0 string) (*github_pr_resource.CommitObject, error) {
-	ret := m.ctrl.Call(m, "GetCommitByID", arg0)
-	ret0, _ := ret[0].(*github_pr_resource.CommitObject)
+// GetPullRequest mocks base method
+func (m *MockGithub) GetPullRequest(arg0, arg1 string) (*github_pr_resource.PullRequest, error) {
+	ret := m.ctrl.Call(m, "GetPullRequest", arg0, arg1)
+	ret0, _ := ret[0].(*github_pr_resource.PullRequest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetCommitByID indicates an expected call of GetCommitByID
-func (mr *MockGithubMockRecorder) GetCommitByID(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCommitByID", reflect.TypeOf((*MockGithub)(nil).GetCommitByID), arg0)
-}
-
-// GetPullRequestByID mocks base method
-func (m *MockGithub) GetPullRequestByID(arg0 string) (*github_pr_resource.PullRequestObject, error) {
-	ret := m.ctrl.Call(m, "GetPullRequestByID", arg0)
-	ret0, _ := ret[0].(*github_pr_resource.PullRequestObject)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPullRequestByID indicates an expected call of GetPullRequestByID
-func (mr *MockGithubMockRecorder) GetPullRequestByID(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPullRequestByID", reflect.TypeOf((*MockGithub)(nil).GetPullRequestByID), arg0)
+// GetPullRequest indicates an expected call of GetPullRequest
+func (mr *MockGithubMockRecorder) GetPullRequest(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPullRequest", reflect.TypeOf((*MockGithub)(nil).GetPullRequest), arg0, arg1)
 }
 
 // ListModifiedFiles mocks base method

@@ -23,8 +23,7 @@ func TestGet(t *testing.T) {
 		source         resource.Source
 		version        resource.Version
 		parameters     resource.GetParameters
-		pullRequest    resource.PullRequestObject
-		commit         resource.CommitObject
+		pullRequest    *resource.PullRequest
 		versionString  string
 		metadataString string
 	}{
@@ -40,8 +39,7 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1),
-			commit:         createTestCommit(1, false),
+			pullRequest:    createTestPR(1, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_sha","value":"oid1"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
 		},
@@ -53,8 +51,7 @@ func TestGet(t *testing.T) {
 			defer ctrl.Finish()
 
 			github := mocks.NewMockGithub(ctrl)
-			github.EXPECT().GetPullRequestByID(tc.version.PR).Times(1).Return(&tc.pullRequest, nil)
-			github.EXPECT().GetCommitByID(tc.version.Commit).Times(1).Return(&tc.commit, nil)
+			github.EXPECT().GetPullRequest(tc.version.PR, tc.version.Commit).Times(1).Return(tc.pullRequest, nil)
 
 			git := mocks.NewMockGit(ctrl)
 			gomock.InOrder(
@@ -63,7 +60,7 @@ func TestGet(t *testing.T) {
 				git.EXPECT().Fetch(tc.pullRequest.Repository.URL, tc.pullRequest.Number).Times(1).Return(nil),
 				git.EXPECT().RevParse(tc.pullRequest.BaseRefName).Times(1).Return("sha", nil),
 				git.EXPECT().Checkout("sha").Times(1).Return(nil),
-				git.EXPECT().Merge(tc.commit.OID).Times(1).Return(nil),
+				git.EXPECT().Merge(tc.pullRequest.Tip.OID).Times(1).Return(nil),
 			)
 
 			dir := createTestDirectory(t)
@@ -93,23 +90,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func createTestPR(count int) resource.PullRequestObject {
-	n := strconv.Itoa(count)
-
-	return resource.PullRequestObject{
-		ID:          fmt.Sprintf("pr%s", n),
-		Number:      count,
-		Title:       fmt.Sprintf("pr%s title", n),
-		URL:         fmt.Sprintf("pr%s url", n),
-		BaseRefName: "master",
-		HeadRefName: fmt.Sprintf("pr%s", n),
-		Repository: struct{ URL string }{
-			URL: fmt.Sprintf("repo%s url", n),
-		},
-	}
-}
-
-func createTestCommit(count int, skipCI bool) resource.CommitObject {
+func createTestPR(count int, skipCI bool) *resource.PullRequest {
 	n := strconv.Itoa(count)
 	d := time.Now().AddDate(0, 0, -count)
 	m := fmt.Sprintf("commit message%s", n)
@@ -117,14 +98,27 @@ func createTestCommit(count int, skipCI bool) resource.CommitObject {
 		m = "[skip ci]" + m
 	}
 
-	return resource.CommitObject{
-		ID:            fmt.Sprintf("commit%s", n),
-		OID:           fmt.Sprintf("oid%s", n),
-		CommittedDate: githubv4.DateTime{Time: d},
-		Message:       m,
-		Author: struct{ User struct{ Login string } }{
-			User: struct{ Login string }{
-				Login: fmt.Sprintf("login%s", n),
+	return &resource.PullRequest{
+		PullRequestObject: resource.PullRequestObject{
+			ID:          fmt.Sprintf("pr%s", n),
+			Number:      count,
+			Title:       fmt.Sprintf("pr%s title", n),
+			URL:         fmt.Sprintf("pr%s url", n),
+			BaseRefName: "master",
+			HeadRefName: fmt.Sprintf("pr%s", n),
+			Repository: struct{ URL string }{
+				URL: fmt.Sprintf("repo%s url", n),
+			},
+		},
+		Tip: resource.CommitObject{
+			ID:            fmt.Sprintf("commit%s", n),
+			OID:           fmt.Sprintf("oid%s", n),
+			CommittedDate: githubv4.DateTime{Time: d},
+			Message:       m,
+			Author: struct{ User struct{ Login string } }{
+				User: struct{ Login string }{
+					Login: fmt.Sprintf("login%s", n),
+				},
 			},
 		},
 	}

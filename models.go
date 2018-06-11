@@ -2,6 +2,7 @@ package resource
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/shurcooL/githubv4"
@@ -59,8 +60,8 @@ type Version struct {
 // NewVersion constructs a new Version.
 func NewVersion(p *PullRequest) Version {
 	return Version{
-		PR:            p.ID,
-		Commit:        p.Tip.ID,
+		PR:            strconv.Itoa(p.Number),
+		Commit:        p.Tip.OID,
 		CommittedDate: p.Tip.CommittedDate.Time,
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -19,8 +20,7 @@ type Github interface {
 	ListOpenPullRequests() ([]*PullRequest, error)
 	ListModifiedFiles(int) ([]string, error)
 	PostComment(string, string) error
-	GetPullRequestByID(string) (*PullRequestObject, error)
-	GetCommitByID(string) (*CommitObject, error)
+	GetPullRequest(string, string) (*PullRequest, error)
 	UpdateCommitStatus(string, string, string) error
 }
 
@@ -180,48 +180,55 @@ func (m *GithubClient) PostComment(objectID, comment string) error {
 	return err
 }
 
-// GetPullRequestByID ...
-func (m *GithubClient) GetPullRequestByID(objectID string) (*PullRequestObject, error) {
+// GetPullRequest ...
+func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest, error) {
+	pr, err := strconv.Atoi(prNumber)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert pull request number to int: %s", err)
+	}
+
 	var query struct {
-		Node struct {
-			PullRequest PullRequestObject `graphql:"... on PullRequest"`
-		} `graphql:"node(id:$nodeId)"`
+		Repository struct {
+			PullRequest struct {
+				PullRequestObject
+				Commits struct {
+					Edges []struct {
+						Node struct {
+							Commit CommitObject
+						}
+					}
+				} `graphql:"commits(last:$commitsLast)"`
+			} `graphql:"pullRequest(number:$prNumber)"`
+		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
 	}
 
 	vars := map[string]interface{}{
-		"nodeId": githubv4.ID(objectID),
+		"repositoryOwner": githubv4.String(m.Owner),
+		"repositoryName":  githubv4.String(m.Repository),
+		"prNumber":        githubv4.Int(pr),
+		"commitsLast":     githubv4.Int(100),
 	}
+
+	// TODO: Pagination - in case someone pushes > 100 commits before the build has time to start :p
 	if err := m.V4.Query(context.TODO(), &query, vars); err != nil {
 		return nil, err
 	}
-	return &query.Node.PullRequest, nil
-}
-
-// GetCommitByID ...
-func (m *GithubClient) GetCommitByID(objectID string) (*CommitObject, error) {
-	var query struct {
-		Node struct {
-			Commit CommitObject `graphql:"... on Commit"`
-		} `graphql:"node(id:$nodeId)"`
+	for _, c := range query.Repository.PullRequest.Commits.Edges {
+		if c.Node.Commit.OID == commitRef {
+			// Return as soon as we find the correct ref.
+			return &PullRequest{
+				PullRequestObject: query.Repository.PullRequest.PullRequestObject,
+				Tip:               c.Node.Commit,
+			}, nil
+		}
 	}
 
-	vars := map[string]interface{}{
-		"nodeId": githubv4.ID(objectID),
-	}
-	if err := m.V4.Query(context.TODO(), &query, vars); err != nil {
-		return nil, err
-	}
-	return &query.Node.Commit, nil
+	// Return an error if the commit was not found
+	return nil, fmt.Errorf("commit with ref '%s' does not exist", commitRef)
 }
 
 // UpdateCommitStatus for a given commit (not supported by V4 API).
-func (m *GithubClient) UpdateCommitStatus(objectID, statusContext, status string) error {
-	commit, err := m.GetCommitByID(objectID)
-	if err != nil {
-		return err
-	}
-
-	// Format context
+func (m *GithubClient) UpdateCommitStatus(commitRef, statusContext, status string) error {
 	c := []string{"concourse-ci"}
 	if statusContext == "" {
 		c = append(c, "status")
@@ -236,11 +243,11 @@ func (m *GithubClient) UpdateCommitStatus(objectID, statusContext, status string
 		build = strings.Join([]string{build, "builds", os.Getenv("BUILD_ID")}, "/")
 	}
 
-	_, _, err = m.V3.Repositories.CreateStatus(
+	_, _, err := m.V3.Repositories.CreateStatus(
 		context.TODO(),
 		m.Owner,
 		m.Repository,
-		commit.OID,
+		commitRef,
 		&github.RepoStatus{
 			State:       github.String(strings.ToLower(status)),
 			TargetURL:   github.String(build),

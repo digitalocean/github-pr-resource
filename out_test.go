@@ -18,8 +18,7 @@ func TestPut(t *testing.T) {
 		source      resource.Source
 		version     resource.Version
 		parameters  resource.PutParameters
-		pullRequest resource.PullRequestObject
-		commit      resource.CommitObject
+		pullRequest *resource.PullRequest
 	}{
 		{
 			description: "put with no parameters does nothing",
@@ -33,8 +32,7 @@ func TestPut(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:  resource.PutParameters{},
-			pullRequest: createTestPR(1),
-			commit:      createTestCommit(1, false),
+			pullRequest: createTestPR(1, false),
 		},
 
 		{
@@ -51,8 +49,7 @@ func TestPut(t *testing.T) {
 			parameters: resource.PutParameters{
 				Status: "success",
 			},
-			pullRequest: createTestPR(1),
-			commit:      createTestCommit(1, false),
+			pullRequest: createTestPR(1, false),
 		},
 
 		{
@@ -70,8 +67,7 @@ func TestPut(t *testing.T) {
 				Status:  "failure",
 				Context: "build",
 			},
-			pullRequest: createTestPR(1),
-			commit:      createTestCommit(1, false),
+			pullRequest: createTestPR(1, false),
 		},
 
 		{
@@ -88,8 +84,7 @@ func TestPut(t *testing.T) {
 			parameters: resource.PutParameters{
 				Comment: "comment",
 			},
-			pullRequest: createTestPR(1),
-			commit:      createTestCommit(1, false),
+			pullRequest: createTestPR(1, false),
 		},
 	}
 
@@ -99,8 +94,7 @@ func TestPut(t *testing.T) {
 			defer ctrl.Finish()
 
 			github := mocks.NewMockGithub(ctrl)
-			github.EXPECT().GetPullRequestByID(tc.version.PR).Times(1).Return(&tc.pullRequest, nil)
-			github.EXPECT().GetCommitByID(tc.version.Commit).Times(1).Return(&tc.commit, nil)
+			github.EXPECT().GetPullRequest(tc.version.PR, tc.version.Commit).Times(1).Return(tc.pullRequest, nil)
 
 			git := mocks.NewMockGit(ctrl)
 			gomock.InOrder(
@@ -109,7 +103,7 @@ func TestPut(t *testing.T) {
 				git.EXPECT().Fetch(tc.pullRequest.Repository.URL, tc.pullRequest.Number).Times(1).Return(nil),
 				git.EXPECT().RevParse(tc.pullRequest.BaseRefName).Times(1).Return("sha", nil),
 				git.EXPECT().Checkout("sha").Times(1).Return(nil),
-				git.EXPECT().Merge(tc.commit.OID).Times(1).Return(nil),
+				git.EXPECT().Merge(tc.pullRequest.Tip.OID).Times(1).Return(nil),
 			)
 
 			dir := createTestDirectory(t)

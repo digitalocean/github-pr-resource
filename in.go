@@ -11,15 +11,10 @@ import (
 
 // Get (business logic)
 func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResponse, error) {
-	commit, err := github.GetCommitByID(request.Version.Commit)
+	pull, err := github.GetPullRequest(request.Version.PR, request.Version.Commit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
 	}
-	pr, err := github.GetPullRequestByID(request.Version.PR)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
-	}
-	pull := &PullRequest{PullRequestObject: *pr, Tip: *commit}
 
 	// Clone the repository and fetch the PR
 	if err := git.Init(); err != nil {
@@ -48,10 +43,10 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	var metadata Metadata
 	metadata.Add("pr", strconv.Itoa(pull.Number))
 	metadata.Add("url", pull.URL)
-	metadata.Add("head_sha", commit.OID)
+	metadata.Add("head_sha", pull.Tip.OID)
 	metadata.Add("base_sha", baseSHA)
-	metadata.Add("message", commit.Message)
-	metadata.Add("author", commit.Author.User.Login)
+	metadata.Add("message", pull.Tip.Message)
+	metadata.Add("author", pull.Tip.Author.User.Login)
 
 	// Write version and metadata for reuse in PUT
 	path := filepath.Join(outputDir, ".git", "resource")
