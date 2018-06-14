@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/itsdalmo/github-pr-resource"
-	"github.com/itsdalmo/github-pr-resource/mocks"
 	"github.com/shurcooL/githubv4"
+	"github.com/telia-oss/github-pr-resource"
+	"github.com/telia-oss/github-pr-resource/mocks"
 )
 
 func TestGet(t *testing.T) {

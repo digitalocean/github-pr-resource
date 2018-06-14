@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/itsdalmo/github-pr-resource"
+	"github.com/telia-oss/github-pr-resource"
 )
 
 var (

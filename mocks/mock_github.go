@@ -5,9 +5,10 @@
 package mocks
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	github_pr_resource "github.com/itsdalmo/github-pr-resource"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
+	github_pr_resource "github.com/telia-oss/github-pr-resource"
 )
 
 // MockGithub is a mock of Github interface

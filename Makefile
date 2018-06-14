@@ -1,6 +1,6 @@
 TARGET ?= darwin
 ARCH ?= amd64
-DOCKER_REPO=itsdalmo/github-pr-resource
+DOCKER_REPO=telia-oss/github-pr-resource
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 default: test

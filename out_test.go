@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/itsdalmo/github-pr-resource"
-	"github.com/itsdalmo/github-pr-resource/mocks"
+	"github.com/telia-oss/github-pr-resource"
+	"github.com/telia-oss/github-pr-resource/mocks"
 )
 
 func TestPut(t *testing.T) {

@@ -1,7 +1,7 @@
 ## Github PR resource
 
-[![Build Status](https://travis-ci.org/itsdalmo/github-pr-resource.svg?branch=master)](https://travis-ci.org/itsdalmo/github-pr-resource)
-[![Go Report Card](https://goreportcard.com/badge/github.com/itsdalmo/github-pr-resource)](https://goreportcard.com/report/github.com/itsdalmo/github-pr-resource)
+[![Build Status](https://travis-ci.org/telia-oss/github-pr-resource.svg?branch=master)](https://travis-ci.org/telia-oss/github-pr-resource)
+[![Go Report Card](https://goreportcard.com/badge/github.com/telia-oss/github-pr-resource)](https://goreportcard.com/report/github.com/telia-oss/github-pr-resource)
 
 A Concourse resource for pull requests on Github. Written in Go and based on the [Github V4 (GraphQL) API](https://developer.github.com/v4/object/commit/).
 Inspired by [the original](https://github.com/jtarchie/github-pullrequest-resource), with some important differences:
@@ -74,7 +74,7 @@ resource_types:
 - name: pull-request
   type: docker-image
   source:
-    repository: itsdalmo/github-pr-resource
+    repository: telia-oss/github-pr-resource
 
 resources:
 - name: pull-request
