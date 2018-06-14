@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/telia-oss/github-pr-resource.svg?branch=master)](https://travis-ci.org/telia-oss/github-pr-resource)
 [![Go Report Card](https://goreportcard.com/badge/github.com/telia-oss/github-pr-resource)](https://goreportcard.com/report/github.com/telia-oss/github-pr-resource)
+![Docker Automated build](https://img.shields.io/docker/automated/teliaoss/github-pr-resource.svg)
+
 
 A Concourse resource for pull requests on Github. Written in Go and based on the [Github V4 (GraphQL) API](https://developer.github.com/v4/object/commit/).
 Inspired by [the original](https://github.com/jtarchie/github-pullrequest-resource), with some important differences:
