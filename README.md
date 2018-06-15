@@ -76,7 +76,7 @@ resource_types:
 - name: pull-request
   type: docker-image
   source:
-    repository: telia-oss/github-pr-resource
+    repository: teliaoss/github-pr-resource
 
 resources:
 - name: pull-request
