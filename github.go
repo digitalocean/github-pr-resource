@@ -164,19 +164,21 @@ func (m *GithubClient) ListModifiedFiles(prNumber int) ([]string, error) {
 }
 
 // PostComment to a pull request or issue.
-func (m *GithubClient) PostComment(objectID, comment string) error {
-	var mutation struct {
-		AddComment struct {
-			Subject struct {
-				ID githubv4.ID
-			}
-		} `graphql:"addComment(input: $input)"`
+func (m *GithubClient) PostComment(prNumber, comment string) error {
+	pr, err := strconv.Atoi(prNumber)
+	if err != nil {
+		return fmt.Errorf("failed to convert pull request number to int: %s", err)
 	}
-	input := githubv4.AddCommentInput{
-		SubjectID: objectID,
-		Body:      githubv4.String(comment),
-	}
-	err := m.V4.Mutate(context.TODO(), &mutation, input, nil)
+
+	_, _, err = m.V3.Issues.CreateComment(
+		context.TODO(),
+		m.Owner,
+		m.Repository,
+		pr,
+		&github.IssueComment{
+			Body: github.String(comment),
+		},
+	)
 	return err
 }
 
