@@ -63,6 +63,18 @@ empty commit to the PR*.
 | --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------- |
 | `skip_download` | No       | `true`  | Use with `get_params` in a `put` step to do nothing on the implicit get.                            |
 
+When specifying `skip_download` the pull request volume mounted to subsequent tasks will be empty, which is a problem when you set e.g. the pending
+status before running the actual tests. The workaround for this is to use an alias for the `put` (see https://github.com/telia-oss/github-pr-resource/issues/32 for more details):
+
+```yaml
+put: update-status <-- Use an alias for the pull-request resource
+resource: pull-request
+params:
+    path: pull-request 
+    status: pending 
+get_params: {skip_download: true}
+```
+
 #### `put`
 
 |   Parameter    | Required |         Example         |                                             Description                                             |
