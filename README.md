@@ -59,6 +59,10 @@ the base, Concourse will reuse the volume (i.e. not trigger a new `get`) if it s
 unexpected results (#5). As such, re-testing a PR against a newer version of the base is best done by *pushing an 
 empty commit to the PR*.
 
+|   Parameter     | Required | Example |                                             Description                                             |
+| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `skip_download` | No       | `true`  | Use with `get_params` in a `put` step to do nothing on the implicit get.                            |
+
 #### `put`
 
 |   Parameter    | Required |         Example         |                                             Description                                             |

@@ -11,6 +11,16 @@ import (
 
 // Get (business logic)
 func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResponse, error) {
+	if request.Params.SkipDownload != "" {
+		skipDownload, err := strconv.ParseBool(request.Params.SkipDownload)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse skip_download: %s", err)
+		}
+		if skipDownload {
+			return &GetResponse{Version: request.Version}, nil
+		}
+	}
+
 	pull, err := github.GetPullRequest(request.Version.PR, request.Version.Commit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
@@ -75,7 +85,9 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 }
 
 // GetParameters ...
-type GetParameters struct{}
+type GetParameters struct {
+	SkipDownload string `json:"skip_download"`
+}
 
 // GetRequest ...
 type GetRequest struct {
