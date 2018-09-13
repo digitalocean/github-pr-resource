@@ -49,22 +49,18 @@ generate notifications over the webhook. So if you have a repository with little
 
 #### `get`
 
+|   Parameter     | Required | Example |                                             Description                                             |
+| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `skip_download` | No       | `true`  | Use with `get_params` in a `put` step to do nothing on the implicit get.                            |
+
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
 into master. This ensures that we are both testing and setting status on the exact commit that was requested in
 input. Because the base of the PR is not locked to a specific commit in versions emitted from `check`, a fresh
 `get` will always use the latest commit in master and *report the SHA of said commit in the metadata*.
 
-Note that, should you retrigger a build in the hopes of testing the last commit to a PR against a newer version of
-the base, Concourse will reuse the volume (i.e. not trigger a new `get`) if it still exists, which can produce
-unexpected results (#5). As such, re-testing a PR against a newer version of the base is best done by *pushing an 
-empty commit to the PR*.
-
-|   Parameter     | Required | Example |                                             Description                                             |
-| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `skip_download` | No       | `true`  | Use with `get_params` in a `put` step to do nothing on the implicit get.                            |
-
-When specifying `skip_download` the pull request volume mounted to subsequent tasks will be empty, which is a problem when you set e.g. the pending
-status before running the actual tests. The workaround for this is to use an alias for the `put` (see https://github.com/telia-oss/github-pr-resource/issues/32 for more details):
+When specifying `skip_download` the pull request volume mounted to subsequent tasks will be empty, which is a problem 
+when you set e.g. the pending status before running the actual tests. The workaround for this is to use an alias for 
+the `put` (see https://github.com/telia-oss/github-pr-resource/issues/32 for more details).
 
 ```yaml
 put: update-status <-- Use an alias for the pull-request resource
@@ -74,6 +70,12 @@ params:
     status: pending 
 get_params: {skip_download: true}
 ```
+
+Note that, should you retrigger a build in the hopes of testing the last commit to a PR against a newer version of
+the base, Concourse will reuse the volume (i.e. not trigger a new `get`) if it still exists, which can produce
+unexpected results (#5). As such, re-testing a PR against a newer version of the base is best done by *pushing an 
+empty commit to the PR*.
+
 
 #### `put`
 
