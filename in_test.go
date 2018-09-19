@@ -90,6 +90,52 @@ func TestGet(t *testing.T) {
 	}
 }
 
+func TestGetSkipDownload(t *testing.T) {
+
+	tests := []struct {
+		description string
+		source      resource.Source
+		version     resource.Version
+		parameters  resource.GetParameters
+	}{
+		{
+			description: "skip download works",
+			source: resource.Source{
+				Repository:  "itsdalmo/test-repository",
+				AccessToken: "oauthtoken",
+			},
+			version: resource.Version{
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
+			},
+			parameters: resource.GetParameters{SkipDownload: "true"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			github := mocks.NewMockGithub(ctrl)
+			git := mocks.NewMockGit(ctrl)
+			dir := createTestDirectory(t)
+			defer os.RemoveAll(dir)
+
+			// Run the get and check output
+			input := resource.GetRequest{Source: tc.source, Version: tc.version, Params: tc.parameters}
+			output, err := resource.Get(input, github, git, dir)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if got, want := output.Version, tc.version; !reflect.DeepEqual(got, want) {
+				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
+			}
+		})
+	}
+}
+
 func createTestPR(count int, skipCI bool) *resource.PullRequest {
 	n := strconv.Itoa(count)
 	d := time.Now().AddDate(0, 0, -count)
