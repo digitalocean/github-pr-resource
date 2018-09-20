@@ -112,7 +112,7 @@ func TestCheck(t *testing.T) {
 			source: resource.Source{
 				Repository:    "itsdalmo/test-repository",
 				AccessToken:   "oauthtoken",
-				DisableCISkip: "true",
+				DisableCISkip: true,
 			},
 			version:      resource.NewVersion(testPullRequests[1]),
 			pullRequests: testPullRequests,
