@@ -16,7 +16,7 @@ type Source struct {
 	V4Endpoint    string   `json:"v4_endpoint"`
 	Paths         []string `json:"path"`
 	IgnorePaths   []string `json:"ignore_path"`
-	DisableCISkip string   `json:"disable_ci_skip"`
+	DisableCISkip bool     `json:"disable_ci_skip"`
 }
 
 // Validate the source configuration.

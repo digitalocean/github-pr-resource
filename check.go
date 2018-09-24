@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 )
 
 // Check (business logic)
@@ -16,13 +15,8 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last commits: %s", err)
 	}
-	var disableSkipCI bool
-	if request.Source.DisableCISkip != "" {
-		disableSkipCI, err = strconv.ParseBool(request.Source.DisableCISkip)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse disable_ci_skip: %s", err)
-		}
-	}
+
+	disableSkipCI := request.Source.DisableCISkip
 
 Loop:
 	for _, p := range pulls {
