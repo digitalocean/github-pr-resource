@@ -117,7 +117,7 @@ func (g *GitClient) RevParse(branch string) (string, error) {
 	cmd.Dir = g.Directory
 	sha, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("rev-parse '%s' failed: %s: %s", branch, err, string(sha))
 	}
 	return strings.TrimSpace(string(sha)), nil
 }
