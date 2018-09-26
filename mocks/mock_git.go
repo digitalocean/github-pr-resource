@@ -57,15 +57,15 @@ func (mr *MockGitMockRecorder) Fetch(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // Init mocks base method
-func (m *MockGit) Init() error {
-	ret := m.ctrl.Call(m, "Init")
+func (m *MockGit) Init(arg0 string) error {
+	ret := m.ctrl.Call(m, "Init", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Init indicates an expected call of Init
-func (mr *MockGitMockRecorder) Init() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockGit)(nil).Init))
+func (mr *MockGitMockRecorder) Init(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockGit)(nil).Init), arg0)
 }
 
 // Merge mocks base method
@@ -81,15 +81,15 @@ func (mr *MockGitMockRecorder) Merge(arg0 interface{}) *gomock.Call {
 }
 
 // Pull mocks base method
-func (m *MockGit) Pull(arg0 string) error {
-	ret := m.ctrl.Call(m, "Pull", arg0)
+func (m *MockGit) Pull(arg0, arg1 string) error {
+	ret := m.ctrl.Call(m, "Pull", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Pull indicates an expected call of Pull
-func (mr *MockGitMockRecorder) Pull(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pull", reflect.TypeOf((*MockGit)(nil).Pull), arg0)
+func (mr *MockGitMockRecorder) Pull(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pull", reflect.TypeOf((*MockGit)(nil).Pull), arg0, arg1)
 }
 
 // RevParse mocks base method
