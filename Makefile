@@ -1,7 +1,9 @@
-TARGET ?= darwin
-ARCH ?= amd64
-DOCKER_REPO=teliaoss/github-pr-resource
-SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
+DOCKER_REPO  = teliaoss/github-pr-resource
+TARGET      ?= darwin
+ARCH        ?= amd64
+SRC          = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+
+export GO111MODULE=on
 
 default: test
 
