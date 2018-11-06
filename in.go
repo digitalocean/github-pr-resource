@@ -46,7 +46,9 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	var metadata Metadata
 	metadata.Add("pr", strconv.Itoa(pull.Number))
 	metadata.Add("url", pull.URL)
+	metadata.Add("head_name", pull.HeadRefName)
 	metadata.Add("head_sha", pull.Tip.OID)
+	metadata.Add("base_name", pull.BaseRefName)
 	metadata.Add("base_sha", baseSHA)
 	metadata.Add("message", pull.Tip.Message)
 	metadata.Add("author", pull.Tip.Author.User.Login)
