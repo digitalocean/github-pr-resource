@@ -74,7 +74,7 @@ type PullRequest struct {
 }
 
 // PullRequestObject represents the GraphQL commit node.
-// https://developer.github.com/v4/object/commit/
+// https://developer.github.com/v4/object/pullrequest/
 type PullRequestObject struct {
 	ID          string
 	Number      int
