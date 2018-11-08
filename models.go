@@ -51,7 +51,7 @@ type MetadataField struct {
 	Value string `json:"value"`
 }
 
-// Version communicated with Concourse. ID is the Github Global ID.
+// Version communicated with Concourse.
 type Version struct {
 	PR            string    `json:"pr"`
 	Commit        string    `json:"commit"`
@@ -74,7 +74,7 @@ type PullRequest struct {
 }
 
 // PullRequestObject represents the GraphQL commit node.
-// https://developer.github.com/v4/object/commit/
+// https://developer.github.com/v4/object/pullrequest/
 type PullRequestObject struct {
 	ID          string
 	Number      int
