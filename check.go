@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 )
 
 // Check (business logic)
@@ -102,7 +103,7 @@ func FilterIgnorePath(files []string, pattern string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if !match {
+		if !match && !strings.HasPrefix(file, pattern) {
 			out = append(out, file)
 		}
 	}
@@ -113,6 +114,13 @@ func FilterIgnorePath(files []string, pattern string) ([]string, error) {
 func FilterPath(files []string, pattern string) ([]string, error) {
 	var out []string
 	for _, file := range files {
+		// Check for a prefix match
+		if strings.HasPrefix(file, pattern) {
+			out = append(out, file)
+			continue
+		}
+
+		// Check for a glob match
 		match, err := filepath.Match(pattern, file)
 		if err != nil {
 			return nil, err

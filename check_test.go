@@ -244,6 +244,22 @@ func TestFilterPath(t *testing.T) {
 				"test/file2.txt",
 			},
 		},
+		{
+			description: "handles prefix matches",
+			pattern:     "foo/",
+			files: []string{
+				"foo/a",
+				"foo/a.txt",
+				"foo/a/b/c/d.txt",
+				"bar",
+				"bar/a.txt",
+			},
+			want: []string{
+				"foo/a",
+				"foo/a.txt",
+				"foo/a/b/c/d.txt",
+			},
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.description, func(t *testing.T) {
@@ -298,6 +314,21 @@ func TestFilterIgnorePath(t *testing.T) {
 				"test/file1.go",
 			},
 		},
+		{
+			description: "handles prefix matches",
+			pattern:     "foo/",
+			files: []string{
+				"foo/a",
+				"foo/a.txt",
+				"foo/a/b/c/d.txt",
+				"bar",
+				"bar/a.txt",
+			},
+			want: []string{
+				"bar",
+				"bar/a.txt",
+			},
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.description, func(t *testing.T) {
@@ -311,3 +342,4 @@ func TestFilterIgnorePath(t *testing.T) {
 		})
 	}
 }
+
