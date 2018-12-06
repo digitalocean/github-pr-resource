@@ -251,6 +251,7 @@ func TestFilterPath(t *testing.T) {
 				"foo/a",
 				"foo/a.txt",
 				"foo/a/b/c/d.txt",
+				"foo",
 				"bar",
 				"bar/a.txt",
 			},
@@ -321,10 +322,12 @@ func TestFilterIgnorePath(t *testing.T) {
 				"foo/a",
 				"foo/a.txt",
 				"foo/a/b/c/d.txt",
+				"foo",
 				"bar",
 				"bar/a.txt",
 			},
 			want: []string{
+				"foo",
 				"bar",
 				"bar/a.txt",
 			},
@@ -343,3 +346,69 @@ func TestFilterIgnorePath(t *testing.T) {
 	}
 }
 
+func TestIsInsidePath(t *testing.T) {
+	cases := []struct {
+		description string
+		parent      string
+
+		expectChildren    []string
+		expectNotChildren []string
+
+		want bool
+	}{
+		{
+			description: "basic test",
+			parent:      "foo/bar",
+			expectChildren: []string{
+				"foo/bar",
+				"foo/bar/baz",
+			},
+			expectNotChildren: []string{
+				"foo/barbar",
+				"foo/baz/bar",
+			},
+		},
+		{
+			description: "does not match parent directories against child files",
+			parent:      "foo/",
+			expectChildren: []string{
+				"foo/bar",
+			},
+			expectNotChildren: []string{
+				"foo",
+			},
+		},
+		{
+			description: "matches parents without trailing slash",
+			parent:      "foo/bar",
+			expectChildren: []string{
+				"foo/bar",
+				"foo/bar/baz",
+			},
+		},
+		{
+			description: "handles children that are shorter than the parent",
+			parent:      "foo/bar/baz",
+			expectNotChildren: []string{
+				"foo",
+				"foo/bar",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.description, func(t *testing.T) {
+			for _, expectedChild := range tc.expectChildren {
+				if !resource.IsInsidePath(tc.parent, expectedChild) {
+					t.Errorf("Expected \"%s\" to be inside \"%s\"", expectedChild, tc.parent)
+				}
+			}
+
+			for _, expectedNotChild := range tc.expectNotChildren {
+				if resource.IsInsidePath(tc.parent, expectedNotChild) {
+					t.Errorf("Expected \"%s\" to not be inside \"%s\"", expectedNotChild, tc.parent)
+				}
+			}
+		})
+	}
+}

@@ -103,7 +103,7 @@ func FilterIgnorePath(files []string, pattern string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if !match && !strings.HasPrefix(file, pattern) {
+		if !match && !IsInsidePath(pattern, file) {
 			out = append(out, file)
 		}
 	}
@@ -115,7 +115,7 @@ func FilterPath(files []string, pattern string) ([]string, error) {
 	var out []string
 	for _, file := range files {
 		// Check for a prefix match
-		if strings.HasPrefix(file, pattern) {
+		if IsInsidePath(pattern, file) {
 			out = append(out, file)
 			continue
 		}
@@ -130,6 +130,25 @@ func FilterPath(files []string, pattern string) ([]string, error) {
 		}
 	}
 	return out, nil
+}
+
+// IsInsidePath checks whether the child path is inside the parent path.
+//
+// /foo/bar is inside /foo, but /foobar is not inside /foo.
+// /foo is inside /foo, but /foo is not inside /foo/
+func IsInsidePath(parent, child string) bool {
+	if parent == child {
+		return true
+	}
+
+	// we add a trailing slash so that we only get prefix matches on a
+	// directory separator
+	parentWithTrailingSlash := parent
+	if !strings.HasSuffix(parentWithTrailingSlash, string(filepath.Separator)) {
+		parentWithTrailingSlash += string(filepath.Separator)
+	}
+
+	return strings.HasPrefix(child, parentWithTrailingSlash)
 }
 
 // CheckRequest ...
