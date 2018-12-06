@@ -114,18 +114,11 @@ func FilterIgnorePath(files []string, pattern string) ([]string, error) {
 func FilterPath(files []string, pattern string) ([]string, error) {
 	var out []string
 	for _, file := range files {
-		// Check for a prefix match
-		if IsInsidePath(pattern, file) {
-			out = append(out, file)
-			continue
-		}
-
-		// Check for a glob match
 		match, err := filepath.Match(pattern, file)
 		if err != nil {
 			return nil, err
 		}
-		if match {
+		if match || IsInsidePath(pattern, file) {
 			out = append(out, file)
 		}
 	}
