@@ -2,6 +2,7 @@ DOCKER_REPO  = teliaoss/github-pr-resource
 TARGET      ?= darwin
 ARCH        ?= amd64
 SRC          = $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+OUT          = build
 
 export GO111MODULE=on
 
@@ -13,9 +14,10 @@ generate:
 
 build: test
 	@echo "== Build =="
-	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o check -v cmd/check/main.go
-	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o in -v cmd/in/main.go
-	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o out -v cmd/out/main.go
+	@mkdir -p $(OUT)
+	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o $(OUT)/check -ldflags="-s -w" -v cmd/check/main.go
+	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o $(OUT)/in -ldflags="-s -w" -v cmd/in/main.go
+	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o $(OUT)/out -ldflags="-s -w" -v cmd/out/main.go
 
 test:
 	@echo "== Test =="
