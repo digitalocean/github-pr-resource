@@ -13,9 +13,9 @@ generate:
 
 build: test
 	@echo "== Build =="
-	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o check -v cmd/check/main.go
-	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o in -v cmd/in/main.go
-	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o out -v cmd/out/main.go
+	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o check -ldflags="-s -w" -v cmd/check/main.go
+	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o in -ldflags="-s -w" -v cmd/in/main.go
+	CGO_ENABLED=0 GOOS=$(TARGET) GOARCH=$(ARCH) go build -o out -ldflags="-s -w" -v cmd/out/main.go
 
 test:
 	@echo "== Test =="
