@@ -6,7 +6,8 @@ ENV TARGET linux
 ENV ARCH amd64
 RUN make build
 
-FROM alpine/git:latest as resource
+FROM alpine:3.8 as resource
+RUN apk --update add git openssh
 COPY --from=builder /go/src/github.com/telia-oss/github-pr-resource/check /opt/resource/check
 COPY --from=builder /go/src/github.com/telia-oss/github-pr-resource/in /opt/resource/in
 COPY --from=builder /go/src/github.com/telia-oss/github-pr-resource/out /opt/resource/out
