@@ -31,7 +31,10 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `skip_ssl_verification` | No       | `true`                           | Disable SSL/TLS certificate validation on git and API clients. Use with care!                                                                                                                                                                                                              |
 | `disable_forks`         | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository.                                                                                                                                                                        |
 
-Note: If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
+Notes:
+ - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
+ - Look at the [Concourse Resources documentation](https://concourse-ci.org/resources.html#resource-webhook-token)
+ for webhook token configuration.
 
 ## Behaviour
 
