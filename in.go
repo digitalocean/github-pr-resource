@@ -42,6 +42,12 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		return nil, err
 	}
 
+	if request.Source.GitCryptKey != "" {
+		if err := git.GitCryptUnlock(request.Source.GitCryptKey); err != nil {
+			return nil, err
+		}
+	}
+
 	// Create the metadata
 	var metadata Metadata
 	metadata.Add("pr", strconv.Itoa(pull.Number))

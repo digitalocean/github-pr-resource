@@ -44,6 +44,18 @@ func (mr *MockGitMockRecorder) Fetch(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockGit)(nil).Fetch), arg0, arg1)
 }
 
+// GitCryptUnlock mocks base method
+func (m *MockGit) GitCryptUnlock(arg0 string) error {
+	ret := m.ctrl.Call(m, "GitCryptUnlock", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// GitCryptUnlock indicates an expected call of GitCryptUnlock
+func (mr *MockGitMockRecorder) GitCryptUnlock(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GitCryptUnlock", reflect.TypeOf((*MockGit)(nil).GitCryptUnlock), arg0)
+}
+
 // Init mocks base method
 func (m *MockGit) Init(arg0 string) error {
 	ret := m.ctrl.Call(m, "Init", arg0)
