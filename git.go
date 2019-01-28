@@ -1,12 +1,14 @@
 package resource
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -19,6 +21,7 @@ type Git interface {
 	RevParse(string) (string, error)
 	Fetch(string, int) error
 	Merge(string) error
+	GitCryptUnlock(string) error
 }
 
 // NewGitClient ...
@@ -116,6 +119,25 @@ func (g *GitClient) Fetch(uri string, prNumber int) error {
 func (g *GitClient) Merge(sha string) error {
 	if err := g.command("git", "merge", sha, "--no-stat").Run(); err != nil {
 		return fmt.Errorf("merge failed: %s", err)
+	}
+	return nil
+}
+
+// GitCryptUnlock unlocks the repository using git-crypt
+func (g *GitClient) GitCryptUnlock(base64key string) error {
+	keyDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary directory")
+	}
+	defer os.RemoveAll(keyDir)
+	decodedKey, err := base64.StdEncoding.DecodeString(base64key)
+	if err != nil {
+		return fmt.Errorf("failed to decode git-crypt key")
+	}
+	keyPath := filepath.Join(keyDir, "git-crypt-key")
+	ioutil.WriteFile(keyPath, decodedKey, 600)
+	if err := g.command("git-crypt", "unlock", keyPath).Run(); err != nil {
+		return fmt.Errorf("git-crypt unlock failed: %s", err)
 	}
 	return nil
 }
