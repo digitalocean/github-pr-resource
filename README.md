@@ -208,7 +208,7 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
   - `require_review_approval`
   - `authorship_restriction`
   - `label`
-  - `git_config`
+  - `git_config`: You can now get the pr/author info from .git/resource/metadata.json instead
 - `get`:
   - `git.*`
 - `put`:
