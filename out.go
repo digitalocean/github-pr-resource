@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -44,7 +45,7 @@ func Put(request PutRequest, manager Github, inputDir string) (*PutResponse, err
 
 	// Set comment if specified
 	if comment := request.Params.Comment; comment != "" {
-		err = manager.PostComment(version.PR, comment)
+		err = manager.PostComment(version.PR, os.ExpandEnv(comment))
 		if err != nil {
 			return nil, fmt.Errorf("failed to post comment: %s", err)
 		}
@@ -59,7 +60,7 @@ func Put(request PutRequest, manager Github, inputDir string) (*PutResponse, err
 		}
 		comment := string(content)
 		if comment != "" {
-			err = manager.PostComment(version.PR, comment)
+			err = manager.PostComment(version.PR, os.ExpandEnv(comment))
 			if err != nil {
 				return nil, fmt.Errorf("failed to post comment: %s", err)
 			}
