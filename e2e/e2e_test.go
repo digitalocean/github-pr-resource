@@ -6,11 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 	"time"
 
-	"github.com/telia-oss/github-pr-resource"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	resource "github.com/telia-oss/github-pr-resource"
 )
 
 var (
@@ -113,17 +114,13 @@ func TestCheckE2E(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
 			github, err := resource.NewGithubClient(&tc.source)
-			if err != nil {
-				t.Fatalf("failed to create github client: %s", err)
-			}
+			require.NoError(t, err)
 
 			input := resource.CheckRequest{Source: tc.source, Version: tc.version}
 			output, err := resource.Check(input, github)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
-			}
-			if got, want := output, tc.expected; !reflect.DeepEqual(got, want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
+
+			if assert.NoError(t, err) {
+				assert.Equal(t, tc.expected, output)
 			}
 		})
 	}
@@ -200,49 +197,34 @@ func TestGetAndPutE2E(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			// Create temporary directory
 			dir, err := ioutil.TempDir("", "github-pr-resource")
-			if err != nil {
-				t.Fatalf("failed to create temporary directory")
-			}
+			require.NoError(t, err)
 			defer os.RemoveAll(dir)
 
 			github, err := resource.NewGithubClient(&tc.source)
-			if err != nil {
-				t.Fatalf("failed to create github client: %s", err)
-			}
+			require.NoError(t, err)
+
 			git, err := resource.NewGitClient(&tc.source, dir, ioutil.Discard)
-			if err != nil {
-				t.Fatalf("failed to create git client: %s", err)
-			}
+			require.NoError(t, err)
 
 			// Get (output and files)
 			getRequest := resource.GetRequest{Source: tc.source, Version: tc.version, Params: tc.getParameters}
 			getOutput, err := resource.Get(getRequest, github, git, dir)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
-			}
-			if got, want := getOutput.Version, tc.version; !reflect.DeepEqual(got, want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
-			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.version, getOutput.Version)
 
 			version := readTestFile(t, filepath.Join(dir, ".git", "resource", "version.json"))
-			if got, want := version, tc.versionString; got != want {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
-			}
+			assert.Equal(t, tc.versionString, version)
 
 			metadata := readTestFile(t, filepath.Join(dir, ".git", "resource", "metadata.json"))
-			if got, want := metadata, tc.metadataString; got != want {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
-			}
+			assert.Equal(t, tc.metadataString, metadata)
 
 			// Put
 			putRequest := resource.PutRequest{Source: tc.source, Params: tc.putParameters}
 			putOutput, err := resource.Put(putRequest, github, dir)
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
-			}
-			if got, want := putOutput.Version, tc.version; !reflect.DeepEqual(got, want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, want)
-			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.version, putOutput.Version)
 		})
 	}
 }
