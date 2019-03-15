@@ -1,2 +1,5 @@
 # Binaries
 build/*
+
+# Taskfile
+.task

@@ -1,0 +1,73 @@
+version: '2'
+
+env:
+  GO111MODULE: on
+
+vars:
+  BUILD_DIR: build
+  DOCKER_REPO: teliaoss/github-pr-resource
+
+tasks:
+  default:
+    cmds:
+      - task: test
+
+  dependencies:
+    desc: Install build dependencies
+    cmds:
+    - task: go-get
+      vars: {REPO: github.com/maxbrunsfeld/counterfeiter, GOMOD: off}
+  
+  generate:
+    desc: Generate test fakes
+    deps: [dependencies]
+    cmds:
+    - go generate ./...
+    sources:
+    - github.go
+    - git.go
+    generates:
+    - fakes/*.go
+    method: checksum
+
+  test:
+    desc: Run test suite
+    deps: [generate]
+    cmds:
+    - gofmt -s -l -w .
+    - go vet -v ./...
+    - go test -race -v ./...
+
+  e2e:
+    desc: Run E2E test suite
+    cmds:
+    - task: test
+    - go test -race -v ./... -tags=e2e
+
+  docker:
+    desc: Build docker image under dev tag.
+    cmds:
+    - docker build -t {{.DOCKER_REPO}}:dev .
+
+  build:
+    desc: Build check/in/out artifacts
+    cmds:
+    - task: test
+    - task: go-build
+      vars: {BINARY: check}
+    - task: go-build
+      vars: {BINARY: in}
+    - task: go-build
+      vars: {BINARY: out}
+
+  go-get:
+    cmds:
+    - GO111MODULE={{.GOMOD}} go get -u {{.REPO}}
+
+  go-build:
+    cmds:
+    - go build -o {{.BUILD_DIR}}/{{.BINARY}}{{exeExt}} -ldflags="-s -w" -v cmd/{{.BINARY}}/main.go
+    env:
+      CGO_ENABLED: '0'
+      GOOS: '{{OS}}'
+      GOARCH: '{{ARCH}}'
