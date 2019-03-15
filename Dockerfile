@@ -1,8 +1,8 @@
 FROM golang:1.11 as builder
 ADD . /go/src/github.com/telia-oss/github-pr-resource
 WORKDIR /go/src/github.com/telia-oss/github-pr-resource
-ENV TARGET=linux ARCH=amd64
-RUN make build
+ENV GO111MODULE=off
+RUN go get -u -v github.com/go-task/task/cmd/task && task build
 
 FROM alpine:3.8 as resource
 COPY --from=builder /go/src/github.com/telia-oss/github-pr-resource/build /opt/resource
