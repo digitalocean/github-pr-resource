@@ -18,6 +18,7 @@ _main() {
   rm -rf "$tmpdir"
 
   apk del .build-deps
+  rm -rf /var/cache/apk/*
 }
 
 _main "$@"
