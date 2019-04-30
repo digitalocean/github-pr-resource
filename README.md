@@ -25,8 +25,8 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `access_token`          | Yes      |                                  | A Github Access Token with repository access (required for setting status on commits). N.B. If you want github-pr-resource to work with a private repository. Set `repo:full` permissions on the access token you create on GitHub. If it is a public repository, `repo:status` is enough. |
 | `v3_endpoint`           | No       | `https://api.github.com`         | Endpoint to use for the V3 Github API (Restful).                                                                                                                                                                                                                                           |
 | `v4_endpoint`           | No       | `https://api.github.com/graphql` | Endpoint to use for the V4 Github API (Graphql).                                                                                                                                                                                                                                           |
-| `paths`                 | No       | `terraform/*/*.tf`               | Only produce new versions if the PR includes changes to files that match one or more glob patterns or prefixes.                                                                                                                                                                                         |
-| `ignore_paths`          | No       | `.ci/`                          | Inverse of the above. Pattern syntax is documented in [filepath.Match](https://golang.org/pkg/path/filepath/#Match), or a path prefix can be specified (e.g. `.ci/` will match everything in the `.ci` directory).                                                                                                                                                                        |
+| `paths`                 | No       | `terraform/*/*.tf`               | Only produce new versions if the PR includes changes to files that match one or more glob patterns or prefixes.                                                                                                                                                                            |
+| `ignore_paths`          | No       | `.ci/`                           | Inverse of the above. Pattern syntax is documented in [filepath.Match](https://golang.org/pkg/path/filepath/#Match), or a path prefix can be specified (e.g. `.ci/` will match everything in the `.ci` directory).                                                                         |
 | `disable_ci_skip`       | No       | `true`                           | Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title.                                                                                                                                                                                   |
 | `skip_ssl_verification` | No       | `true`                           | Disable SSL/TLS certificate validation on git and API clients. Use with care!                                                                                                                                                                                                              |
 | `disable_forks`         | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository.                                                                                                                                                                        |
@@ -61,9 +61,9 @@ generate notifications over the webhook. So if you have a repository with little
 
 #### `get`
 
-|   Parameter     | Required | Example |                                             Description                                             |
-| --------------- | -------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `skip_download` | No       | `true`  | Use with `get_params` in a `put` step to do nothing on the implicit get.                            |
+| Parameter       | Required | Example | Description                                                              |
+|-----------------|----------|---------|--------------------------------------------------------------------------|
+| `skip_download` | No       | `true`  | Use with `get_params` in a `put` step to do nothing on the implicit get. |
 
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
 into master. This ensures that we are both testing and setting status on the exact commit that was requested in
@@ -96,8 +96,8 @@ empty commit to the PR*.
 
 #### `put`
 
-|   Parameter    | Required |         Example         |                                             Description                                             |
-| -------------- | -------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
+| Parameter      | Required | Example                 | Description                                                                                         |
+|----------------|----------|-------------------------|-----------------------------------------------------------------------------------------------------|
 | `path`         | Yes      | `pull-request`          | The name given to the resource in a GET step.                                                       |
 | `status`       | No       | `SUCCESS`               | Set a status on a commit. One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.                       |
 | `context`      | No       | `unit-test`             | A context to use for the status. (Prefixed with `concourse-ci`, defaults to `concourse-ci/status`). |
