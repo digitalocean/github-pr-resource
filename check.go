@@ -29,6 +29,10 @@ Loop:
 		if !disableSkipCI && ContainsSkipCI(p.Tip.Message) {
 			continue
 		}
+		// Filter pull request if the BaseBranch does not match the one specified in source
+		if request.Source.BaseBranch != "" && p.PullRequestObject.BaseRefName != request.Source.BaseBranch {
+			continue
+		}
 		// Filter out commits that are too old.
 		if !p.Tip.CommittedDate.Time.After(request.Version.CommittedDate) {
 			continue
