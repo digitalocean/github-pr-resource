@@ -190,6 +190,7 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
   - `repo` -> `repository`
   - `ci_skip` -> `disable_ci_skip` (the logic has been inverted and its `true` by default)
   - `api_endpoint` -> `v3_endpoint`
+  - `base` -> `base_branch`
 - `put`:
   - `comment` -> `comment_file` (because we added `comment`)
 
@@ -205,7 +206,6 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
 
 #### Parameters that did not make it:
 - `src`:
-  - `base`: 
   - `require_review_approval`
   - `authorship_restriction`
   - `label`
