@@ -23,7 +23,7 @@ var (
 	latestDateTime       = time.Date(2018, time.May, 14, 10, 51, 58, 0, time.UTC)
 	developCommitID      = "ac771f3b69cbd63b22bbda553f827ab36150c640"
 	developPullRequestID = "6"
-	developDateTime      = time.Date(2018, time.May, 14, 10, 51, 58, 0, time.UTC)
+	developDateTime      = time.Date(2018, time.September, 25, 21, 00, 16, 0, time.UTC)
 )
 
 func TestCheckE2E(t *testing.T) {
@@ -107,6 +107,22 @@ func TestCheckE2E(t *testing.T) {
 			version: resource.Version{},
 			expected: resource.CheckResponse{
 				resource.Version{PR: latestPullRequestID, Commit: latestCommitID, CommittedDate: latestDateTime},
+			},
+		},
+
+		{
+			description: "check works with custom base branch",
+			source: resource.Source{
+				Repository:    "itsdalmo/test-repository",
+				AccessToken:   os.Getenv("GITHUB_ACCESS_TOKEN"),
+				V3Endpoint:    "https://api.github.com/",
+				V4Endpoint:    "https://api.github.com/graphql",
+				BaseBranch:    "develop",
+				DisableCISkip: true,
+			},
+			version: resource.Version{},
+			expected: resource.CheckResponse{
+				resource.Version{PR: developPullRequestID, Commit: developCommitID, CommittedDate: developDateTime},
 			},
 		},
 	}
