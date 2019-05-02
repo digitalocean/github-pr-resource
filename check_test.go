@@ -10,12 +10,13 @@ import (
 
 var (
 	testPullRequests = []*resource.PullRequest{
-		createTestPR(1, true, false),
-		createTestPR(2, false, false),
-		createTestPR(3, false, false),
-		createTestPR(4, false, false),
-		createTestPR(5, false, true),
-		createTestPR(6, false, false),
+		createTestPR(1, "master", true, false),
+		createTestPR(2, "master", false, false),
+		createTestPR(3, "master", false, false),
+		createTestPR(4, "master", false, false),
+		createTestPR(5, "master", false, true),
+		createTestPR(6, "master", false, false),
+		createTestPR(7, "develop", false, false),
 	}
 )
 
@@ -134,6 +135,20 @@ func TestCheck(t *testing.T) {
 				resource.NewVersion(testPullRequests[3]),
 				resource.NewVersion(testPullRequests[2]),
 				resource.NewVersion(testPullRequests[1]),
+			},
+		},
+		{
+			description: "check supports specifying base branch",
+			source: resource.Source{
+				Repository:  "itsdalmo/test-repository",
+				AccessToken: "oauthtoken",
+				BaseBranch:  "develop",
+			},
+			version:      resource.Version{},
+			pullRequests: testPullRequests,
+			files:        [][]string{},
+			expected: resource.CheckResponse{
+				resource.NewVersion(testPullRequests[6]),
 			},
 		},
 	}

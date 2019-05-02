@@ -38,7 +38,7 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1, false, false),
+			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
 		},
@@ -55,7 +55,7 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1, false, false),
+			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
 		},
@@ -173,7 +173,7 @@ func TestGetSkipDownload(t *testing.T) {
 	}
 }
 
-func createTestPR(count int, skipCI bool, isCrossRepo bool) *resource.PullRequest {
+func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool) *resource.PullRequest {
 	n := strconv.Itoa(count)
 	d := time.Now().AddDate(0, 0, -count)
 	m := fmt.Sprintf("commit message%s", n)
@@ -187,7 +187,7 @@ func createTestPR(count int, skipCI bool, isCrossRepo bool) *resource.PullReques
 			Number:      count,
 			Title:       fmt.Sprintf("pr%s title", n),
 			URL:         fmt.Sprintf("pr%s url", n),
-			BaseRefName: "master",
+			BaseRefName: baseName,
 			HeadRefName: fmt.Sprintf("pr%s", n),
 			Repository: struct{ URL string }{
 				URL: fmt.Sprintf("repo%s url", n),
