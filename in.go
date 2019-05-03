@@ -38,8 +38,17 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	if err := git.Fetch(pull.Repository.URL, pull.Number); err != nil {
 		return nil, err
 	}
-	if err := git.Merge(pull.Tip.OID); err != nil {
-		return nil, err
+
+	switch request.Source.IntegrationTool {
+	case "rebase":
+		if err := git.Rebase(pull.BaseRefName, pull.Tip.OID); err != nil {
+			return nil, err
+		}
+
+	default:
+		if err := git.Merge(pull.Tip.OID); err != nil {
+			return nil, err
+		}
 	}
 
 	if request.Source.GitCryptKey != "" {

@@ -65,6 +65,18 @@ type FakeGit struct {
 	pullReturnsOnCall map[int]struct {
 		result1 error
 	}
+	RebaseStub        func(string, string) error
+	rebaseMutex       sync.RWMutex
+	rebaseArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	rebaseReturns struct {
+		result1 error
+	}
+	rebaseReturnsOnCall map[int]struct {
+		result1 error
+	}
 	RevParseStub        func(string) (string, error)
 	revParseMutex       sync.RWMutex
 	revParseArgsForCall []struct {
@@ -384,6 +396,67 @@ func (fake *FakeGit) PullReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeGit) Rebase(arg1 string, arg2 string) error {
+	fake.rebaseMutex.Lock()
+	ret, specificReturn := fake.rebaseReturnsOnCall[len(fake.rebaseArgsForCall)]
+	fake.rebaseArgsForCall = append(fake.rebaseArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("Rebase", []interface{}{arg1, arg2})
+	fake.rebaseMutex.Unlock()
+	if fake.RebaseStub != nil {
+		return fake.RebaseStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.rebaseReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeGit) RebaseCallCount() int {
+	fake.rebaseMutex.RLock()
+	defer fake.rebaseMutex.RUnlock()
+	return len(fake.rebaseArgsForCall)
+}
+
+func (fake *FakeGit) RebaseCalls(stub func(string, string) error) {
+	fake.rebaseMutex.Lock()
+	defer fake.rebaseMutex.Unlock()
+	fake.RebaseStub = stub
+}
+
+func (fake *FakeGit) RebaseArgsForCall(i int) (string, string) {
+	fake.rebaseMutex.RLock()
+	defer fake.rebaseMutex.RUnlock()
+	argsForCall := fake.rebaseArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeGit) RebaseReturns(result1 error) {
+	fake.rebaseMutex.Lock()
+	defer fake.rebaseMutex.Unlock()
+	fake.RebaseStub = nil
+	fake.rebaseReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeGit) RebaseReturnsOnCall(i int, result1 error) {
+	fake.rebaseMutex.Lock()
+	defer fake.rebaseMutex.Unlock()
+	fake.RebaseStub = nil
+	if fake.rebaseReturnsOnCall == nil {
+		fake.rebaseReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.rebaseReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeGit) RevParse(arg1 string) (string, error) {
 	fake.revParseMutex.Lock()
 	ret, specificReturn := fake.revParseReturnsOnCall[len(fake.revParseArgsForCall)]
@@ -460,6 +533,8 @@ func (fake *FakeGit) Invocations() map[string][][]interface{} {
 	defer fake.mergeMutex.RUnlock()
 	fake.pullMutex.RLock()
 	defer fake.pullMutex.RUnlock()
+	fake.rebaseMutex.RLock()
+	defer fake.rebaseMutex.RUnlock()
 	fake.revParseMutex.RLock()
 	defer fake.revParseMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
