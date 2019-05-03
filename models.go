@@ -8,6 +8,11 @@ import (
 	"github.com/shurcooL/githubv4"
 )
 
+var validIntegrationTools = map[string]struct{}{
+	"merge":  {},
+	"rebase": {},
+}
+
 // Source represents the configuration for the resource.
 type Source struct {
 	Repository          string   `json:"repository"`
@@ -21,6 +26,7 @@ type Source struct {
 	DisableForks        bool     `json:"disable_forks"`
 	GitCryptKey         string   `json:"git_crypt_key"`
 	BaseBranch          string   `json:"base_branch"`
+	IntegrationTool     string   `json:"integration_tool"`
 }
 
 // Validate the source configuration.
@@ -36,6 +42,9 @@ func (s *Source) Validate() error {
 	}
 	if s.V4Endpoint != "" && s.V3Endpoint == "" {
 		return errors.New("v3_endpoint must be set together with v4_endpoint")
+	}
+	if _, exists := validIntegrationTools[s.IntegrationTool]; s.IntegrationTool != "" && !exists {
+		return errors.New("Invalid integration_tool provided")
 	}
 	return nil
 }

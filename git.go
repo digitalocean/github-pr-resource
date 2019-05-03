@@ -21,6 +21,7 @@ type Git interface {
 	RevParse(string) (string, error)
 	Fetch(string, int) error
 	Merge(string) error
+	Rebase(string, string) error
 	GitCryptUnlock(string) error
 }
 
@@ -119,6 +120,17 @@ func (g *GitClient) Fetch(uri string, prNumber int) error {
 func (g *GitClient) Merge(sha string) error {
 	if err := g.command("git", "merge", sha, "--no-stat").Run(); err != nil {
 		return fmt.Errorf("merge failed: %s", err)
+	}
+	return nil
+}
+
+// Rebase ...
+func (g *GitClient) Rebase(baseRef string, headSha string) error {
+	if err := g.command("git", "checkout", headSha).Run(); err != nil {
+		return fmt.Errorf("checkout failed: %s", err)
+	}
+	if err := g.command("git", "rebase", baseRef).Run(); err != nil {
+		return fmt.Errorf("rebase failed: %s", err)
 	}
 	return nil
 }
