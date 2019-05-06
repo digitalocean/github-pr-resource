@@ -11,7 +11,7 @@ import (
 
 	"github.com/shurcooL/githubv4"
 	"github.com/stretchr/testify/assert"
-	"github.com/telia-oss/github-pr-resource"
+	resource "github.com/telia-oss/github-pr-resource"
 	"github.com/telia-oss/github-pr-resource/fakes"
 )
 
@@ -20,7 +20,6 @@ func TestGet(t *testing.T) {
 	tests := []struct {
 		description    string
 		source         resource.Source
-
 		version        resource.Version
 		parameters     resource.GetParameters
 		pullRequest    *resource.PullRequest
@@ -63,8 +62,8 @@ func TestGet(t *testing.T) {
 		{
 			description: "get supports rebasing",
 			source: resource.Source{
-				Repository:  "itsdalmo/test-repository",
-				AccessToken: "oauthtoken",
+				Repository:      "itsdalmo/test-repository",
+				AccessToken:     "oauthtoken",
 				IntegrationTool: "rebase",
 			},
 			version: resource.Version{
@@ -135,7 +134,7 @@ func TestGet(t *testing.T) {
 				assert.Equal(t, tc.pullRequest.Number, pr)
 			}
 
-			switch tc.source.IntegrationTool{
+			switch tc.source.IntegrationTool {
 			case "rebase":
 				if assert.Equal(t, 1, git.RebaseCallCount()) {
 					branch, tip := git.RebaseArgsForCall(0)
