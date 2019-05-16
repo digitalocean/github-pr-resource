@@ -59,12 +59,14 @@ type FakeGithub struct {
 	postCommentReturnsOnCall map[int]struct {
 		result1 error
 	}
-	UpdateCommitStatusStub        func(string, string, string) error
+	UpdateCommitStatusStub        func(string, string, string, string, string) error
 	updateCommitStatusMutex       sync.RWMutex
 	updateCommitStatusArgsForCall []struct {
 		arg1 string
 		arg2 string
 		arg3 string
+		arg4 string
+		arg5 string
 	}
 	updateCommitStatusReturns struct {
 		result1 error
@@ -319,18 +321,20 @@ func (fake *FakeGithub) PostCommentReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeGithub) UpdateCommitStatus(arg1 string, arg2 string, arg3 string) error {
+func (fake *FakeGithub) UpdateCommitStatus(arg1 string, arg2 string, arg3 string, arg4 string, arg5 string) error {
 	fake.updateCommitStatusMutex.Lock()
 	ret, specificReturn := fake.updateCommitStatusReturnsOnCall[len(fake.updateCommitStatusArgsForCall)]
 	fake.updateCommitStatusArgsForCall = append(fake.updateCommitStatusArgsForCall, struct {
 		arg1 string
 		arg2 string
 		arg3 string
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("UpdateCommitStatus", []interface{}{arg1, arg2, arg3})
+		arg4 string
+		arg5 string
+	}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("UpdateCommitStatus", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.updateCommitStatusMutex.Unlock()
 	if fake.UpdateCommitStatusStub != nil {
-		return fake.UpdateCommitStatusStub(arg1, arg2, arg3)
+		return fake.UpdateCommitStatusStub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
@@ -345,17 +349,17 @@ func (fake *FakeGithub) UpdateCommitStatusCallCount() int {
 	return len(fake.updateCommitStatusArgsForCall)
 }
 
-func (fake *FakeGithub) UpdateCommitStatusCalls(stub func(string, string, string) error) {
+func (fake *FakeGithub) UpdateCommitStatusCalls(stub func(string, string, string, string, string) error) {
 	fake.updateCommitStatusMutex.Lock()
 	defer fake.updateCommitStatusMutex.Unlock()
 	fake.UpdateCommitStatusStub = stub
 }
 
-func (fake *FakeGithub) UpdateCommitStatusArgsForCall(i int) (string, string, string) {
+func (fake *FakeGithub) UpdateCommitStatusArgsForCall(i int) (string, string, string, string, string) {
 	fake.updateCommitStatusMutex.RLock()
 	defer fake.updateCommitStatusMutex.RUnlock()
 	argsForCall := fake.updateCommitStatusArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeGithub) UpdateCommitStatusReturns(result1 error) {
