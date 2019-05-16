@@ -32,8 +32,10 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `disable_forks`         | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository.                                                                                                                                                                        |
 | `git_crypt_key`         | No       | `AEdJVENSWVBUS0VZAAAAA...`       | Base64 encoded git-crypt key. Setting this will unlock / decrypt the repository with git-crypt. To get the key simply execute `git-crypt export-key -- - | base64` in an encrypted repository.                                                                                             |
 | `base_branch`           | No       | `master`                         | Name of a branch. The pipeline will only trigger on pull requests against the specified branch.                                                                                                                                                                                            |
-| `integration_tool`      | No       | `rebase`                         | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.                                                                                                                                                                                                                     |
-
+| `integration_tool`      | No       | `rebase`                         | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.
+| `base_context`          | No       | `concourse-ci`                   | Change the default prepended name of the context.  For example: concourse-ci/status, base context will be concourse-ci.
+| `target_url`            | No       | `ATC DEFAULT URL`                | The base URL for the Concourse deployment, used for linking to builds.
+| `description`           | No       | `Concourse CI build %s`          | The description status on the specified pull request.                                                                                                                             |
 
 Notes:
  - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
@@ -69,13 +71,13 @@ generate notifications over the webhook. So if you have a repository with little
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
 into master. This ensures that we are both testing and setting status on the exact commit that was requested in
 input. Because the base of the PR is not locked to a specific commit in versions emitted from `check`, a fresh
-`get` will always use the latest commit in master and *report the SHA of said commit in the metadata*. Both the 
+`get` will always use the latest commit in master and *report the SHA of said commit in the metadata*. Both the
 requested version and the metadata emitted by `get` are available to your tasks as JSON:
 - `.git/resource/version.json`
 - `.git/resource/metadata.json`
 
-When specifying `skip_download` the pull request volume mounted to subsequent tasks will be empty, which is a problem 
-when you set e.g. the pending status before running the actual tests. The workaround for this is to use an alias for 
+When specifying `skip_download` the pull request volume mounted to subsequent tasks will be empty, which is a problem
+when you set e.g. the pending status before running the actual tests. The workaround for this is to use an alias for
 the `put` (see https://github.com/telia-oss/github-pr-resource/issues/32 for more details).
 
 git-crypt encrypted repositories will automatically be decrypted when the `git_crypt_key` is set in the source configuration.
@@ -84,14 +86,14 @@ git-crypt encrypted repositories will automatically be decrypted when the `git_c
 put: update-status <-- Use an alias for the pull-request resource
 resource: pull-request
 params:
-    path: pull-request 
-    status: pending 
+    path: pull-request
+    status: pending
 get_params: {skip_download: true}
 ```
 
 Note that, should you retrigger a build in the hopes of testing the last commit to a PR against a newer version of
 the base, Concourse will reuse the volume (i.e. not trigger a new `get`) if it still exists, which can produce
-unexpected results (#5). As such, re-testing a PR against a newer version of the base is best done by *pushing an 
+unexpected results (#5). As such, re-testing a PR against a newer version of the base is best done by *pushing an
 empty commit to the PR*.
 
 
@@ -104,6 +106,8 @@ empty commit to the PR*.
 | `context`      | No       | `unit-test`             | A context to use for the status. (Prefixed with `concourse-ci`, defaults to `concourse-ci/status`). |
 | `comment`      | No       | `hello world!`          | A comment to add to the pull request.                                                               |
 | `comment_file` | No       | `my-output/comment.txt` | Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).     |
+| `target_url`   | No       | `ATC DEFAULT URL`       | The base URL for the Concourse deployment, used for linking to builds.                              |
+| `description`  | No       | `Concourse CI build %s` | The description status on the specified pull request.                                               |
 
 ## Example
 
@@ -192,6 +196,7 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
   - `ci_skip` -> `disable_ci_skip` (the logic has been inverted and its `true` by default)
   - `api_endpoint` -> `v3_endpoint`
   - `base` -> `base_branch`
+  - `base_url` -> `target_url`
 - `put`:
   - `comment` -> `comment_file` (because we added `comment`)
 
