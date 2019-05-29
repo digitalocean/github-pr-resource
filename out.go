@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -37,14 +38,14 @@ func Put(request PutRequest, manager Github, inputDir string) (*PutResponse, err
 
 	// Set status if specified
 	if status := request.Params.Status; status != "" {
-		if err := manager.UpdateCommitStatus(version.Commit, request.Params.Context, status); err != nil {
+		if err := manager.UpdateCommitStatus(version.Commit, request.Params.BaseContext, request.Params.Context, status, os.ExpandEnv(request.Params.TargetURL), request.Params.Description); err != nil {
 			return nil, fmt.Errorf("failed to set status: %s", err)
 		}
 	}
 
 	// Set comment if specified
 	if comment := request.Params.Comment; comment != "" {
-		err = manager.PostComment(version.PR, comment)
+		err = manager.PostComment(version.PR, os.ExpandEnv(comment))
 		if err != nil {
 			return nil, fmt.Errorf("failed to post comment: %s", err)
 		}
@@ -59,7 +60,7 @@ func Put(request PutRequest, manager Github, inputDir string) (*PutResponse, err
 		}
 		comment := string(content)
 		if comment != "" {
-			err = manager.PostComment(version.PR, comment)
+			err = manager.PostComment(version.PR, os.ExpandEnv(comment))
 			if err != nil {
 				return nil, fmt.Errorf("failed to post comment: %s", err)
 			}
@@ -87,7 +88,10 @@ type PutResponse struct {
 // PutParameters for the resource.
 type PutParameters struct {
 	Path        string `json:"path"`
+	BaseContext string `json:"base_context"`
 	Context     string `json:"context"`
+	TargetURL   string `json:"target_url"`
+	Description string `json:"description"`
 	Status      string `json:"status"`
 	CommentFile string `json:"comment_file"`
 	Comment     string `json:"comment"`

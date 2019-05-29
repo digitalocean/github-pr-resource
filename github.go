@@ -23,7 +23,7 @@ type Github interface {
 	ListModifiedFiles(int) ([]string, error)
 	PostComment(string, string) error
 	GetPullRequest(string, string) (*PullRequest, error)
-	UpdateCommitStatus(string, string, string) error
+	UpdateCommitStatus(string, string, string, string, string, string) error
 }
 
 // GithubClient for handling requests to the Github V3 and V4 APIs.
@@ -245,8 +245,15 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 }
 
 // UpdateCommitStatus for a given commit (not supported by V4 API).
-func (m *GithubClient) UpdateCommitStatus(commitRef, statusContext, status string) error {
-	c := []string{"concourse-ci"}
+func (m *GithubClient) UpdateCommitStatus(commitRef, baseContext, statusContext, status, targetURL, description string) error {
+	c := make([]string, 0, 0)
+
+	if baseContext == "" {
+		c = append(c, "concourse-ci")
+	} else {
+		c = append(c, baseContext)
+	}
+
 	if statusContext == "" {
 		c = append(c, "status")
 	} else {
@@ -256,8 +263,17 @@ func (m *GithubClient) UpdateCommitStatus(commitRef, statusContext, status strin
 
 	// Format build page
 	build := os.Getenv("ATC_EXTERNAL_URL")
+	if targetURL != "" {
+		build = targetURL
+	}
+
 	if build != "" {
 		build = strings.Join([]string{build, "builds", os.Getenv("BUILD_ID")}, "/")
+	}
+
+	desc := "Concourse CI build %s"
+	if description != "" {
+		desc = description
 	}
 
 	_, _, err := m.V3.Repositories.CreateStatus(
@@ -268,7 +284,7 @@ func (m *GithubClient) UpdateCommitStatus(commitRef, statusContext, status strin
 		&github.RepoStatus{
 			State:       github.String(strings.ToLower(status)),
 			TargetURL:   github.String(build),
-			Description: github.String(fmt.Sprintf("Concourse CI build %s", status)),
+			Description: github.String(fmt.Sprintf(desc, status)),
 			Context:     github.String(statusContext),
 		},
 	)
