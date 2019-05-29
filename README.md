@@ -32,10 +32,7 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `disable_forks`         | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository.                                                                                                                                                                        |
 | `git_crypt_key`         | No       | `AEdJVENSWVBUS0VZAAAAA...`       | Base64 encoded git-crypt key. Setting this will unlock / decrypt the repository with git-crypt. To get the key simply execute `git-crypt export-key -- - | base64` in an encrypted repository.                                                                                             |
 | `base_branch`           | No       | `master`                         | Name of a branch. The pipeline will only trigger on pull requests against the specified branch.                                                                                                                                                                                            |
-| `integration_tool`      | No       | `rebase`                         | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.
-| `base_context`          | No       | `concourse-ci`                   | Change the default prepended name of the context.  For example: concourse-ci/status, base context will be concourse-ci.
-| `target_url`            | No       | `ATC DEFAULT URL`                | The base URL for the Concourse deployment, used for linking to builds.
-| `description`           | No       | `Concourse CI build`             | The description status on the specified pull request.                                                                                                                             |
+| `integration_tool`      | No       | `rebase`                         | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.                          |
 
 Notes:
  - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
@@ -99,15 +96,16 @@ empty commit to the PR*.
 
 #### `put`
 
-| Parameter      | Required | Example                 | Description                                                                                         |
-|----------------|----------|-------------------------|-----------------------------------------------------------------------------------------------------|
-| `path`         | Yes      | `pull-request`          | The name given to the resource in a GET step.                                                       |
-| `status`       | No       | `SUCCESS`               | Set a status on a commit. One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.                       |
-| `context`      | No       | `unit-test`             | A context to use for the status. (Prefixed with `concourse-ci`, defaults to `concourse-ci/status`). |
-| `comment`      | No       | `hello world!`          | A comment to add to the pull request.                                                               |
-| `comment_file` | No       | `my-output/comment.txt` | Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).     |
-| `target_url`   | No       | `ATC DEFAULT URL`       | The base URL for the Concourse deployment, used for linking to builds.                              |
-| `description`  | No       | `Concourse CI build %s` | The description status on the specified pull request.                                               |
+| Parameter      | Required | Example                 | Description                                                                                                             |
+|----------------|----------|-------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| `path`         | Yes      | `pull-request`          | The name given to the resource in a GET step.                                                                           |
+| `status`       | No       | `SUCCESS`               | Set a status on a commit. One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.                                           |
+| `base_context` | No       | `concourse-ci`          | Change the default prepended name of the context.  For example: concourse-ci/status, base context will be concourse-ci. |
+| `context`      | No       | `unit-test`             | A context to use for the status. (Prefixed with `concourse-ci`, defaults to `concourse-ci/status`).                     |
+| `comment`      | No       | `hello world!`          | A comment to add to the pull request.                                                                                   |
+| `comment_file` | No       | `my-output/comment.txt` | Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).                         |
+| `target_url`   | No       | `ATC DEFAULT URL`       | The base URL for the Concourse deployment, used for linking to builds.                                                  |
+| `description`  | No       | `Concourse CI build %s` | The description status on the specified pull request.                                                                   |
 
 ## Example
 
