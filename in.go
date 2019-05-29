@@ -24,7 +24,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	if err := git.Init(pull.BaseRefName); err != nil {
 		return nil, err
 	}
-	if err := git.Pull(pull.Repository.URL, pull.BaseRefName); err != nil {
+	if err := git.Pull(pull.Repository.URL, pull.BaseRefName, request.Params.GitDepth); err != nil {
 		return nil, err
 	}
 
@@ -99,6 +99,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 type GetParameters struct {
 	SkipDownload    bool   `json:"skip_download"`
 	IntegrationTool string `json:"integration_tool"`
+	GitDepth        int    `json:"git_depth"`
 }
 
 // GetRequest ...

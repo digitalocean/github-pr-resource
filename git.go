@@ -17,7 +17,7 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o fakes/fake_git.go . Git
 type Git interface {
 	Init(string) error
-	Pull(string, string) error
+	Pull(string, string, int) error
 	RevParse(string) (string, error)
 	Fetch(string, int) error
 	Merge(string) error
@@ -70,12 +70,16 @@ func (g *GitClient) Init(branch string) error {
 }
 
 // Pull ...
-func (g *GitClient) Pull(uri, branch string) error {
+func (g *GitClient) Pull(uri, branch string, depth int) error {
 	endpoint, err := g.Endpoint(uri)
 	if err != nil {
 		return err
 	}
+
 	cmd := g.command("git", "pull", endpoint+".git", branch)
+	if depth > 0 {
+		cmd = g.command("git", "pull", "--depth", strconv.Itoa(depth), endpoint+".git", branch)
+	}
 
 	// Discard output to have zero chance of logging the access token.
 	cmd.Stdout = ioutil.Discard

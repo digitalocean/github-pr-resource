@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -233,6 +234,23 @@ func TestGetAndPutE2E(t *testing.T) {
 			metadataString:     `[{"name":"pr","value":"4"},{"name":"url","value":"https://github.com/itsdalmo/test-repository/pull/4"},{"name":"head_name","value":"my_second_pull"},{"name":"head_sha","value":"a5114f6ab89f4b736655642a11e8d15ce363d882"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"93eeeedb8a16e6662062d1eca5655108977cc59a"},{"name":"message","value":"Push 2."},{"name":"author","value":"itsdalmo"}]`,
 			finalCommitMessage: "Merge commit 'a5114f6ab89f4b736655642a11e8d15ce363d882'",
 		},
+		{
+			description: "get works with git_depth",
+			source: resource.Source{
+				Repository:  "itsdalmo/test-repository",
+				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+			},
+			version: resource.Version{
+				PR:            targetPullRequestID,
+				Commit:        targetCommitID,
+				CommittedDate: time.Time{},
+			},
+			getParameters:      resource.GetParameters{GitDepth: 2},
+			putParameters:      resource.PutParameters{},
+			versionString:      `{"pr":"4","commit":"a5114f6ab89f4b736655642a11e8d15ce363d882","committed":"0001-01-01T00:00:00Z"}`,
+			metadataString:     `[{"name":"pr","value":"4"},{"name":"url","value":"https://github.com/itsdalmo/test-repository/pull/4"},{"name":"head_name","value":"my_second_pull"},{"name":"head_sha","value":"a5114f6ab89f4b736655642a11e8d15ce363d882"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"93eeeedb8a16e6662062d1eca5655108977cc59a"},{"name":"message","value":"Push 2."},{"name":"author","value":"itsdalmo"}]`,
+			finalCommitMessage: "Merge commit 'a5114f6ab89f4b736655642a11e8d15ce363d882'",
+		},
 	}
 
 	for _, tc := range tests {
@@ -268,6 +286,14 @@ func TestGetAndPutE2E(t *testing.T) {
 			commitMessage, err := gitHistory.Output()
 			assert.NoError(t, err)
 			assert.Equal(t, tc.finalCommitMessage, string(commitMessage))
+			if tc.getParameters.GitDepth > 0 {
+				gitLog := exec.Command("git", "log", "--oneline", "--pretty=format:%s")
+				gitLog.Dir = dir
+				output, err := gitLog.Output()
+				assert.NoError(t, err)
+				commits := strings.Split(string(output), "\n")
+				assert.Equal(t, tc.getParameters.GitDepth, len(commits))
+			}
 
 			// Put
 			putRequest := resource.PutRequest{Source: tc.source, Params: tc.putParameters}

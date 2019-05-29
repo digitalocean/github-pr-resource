@@ -64,6 +64,7 @@ generate notifications over the webhook. So if you have a repository with little
 |--------------------|----------|----------|--------------------------------------------------------------------------|
 | `skip_download`    | No       | `true`   | Use with `get_params` in a `put` step to do nothing on the implicit get. |
 | `integration_tool` | No       | `rebase` | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.   |
+| `git_depth`        | No       | `1`      | Shallow clone the repository using the `--depth` Git option              |
 
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
 into master. This ensures that we are both testing and setting status on the exact commit that was requested in
@@ -198,6 +199,8 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
   - `api_endpoint` -> `v3_endpoint`
   - `base` -> `base_branch`
   - `base_url` -> `target_url`
+- `get`:
+  - `git.depth` -> `git_depth`
 - `put`:
   - `comment` -> `comment_file` (because we added `comment`)
 
@@ -218,7 +221,7 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
   - `label`
   - `git_config`: You can now get the pr/author info from .git/resource/metadata.json instead
 - `get`:
-  - `git.*`
+  - `git.*` (with the exception of `git_depth`, see above)
 - `put`:
   - `merge.*`
   - `label`
