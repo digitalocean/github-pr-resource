@@ -32,7 +32,6 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `disable_forks`         | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository.                                                                                                                                                                        |
 | `git_crypt_key`         | No       | `AEdJVENSWVBUS0VZAAAAA...`       | Base64 encoded git-crypt key. Setting this will unlock / decrypt the repository with git-crypt. To get the key simply execute `git-crypt export-key -- - | base64` in an encrypted repository.                                                                                             |
 | `base_branch`           | No       | `master`                         | Name of a branch. The pipeline will only trigger on pull requests against the specified branch.                                                                                                                                                                                            |
-| `integration_tool`      | No       | `rebase`                         | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.                          |
 
 Notes:
  - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
@@ -61,9 +60,10 @@ generate notifications over the webhook. So if you have a repository with little
 
 #### `get`
 
-| Parameter       | Required | Example | Description                                                              |
-|-----------------|----------|---------|--------------------------------------------------------------------------|
-| `skip_download` | No       | `true`  | Use with `get_params` in a `put` step to do nothing on the implicit get. |
+| Parameter          | Required | Example  | Description                                                              |
+|--------------------|----------|----------|--------------------------------------------------------------------------|
+| `skip_download`    | No       | `true`   | Use with `get_params` in a `put` step to do nothing on the implicit get. |
+| `integration_tool` | No       | `rebase` | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.   |
 
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
 into master. This ensures that we are both testing and setting status on the exact commit that was requested in

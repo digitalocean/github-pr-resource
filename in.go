@@ -39,16 +39,17 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		return nil, err
 	}
 
-	switch request.Source.IntegrationTool {
+	switch tool := request.Params.IntegrationTool; tool {
 	case "rebase":
 		if err := git.Rebase(pull.BaseRefName, pull.Tip.OID); err != nil {
 			return nil, err
 		}
-
-	default:
+	case "merge", "":
 		if err := git.Merge(pull.Tip.OID); err != nil {
 			return nil, err
 		}
+	default:
+		return nil, fmt.Errorf("invalid integration tool specified: %s", tool)
 	}
 
 	if request.Source.GitCryptKey != "" {
@@ -96,7 +97,8 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 
 // GetParameters ...
 type GetParameters struct {
-	SkipDownload bool `json:"skip_download"`
+	SkipDownload    bool   `json:"skip_download"`
+	IntegrationTool string `json:"integration_tool"`
 }
 
 // GetRequest ...
