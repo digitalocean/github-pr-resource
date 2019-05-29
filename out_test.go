@@ -76,7 +76,6 @@ func TestPut(t *testing.T) {
 			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: "oauthtoken",
-				BaseContext: "concourse-ci-custom",
 			},
 			version: resource.Version{
 				PR:            "pr1",
@@ -84,8 +83,9 @@ func TestPut(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.PutParameters{
-				Status:  "failure",
-				Context: "build",
+				Status:      "failure",
+				BaseContext: "concourse-ci-custom",
+				Context:     "build",
 			},
 			pullRequest: createTestPR(1, "master", false, false),
 		},
@@ -109,24 +109,6 @@ func TestPut(t *testing.T) {
 		},
 
 		{
-			description: "we can provide a custom target url for the status on source",
-			source: resource.Source{
-				Repository:  "itsdalmo/test-repository",
-				AccessToken: "oauthtoken",
-				TargetURL:   "https://targeturl.com/concourse",
-			},
-			version: resource.Version{
-				PR:            "pr1",
-				Commit:        "commit1",
-				CommittedDate: time.Time{},
-			},
-			parameters: resource.PutParameters{
-				Status: "failure",
-			},
-			pullRequest: createTestPR(1, "master", false, false),
-		},
-
-		{
 			description: "we can provide a custom description for the status",
 			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
@@ -140,24 +122,6 @@ func TestPut(t *testing.T) {
 			parameters: resource.PutParameters{
 				Status:      "failure",
 				Description: "Concourse CI build",
-			},
-			pullRequest: createTestPR(1, "master", false, false),
-		},
-
-		{
-			description: "we can provide a custom description for the status on source",
-			source: resource.Source{
-				Repository:  "itsdalmo/test-repository",
-				AccessToken: "oauthtoken",
-				Description: "Concourse CI build",
-			},
-			version: resource.Version{
-				PR:            "pr1",
-				Commit:        "commit1",
-				CommittedDate: time.Time{},
-			},
-			parameters: resource.PutParameters{
-				Status: "failure",
 			},
 			pullRequest: createTestPR(1, "master", false, false),
 		},
@@ -208,8 +172,9 @@ func TestPut(t *testing.T) {
 			// Validate method calls put on Github.
 			if tc.parameters.Status != "" {
 				if assert.Equal(t, 1, github.UpdateCommitStatusCallCount()) {
-					commit, context, status, targetURL, description := github.UpdateCommitStatusArgsForCall(0)
+					commit, baseContext, context, status, targetURL, description := github.UpdateCommitStatusArgsForCall(0)
 					assert.Equal(t, tc.version.Commit, commit)
+					assert.Equal(t, tc.parameters.BaseContext, baseContext)
 					assert.Equal(t, tc.parameters.Context, context)
 					assert.Equal(t, tc.parameters.TargetURL, targetURL)
 					assert.Equal(t, tc.parameters.Description, description)
@@ -309,7 +274,7 @@ func TestVariableSubstitution(t *testing.T) {
 
 			if tc.parameters.TargetURL != "" {
 				if assert.Equal(t, 1, github.UpdateCommitStatusCallCount()) {
-					_, _, _, targetURL, _ := github.UpdateCommitStatusArgsForCall(0)
+					_, _, _, _, targetURL, _ := github.UpdateCommitStatusArgsForCall(0)
 					assert.Equal(t, tc.expectedTargetURL, targetURL)
 				}
 			}

@@ -38,7 +38,7 @@ func Put(request PutRequest, manager Github, inputDir string) (*PutResponse, err
 
 	// Set status if specified
 	if status := request.Params.Status; status != "" {
-		if err := manager.UpdateCommitStatus(version.Commit, request.Params.Context, status, os.ExpandEnv(request.Params.TargetURL), request.Params.Description); err != nil {
+		if err := manager.UpdateCommitStatus(version.Commit, request.Params.BaseContext, request.Params.Context, status, os.ExpandEnv(request.Params.TargetURL), request.Params.Description); err != nil {
 			return nil, fmt.Errorf("failed to set status: %s", err)
 		}
 	}

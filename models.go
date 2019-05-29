@@ -27,9 +27,6 @@ type Source struct {
 	GitCryptKey         string   `json:"git_crypt_key"`
 	BaseBranch          string   `json:"base_branch"`
 	IntegrationTool     string   `json:"integration_tool"`
-	BaseContext         string   `json:"base_context"`
-	TargetURL           string   `json:"target_url"`
-	Description         string   `json:"description"`
 }
 
 // Validate the source configuration.
