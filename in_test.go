@@ -62,16 +62,17 @@ func TestGet(t *testing.T) {
 		{
 			description: "get supports rebasing",
 			source: resource.Source{
-				Repository:      "itsdalmo/test-repository",
-				AccessToken:     "oauthtoken",
-				IntegrationTool: "rebase",
+				Repository:  "itsdalmo/test-repository",
+				AccessToken: "oauthtoken",
 			},
 			version: resource.Version{
 				PR:            "pr1",
 				Commit:        "commit1",
 				CommittedDate: time.Time{},
 			},
-			parameters:     resource.GetParameters{},
+			parameters: resource.GetParameters{
+				IntegrationTool: "rebase",
+			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
@@ -134,7 +135,7 @@ func TestGet(t *testing.T) {
 				assert.Equal(t, tc.pullRequest.Number, pr)
 			}
 
-			switch tc.source.IntegrationTool {
+			switch tc.parameters.IntegrationTool {
 			case "rebase":
 				if assert.Equal(t, 1, git.RebaseCallCount()) {
 					branch, tip := git.RebaseArgsForCall(0)
