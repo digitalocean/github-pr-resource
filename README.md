@@ -35,7 +35,7 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `integration_tool`      | No       | `rebase`                         | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.
 | `base_context`          | No       | `concourse-ci`                   | Change the default prepended name of the context.  For example: concourse-ci/status, base context will be concourse-ci.
 | `target_url`            | No       | `ATC DEFAULT URL`                | The base URL for the Concourse deployment, used for linking to builds.
-| `description`           | No       | `Concourse CI build %s`          | The description status on the specified pull request.                                                                                                                             |
+| `description`           | No       | `Concourse CI build`             | The description status on the specified pull request.                                                                                                                             |
 
 Notes:
  - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
