@@ -265,9 +265,7 @@ func (m *GithubClient) UpdateCommitStatus(commitRef, baseContext, statusContext,
 	build := os.Getenv("ATC_EXTERNAL_URL")
 	if targetURL != "" {
 		build = targetURL
-	}
-
-	if build != "" {
+	} else {
 		build = strings.Join([]string{build, "builds", os.Getenv("BUILD_ID")}, "/")
 	}
 
