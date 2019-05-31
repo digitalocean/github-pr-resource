@@ -126,10 +126,7 @@ func (g *GitClient) Merge(sha string) error {
 
 // Rebase ...
 func (g *GitClient) Rebase(baseRef string, headSha string) error {
-	if err := g.command("git", "checkout", headSha).Run(); err != nil {
-		return fmt.Errorf("checkout failed: %s", err)
-	}
-	if err := g.command("git", "rebase", baseRef).Run(); err != nil {
+	if err := g.command("git", "rebase", baseRef, headSha).Run(); err != nil {
 		return fmt.Errorf("rebase failed: %s", err)
 	}
 	return nil
