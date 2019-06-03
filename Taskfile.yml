@@ -12,15 +12,8 @@ tasks:
     cmds:
       - task: test
 
-  dependencies:
-    desc: Install build dependencies
-    cmds:
-    - task: go-get
-      vars: {REPO: github.com/maxbrunsfeld/counterfeiter, GOMOD: off}
-  
   generate:
     desc: Generate test fakes
-    deps: [dependencies]
     cmds:
     - go generate ./...
     sources:
@@ -59,10 +52,6 @@ tasks:
       vars: {BINARY: in}
     - task: go-build
       vars: {BINARY: out}
-
-  go-get:
-    cmds:
-    - GO111MODULE={{.GOMOD}} go get -u {{.REPO}}
 
   go-build:
     cmds:
