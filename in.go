@@ -35,7 +35,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}
 
 	// Fetch the PR and merge the specified commit into the base
-	if err := git.Fetch(pull.Repository.URL, pull.Number); err != nil {
+	if err := git.Fetch(pull.Repository.URL, pull.Number, request.Params.GitDepth); err != nil {
 		return nil, err
 	}
 

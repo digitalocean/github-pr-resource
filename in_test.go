@@ -147,9 +147,10 @@ func TestGet(t *testing.T) {
 			}
 
 			if assert.Equal(t, 1, git.FetchCallCount()) {
-				url, pr := git.FetchArgsForCall(0)
+				url, pr, depth := git.FetchArgsForCall(0)
 				assert.Equal(t, tc.pullRequest.Repository.URL, url)
 				assert.Equal(t, tc.pullRequest.Number, pr)
+				assert.Equal(t, tc.parameters.GitDepth, depth)
 			}
 
 			switch tc.parameters.IntegrationTool {
