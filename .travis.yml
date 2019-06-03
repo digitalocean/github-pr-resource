@@ -1,13 +1,11 @@
 language: go
 sudo: false
-env:
-  - GO111MODULE=off
 matrix:
   include:
   - os: osx
-    go: 1.11.x
+    go: 1.12.x
   - os: linux
-    go: 1.11.x
+    go: 1.12.x
 notifications:
   email: false
 script:

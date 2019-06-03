@@ -17,7 +17,7 @@ import (
 )
 
 // Github for testing purposes.
-//go:generate counterfeiter -o fakes/fake_github.go . Github
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o fakes/fake_github.go . Github
 type Github interface {
 	ListOpenPullRequests() ([]*PullRequest, error)
 	ListModifiedFiles(int) ([]string, error)
