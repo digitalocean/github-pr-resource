@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -246,32 +247,20 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 
 // UpdateCommitStatus for a given commit (not supported by V4 API).
 func (m *GithubClient) UpdateCommitStatus(commitRef, baseContext, statusContext, status, targetURL, description string) error {
-	c := make([]string, 0, 0)
-
 	if baseContext == "" {
-		c = append(c, "concourse-ci")
-	} else {
-		c = append(c, baseContext)
+		baseContext = "concourse-ci"
 	}
 
 	if statusContext == "" {
-		c = append(c, "status")
-	} else {
-		c = append(c, statusContext)
-	}
-	statusContext = strings.Join(c, "/")
-
-	// Format build page
-	build := os.Getenv("ATC_EXTERNAL_URL")
-	if targetURL != "" {
-		build = targetURL
-	} else {
-		build = strings.Join([]string{build, "builds", os.Getenv("BUILD_ID")}, "/")
+		statusContext = "status"
 	}
 
-	desc := "Concourse CI build %s"
-	if description != "" {
-		desc = description
+	if targetURL == "" {
+		targetURL = path.Join(os.Getenv("ATC_EXTERNAL_URL"), "builds", os.Getenv("BUILD_ID"))
+	}
+
+	if description == "" {
+		description = fmt.Sprintf("Concourse CI build %s", status)
 	}
 
 	_, _, err := m.V3.Repositories.CreateStatus(
@@ -281,9 +270,9 @@ func (m *GithubClient) UpdateCommitStatus(commitRef, baseContext, statusContext,
 		commitRef,
 		&github.RepoStatus{
 			State:       github.String(strings.ToLower(status)),
-			TargetURL:   github.String(build),
-			Description: github.String(fmt.Sprintf(desc, status)),
-			Context:     github.String(statusContext),
+			TargetURL:   github.String(targetURL),
+			Description: github.String(description),
+			Context:     github.String(path.Join(baseContext, statusContext)),
 		},
 	)
 	return err
