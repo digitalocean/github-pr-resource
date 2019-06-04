@@ -37,24 +37,23 @@ func Put(request PutRequest, manager Github, inputDir string) (*PutResponse, err
 	}
 
 	// Set status if specified
-	if status := request.Params.Status; status != "" {
-		if err := manager.UpdateCommitStatus(version.Commit, request.Params.BaseContext, request.Params.Context, status, os.ExpandEnv(request.Params.TargetURL), request.Params.Description); err != nil {
+	if p := request.Params; p.Status != "" {
+		if err := manager.UpdateCommitStatus(version.Commit, p.BaseContext, p.Context, p.Status, os.ExpandEnv(p.TargetURL), p.Description); err != nil {
 			return nil, fmt.Errorf("failed to set status: %s", err)
 		}
 	}
 
 	// Set comment if specified
-	if comment := request.Params.Comment; comment != "" {
-		err = manager.PostComment(version.PR, os.ExpandEnv(comment))
+	if p := request.Params; p.Comment != "" {
+		err = manager.PostComment(version.PR, os.ExpandEnv(p.Comment))
 		if err != nil {
 			return nil, fmt.Errorf("failed to post comment: %s", err)
 		}
 	}
 
 	// Set comment from a file
-	if cf := request.Params.CommentFile; cf != "" {
-		path := filepath.Join(inputDir, request.Params.CommentFile)
-		content, err := ioutil.ReadFile(path)
+	if p := request.Params; p.CommentFile != "" {
+		content, err := ioutil.ReadFile(filepath.Join(inputDir, p.CommentFile))
 		if err != nil {
 			return nil, fmt.Errorf("failed to read comment file: %s", err)
 		}
