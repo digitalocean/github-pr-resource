@@ -96,16 +96,19 @@ empty commit to the PR*.
 
 #### `put`
 
-| Parameter      | Required | Example                 | Description                                                                                                             |
-|----------------|----------|-------------------------|-------------------------------------------------------------------------------------------------------------------------|
-| `path`         | Yes      | `pull-request`          | The name given to the resource in a GET step.                                                                           |
-| `status`       | No       | `SUCCESS`               | Set a status on a commit. One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.                                           |
-| `base_context` | No       | `concourse-ci`          | Change the default prepended name of the context.  For example: concourse-ci/status, base context will be concourse-ci. |
-| `context`      | No       | `unit-test`             | A context to use for the status. (Prefixed with `concourse-ci`, defaults to `concourse-ci/status`).                     |
-| `comment`      | No       | `hello world!`          | A comment to add to the pull request.                                                                                   |
-| `comment_file` | No       | `my-output/comment.txt` | Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).                         |
-| `target_url`   | No       | `ATC DEFAULT URL`       | The base URL for the Concourse deployment, used for linking to builds.                                                  |
-| `description`  | No       | `Concourse CI build %s` | The description status on the specified pull request.                                                                   |
+| Parameter      | Required | Example                             | Description                                                                                                       |
+|----------------|----------|-------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `path`         | Yes      | `pull-request`                      | The name given to the resource in a GET step.                                                                     |
+| `status`       | No       | `SUCCESS`                           | Set a status on a commit. One of `SUCCESS`, `PENDING`, `FAILURE` and `ERROR`.                                     |
+| `base_context` | No       | `concourse-ci`                      | Base context (prefix) used for the status context. Defaults to `concourse-ci`.                                    |
+| `context`      | No       | `unit-test`                         | A context to use for the status, which is prefixed by `base_context`. Defaults to `status`.                       |
+| `comment`      | No       | `hello world!`                      | A comment to add to the pull request.                                                                             |
+| `comment_file` | No       | `my-output/comment.txt`             | Path to file containing a comment to add to the pull request (e.g. output of `terraform plan`).                   |
+| `target_url`   | No       | `$ATC_DEFAULT_URL/builds/$BUILD_ID` | The target URL for the status, where users are sent when clicking details (defaults to the Concourse build page). |
+| `description`  | No       | `Concourse CI build failed`         | The description status on the specified pull request.                                                             |
+
+Note that `comment`, `comment_file` and `target_url` will all expand environment variables, so in the examples above `$ATC_DEFAULT_URL` will be replaced by the public URL of the Concourse ATCs.
+See https://concourse-ci.org/implementing-resource-types.html#resource-metadata for more details about metadata that is available via environment variables.
 
 ## Example
 
