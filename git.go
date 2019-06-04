@@ -17,9 +17,9 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o fakes/fake_git.go . Git
 type Git interface {
 	Init(string) error
-	Pull(string, string) error
+	Pull(string, string, int) error
 	RevParse(string) (string, error)
-	Fetch(string, int) error
+	Fetch(string, int, int) error
 	Merge(string) error
 	Rebase(string, string) error
 	GitCryptUnlock(string) error
@@ -70,12 +70,16 @@ func (g *GitClient) Init(branch string) error {
 }
 
 // Pull ...
-func (g *GitClient) Pull(uri, branch string) error {
+func (g *GitClient) Pull(uri, branch string, depth int) error {
 	endpoint, err := g.Endpoint(uri)
 	if err != nil {
 		return err
 	}
+
 	cmd := g.command("git", "pull", endpoint+".git", branch)
+	if depth > 0 {
+		cmd = g.command("git", "pull", "--depth", strconv.Itoa(depth), endpoint+".git", branch)
+	}
 
 	// Discard output to have zero chance of logging the access token.
 	cmd.Stdout = ioutil.Discard
@@ -99,12 +103,15 @@ func (g *GitClient) RevParse(branch string) (string, error) {
 }
 
 // Fetch ...
-func (g *GitClient) Fetch(uri string, prNumber int) error {
+func (g *GitClient) Fetch(uri string, prNumber int, depth int) error {
 	endpoint, err := g.Endpoint(uri)
 	if err != nil {
 		return err
 	}
 	cmd := g.command("git", "fetch", endpoint, fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber)))
+	if depth > 0 {
+		cmd = g.command("git", "fetch", "--depth", strconv.Itoa(depth), fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber)))
+	}
 
 	// Discard output to have zero chance of logging the access token.
 	cmd.Stdout = ioutil.Discard
