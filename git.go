@@ -76,10 +76,11 @@ func (g *GitClient) Pull(uri, branch string, depth int) error {
 		return err
 	}
 
-	cmd := g.command("git", "pull", endpoint+".git", branch)
+	args := []string{"pull", endpoint + ".git", branch}
 	if depth > 0 {
-		cmd = g.command("git", "pull", "--depth", strconv.Itoa(depth), endpoint+".git", branch)
+		args = append(args, "--depth", strconv.Itoa(depth))
 	}
+	cmd := g.command("git", args...)
 
 	// Discard output to have zero chance of logging the access token.
 	cmd.Stdout = ioutil.Discard
@@ -108,10 +109,12 @@ func (g *GitClient) Fetch(uri string, prNumber int, depth int) error {
 	if err != nil {
 		return err
 	}
-	cmd := g.command("git", "fetch", endpoint, fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber)))
+
+	args := []string{"fetch", endpoint, fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber))}
 	if depth > 0 {
-		cmd = g.command("git", "fetch", "--depth", strconv.Itoa(depth), fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber)))
+		args = append(args, "--depth", strconv.Itoa(depth))
 	}
+	cmd := g.command("git", args...)
 
 	// Discard output to have zero chance of logging the access token.
 	cmd.Stdout = ioutil.Discard
