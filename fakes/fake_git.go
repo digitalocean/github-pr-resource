@@ -43,6 +43,17 @@ type FakeGit struct {
 	initReturnsOnCall map[int]struct {
 		result1 error
 	}
+	CheckoutStub        func(string) error
+	checkoutMutex       sync.RWMutex
+	checkoutArgsForCall []struct {
+		arg1 string
+	}
+	checkoutReturns struct {
+		result1 error
+	}
+	checkoutReturnsOnCall map[int]struct {
+		result1 error
+	}
 	MergeStub        func(string) error
 	mergeMutex       sync.RWMutex
 	mergeArgsForCall []struct {
@@ -274,6 +285,66 @@ func (fake *FakeGit) InitReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.initReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeGit) Checkout(arg1 string) error {
+	fake.checkoutMutex.Lock()
+	ret, specificReturn := fake.checkoutReturnsOnCall[len(fake.checkoutArgsForCall)]
+	fake.checkoutArgsForCall = append(fake.checkoutArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("CheckOut", []interface{}{arg1})
+	fake.checkoutMutex.Unlock()
+	if fake.CheckoutStub != nil {
+		return fake.CheckoutStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.checkoutReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeGit) CheckoutCallCount() int {
+	fake.checkoutMutex.RLock()
+	defer fake.checkoutMutex.RUnlock()
+	return len(fake.checkoutArgsForCall)
+}
+
+func (fake *FakeGit) CheckoutCalls(stub func(string) error) {
+	fake.checkoutMutex.Lock()
+	defer fake.checkoutMutex.Unlock()
+	fake.CheckoutStub = stub
+}
+
+func (fake *FakeGit) CheckoutArgsForCall(i int) string {
+	fake.checkoutMutex.RLock()
+	defer fake.checkoutMutex.RUnlock()
+	argsForCall := fake.checkoutArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeGit) CheckoutReturns(result1 error) {
+	fake.checkoutMutex.Lock()
+	defer fake.checkoutMutex.Unlock()
+	fake.CheckoutStub = nil
+	fake.checkoutReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeGit) CheckoutReturnsOnCall(i int, result1 error) {
+	fake.checkoutMutex.Lock()
+	defer fake.checkoutMutex.Unlock()
+	fake.CheckoutStub = nil
+	if fake.checkoutReturnsOnCall == nil {
+		fake.checkoutReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.checkoutReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

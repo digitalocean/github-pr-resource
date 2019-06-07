@@ -48,6 +48,10 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		if err := git.Merge(pull.Tip.OID); err != nil {
 			return nil, err
 		}
+	case "checkout":
+		if err := git.Checkout(pull.HeadRefName); err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("invalid integration tool specified: %s", tool)
 	}
