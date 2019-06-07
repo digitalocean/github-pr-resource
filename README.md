@@ -60,11 +60,11 @@ generate notifications over the webhook. So if you have a repository with little
 
 #### `get`
 
-| Parameter          | Required | Example  | Description                                                              |
-|--------------------|----------|----------|--------------------------------------------------------------------------|
-| `skip_download`    | No       | `true`   | Use with `get_params` in a `put` step to do nothing on the implicit get. |
-| `integration_tool` | No       | `rebase` | The integration tool to use, `merge` or `rebase`. Defaults to `merge`.   |
-| `git_depth`        | No       | `1`      | Shallow clone the repository using the `--depth` Git option              |
+| Parameter          | Required | Example  | Description                                                                        |
+|--------------------|----------|----------|------------------------------------------------------------------------------------|
+| `skip_download`    | No       | `true`   | Use with `get_params` in a `put` step to do nothing on the implicit get.           |
+| `integration_tool` | No       | `rebase` | The integration tool to use, `merge`, `rebase` or `checkout`. Defaults to `merge`. |
+| `git_depth`        | No       | `1`      | Shallow clone the repository using the `--depth` Git option                        |
 
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
 into master. This ensures that we are both testing and setting status on the exact commit that was requested in
