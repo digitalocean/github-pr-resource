@@ -49,7 +49,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 			return nil, err
 		}
 	case "checkout":
-		if err := git.Checkout(pull.HeadRefName); err != nil {
+		if err := git.Checkout(pull.HeadRefName, pull.Tip.OID); err != nil {
 			return nil, err
 		}
 	default:

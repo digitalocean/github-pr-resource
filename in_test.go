@@ -180,8 +180,9 @@ func TestGet(t *testing.T) {
 				}
 			case "checkout":
 				if assert.Equal(t, 1, git.CheckoutCallCount()) {
-					branch := git.CheckoutArgsForCall(0)
+					branch, sha := git.CheckoutArgsForCall(0)
 					assert.Equal(t, tc.pullRequest.HeadRefName, branch)
+					assert.Equal(t, tc.pullRequest.Tip.OID, sha)
 				}
 			default:
 				if assert.Equal(t, 1, git.MergeCallCount()) {

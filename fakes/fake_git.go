@@ -43,10 +43,11 @@ type FakeGit struct {
 	initReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CheckoutStub        func(string) error
+	CheckoutStub        func(string, string) error
 	checkoutMutex       sync.RWMutex
 	checkoutArgsForCall []struct {
 		arg1 string
+		arg2 string
 	}
 	checkoutReturns struct {
 		result1 error
@@ -289,16 +290,17 @@ func (fake *FakeGit) InitReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeGit) Checkout(arg1 string) error {
+func (fake *FakeGit) Checkout(arg1 string, arg2 string) error {
 	fake.checkoutMutex.Lock()
 	ret, specificReturn := fake.checkoutReturnsOnCall[len(fake.checkoutArgsForCall)]
 	fake.checkoutArgsForCall = append(fake.checkoutArgsForCall, struct {
 		arg1 string
-	}{arg1})
+		arg2 string
+	}{arg1, arg2})
 	fake.recordInvocation("CheckOut", []interface{}{arg1})
 	fake.checkoutMutex.Unlock()
 	if fake.CheckoutStub != nil {
-		return fake.CheckoutStub(arg1)
+		return fake.CheckoutStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -313,17 +315,17 @@ func (fake *FakeGit) CheckoutCallCount() int {
 	return len(fake.checkoutArgsForCall)
 }
 
-func (fake *FakeGit) CheckoutCalls(stub func(string) error) {
+func (fake *FakeGit) CheckoutCalls(stub func(string, string) error) {
 	fake.checkoutMutex.Lock()
 	defer fake.checkoutMutex.Unlock()
 	fake.CheckoutStub = stub
 }
 
-func (fake *FakeGit) CheckoutArgsForCall(i int) string {
+func (fake *FakeGit) CheckoutArgsForCall(i int) (string, string) {
 	fake.checkoutMutex.RLock()
 	defer fake.checkoutMutex.RUnlock()
 	argsForCall := fake.checkoutArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeGit) CheckoutReturns(result1 error) {

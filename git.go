@@ -20,7 +20,7 @@ type Git interface {
 	Pull(string, string, int) error
 	RevParse(string) (string, error)
 	Fetch(string, int, int) error
-	Checkout(string) error
+	Checkout(string, string) error
 	Merge(string) error
 	Rebase(string, string) error
 	GitCryptUnlock(string) error
@@ -128,8 +128,8 @@ func (g *GitClient) Fetch(uri string, prNumber int, depth int) error {
 }
 
 // CheckOut
-func (g *GitClient) Checkout(branch string) error {
-	if err := g.command("git", "checkout", branch).Run(); err != nil {
+func (g *GitClient) Checkout(branch string, sha string) error {
+	if err := g.command("git", "checkout", "-b", branch, sha).Run(); err != nil {
 		return fmt.Errorf("checkout failed: %s", err)
 	}
 
