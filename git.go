@@ -128,7 +128,7 @@ func (g *GitClient) Fetch(uri string, prNumber int, depth int) error {
 }
 
 // CheckOut
-func (g *GitClient) Checkout(branch string, sha string) error {
+func (g *GitClient) Checkout(branch, sha string) error {
 	if err := g.command("git", "checkout", "-b", branch, sha).Run(); err != nil {
 		return fmt.Errorf("checkout failed: %s", err)
 	}

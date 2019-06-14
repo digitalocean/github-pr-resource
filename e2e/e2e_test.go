@@ -218,7 +218,15 @@ func TestGetAndPutE2E(t *testing.T) {
 			versionString:       `{"pr":"4","commit":"a5114f6ab89f4b736655642a11e8d15ce363d882","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString:      `[{"name":"pr","value":"4"},{"name":"url","value":"https://github.com/itsdalmo/test-repository/pull/4"},{"name":"head_name","value":"my_second_pull"},{"name":"head_sha","value":"a5114f6ab89f4b736655642a11e8d15ce363d882"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"93eeeedb8a16e6662062d1eca5655108977cc59a"},{"name":"message","value":"Push 2."},{"name":"author","value":"itsdalmo"}]`,
 			expectedCommitCount: 7,
-			expectedCommits:     []string{"Push 2."},
+			expectedCommits: []string{
+				"Push 2.",
+				"Push 1.",
+				"Add another commit to the 2nd PR to verify concourse behaviour.",
+				"Add another comment to 2nd pull request.",
+				"Add comment from 2nd pull request.",
+				"Add comment after creating first pull request.",
+				"Initial commit",
+			},
 		},
 		{
 			description: "get works with non-master bases",
