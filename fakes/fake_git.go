@@ -8,6 +8,18 @@ import (
 )
 
 type FakeGit struct {
+	CheckoutStub        func(string, string) error
+	checkoutMutex       sync.RWMutex
+	checkoutArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	checkoutReturns struct {
+		result1 error
+	}
+	checkoutReturnsOnCall map[int]struct {
+		result1 error
+	}
 	FetchStub        func(string, int, int) error
 	fetchMutex       sync.RWMutex
 	fetchArgsForCall []struct {
@@ -94,6 +106,67 @@ type FakeGit struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeGit) Checkout(arg1 string, arg2 string) error {
+	fake.checkoutMutex.Lock()
+	ret, specificReturn := fake.checkoutReturnsOnCall[len(fake.checkoutArgsForCall)]
+	fake.checkoutArgsForCall = append(fake.checkoutArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("Checkout", []interface{}{arg1, arg2})
+	fake.checkoutMutex.Unlock()
+	if fake.CheckoutStub != nil {
+		return fake.CheckoutStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.checkoutReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeGit) CheckoutCallCount() int {
+	fake.checkoutMutex.RLock()
+	defer fake.checkoutMutex.RUnlock()
+	return len(fake.checkoutArgsForCall)
+}
+
+func (fake *FakeGit) CheckoutCalls(stub func(string, string) error) {
+	fake.checkoutMutex.Lock()
+	defer fake.checkoutMutex.Unlock()
+	fake.CheckoutStub = stub
+}
+
+func (fake *FakeGit) CheckoutArgsForCall(i int) (string, string) {
+	fake.checkoutMutex.RLock()
+	defer fake.checkoutMutex.RUnlock()
+	argsForCall := fake.checkoutArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeGit) CheckoutReturns(result1 error) {
+	fake.checkoutMutex.Lock()
+	defer fake.checkoutMutex.Unlock()
+	fake.CheckoutStub = nil
+	fake.checkoutReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeGit) CheckoutReturnsOnCall(i int, result1 error) {
+	fake.checkoutMutex.Lock()
+	defer fake.checkoutMutex.Unlock()
+	fake.CheckoutStub = nil
+	if fake.checkoutReturnsOnCall == nil {
+		fake.checkoutReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.checkoutReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeGit) Fetch(arg1 string, arg2 int, arg3 int) error {
@@ -527,6 +600,8 @@ func (fake *FakeGit) RevParseReturnsOnCall(i int, result1 string, result2 error)
 func (fake *FakeGit) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.checkoutMutex.RLock()
+	defer fake.checkoutMutex.RUnlock()
 	fake.fetchMutex.RLock()
 	defer fake.fetchMutex.RUnlock()
 	fake.gitCryptUnlockMutex.RLock()
