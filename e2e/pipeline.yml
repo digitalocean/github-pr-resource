@@ -37,12 +37,18 @@ jobs:
     - get: rebase-pr
       resource: pull-request
       params: { integration_tool: rebase }
+    - get: checkout-pr
+      resource: pull-request
+      params: { integration_tool: checkout }
     - get: shallow-merge-pr
       resource: pull-request
       params: { git_depth: 2 }
     - get: shallow-rebase-pr
       resource: pull-request
       params: { git_depth: 2, integration_tool: rebase }
+    - get: shallow-checkout-pr
+      resource: pull-request
+      params: { git_depth: 2, integration_tool: checkout }
   - aggregate:
     - task: merge-history
       input_mapping: {source: merge-pr}
@@ -50,9 +56,15 @@ jobs:
     - task: rebase-history
       input_mapping: {source: rebase-pr}
       config: *task-config
+    - task: checkout-history
+      input_mapping: {source: checkout-pr}
+      config: *task-config
     - task: shallow-merge-history
       input_mapping: {source: shallow-merge-pr}
       config: *task-config
     - task: shallow-rebase-history
       input_mapping: {source: shallow-rebase-pr}
+      config: *task-config
+    - task: shallow-checkout-history
+      input_mapping: {source: shallow-checkout-pr}
       config: *task-config
