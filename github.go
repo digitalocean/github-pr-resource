@@ -103,6 +103,9 @@ func (m *GithubClient) ListOpenPullRequests() ([]*PullRequest, error) {
 				Edges []struct {
 					Node struct {
 						PullRequestObject
+						Reviews struct {
+							TotalCount int
+						} `graphql:"reviews(states: $prReviewStates)"`
 						Commits struct {
 							Edges []struct {
 								Node struct {
@@ -127,6 +130,7 @@ func (m *GithubClient) ListOpenPullRequests() ([]*PullRequest, error) {
 		"prStates":        []githubv4.PullRequestState{githubv4.PullRequestStateOpen},
 		"prCursor":        (*githubv4.String)(nil),
 		"commitsLast":     githubv4.Int(1),
+		"prReviewStates":  []githubv4.PullRequestReviewState{githubv4.PullRequestReviewStateApproved},
 	}
 
 	var response []*PullRequest
@@ -137,8 +141,9 @@ func (m *GithubClient) ListOpenPullRequests() ([]*PullRequest, error) {
 		for _, p := range query.Repository.PullRequests.Edges {
 			for _, c := range p.Node.Commits.Edges {
 				response = append(response, &PullRequest{
-					PullRequestObject: p.Node.PullRequestObject,
-					Tip:               c.Node.Commit,
+					PullRequestObject:   p.Node.PullRequestObject,
+					Tip:                 c.Node.Commit,
+					ApprovedReviewCount: p.Node.Reviews.TotalCount,
 				})
 			}
 		}

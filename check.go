@@ -42,6 +42,11 @@ Loop:
 			continue
 		}
 
+		// Filter pull request if it does not have at least 1 approved review.
+		if request.Source.RequireReviewApproval && p.ApprovedReviewCount < 1 {
+			continue
+		}
+
 		// Fetch files once if paths/ignore_paths are specified.
 		var files []string
 
