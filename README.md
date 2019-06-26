@@ -38,6 +38,7 @@ Notes:
  - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
  - Look at the [Concourse Resources documentation](https://concourse-ci.org/resources.html#resource-webhook-token)
  for webhook token configuration.
+ - When using `require_review_approval`, you may also want to enable GitHub's branch protection rules to [dismiss stale pull request approvals when new commits are pushed](https://help.github.com/en/articles/enabling-required-reviews-for-pull-requests).
 
 ## Behaviour
 
