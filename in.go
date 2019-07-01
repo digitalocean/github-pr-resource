@@ -99,6 +99,19 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		if err := ioutil.WriteFile(filepath.Join(path, filename), content, 0644); err != nil {
 			return nil, fmt.Errorf("failed to write metadata file %s: %s", filename, err)
 		}
+
+	}
+	if len(pull.Files) != 0 {
+		var fl []byte
+
+		for _, v := range pull.Files {
+			fl = append(fl, []byte(v.Path+"\n")...)
+		}
+
+		// Create List with changed files
+		if err := ioutil.WriteFile(filepath.Join(path, "changedFiles"), fl, 0644); err != nil {
+			return nil, fmt.Errorf("failed to write file list: %s", err)
+		}
 	}
 
 	return &GetResponse{

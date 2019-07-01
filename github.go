@@ -216,6 +216,13 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 						}
 					}
 				} `graphql:"commits(last:$commitsLast)"`
+				Files struct {
+					Edges []struct {
+						Node struct {
+							FilesChangedObject
+						}
+					}
+				} `graphql:"files(last:$commitsLast)"`
 			} `graphql:"pullRequest(number:$prNumber)"`
 		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
 	}
@@ -231,12 +238,19 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 	if err := m.V4.Query(context.TODO(), &query, vars); err != nil {
 		return nil, err
 	}
+
 	for _, c := range query.Repository.PullRequest.Commits.Edges {
 		if c.Node.Commit.OID == commitRef {
+			var fl []FilesChangedObject
+			for _, f := range query.Repository.PullRequest.Files.Edges {
+				fl = append(fl, FilesChangedObject{Path: f.Node.Path})
+			}
+
 			// Return as soon as we find the correct ref.
 			return &PullRequest{
 				PullRequestObject: query.Repository.PullRequest.PullRequestObject,
 				Tip:               c.Node.Commit,
+				Files:             fl,
 			}, nil
 		}
 	}
