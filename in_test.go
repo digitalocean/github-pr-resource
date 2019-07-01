@@ -25,6 +25,7 @@ func TestGet(t *testing.T) {
 		pullRequest    *resource.PullRequest
 		versionString  string
 		metadataString string
+		filesString    string
 	}{
 		{
 			description: "get works",
@@ -38,9 +39,10 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1, "master", false, false),
+			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			filesString:    "README.md\nOther.md\n",
 		},
 		{
 			description: "get supports unlocking with git crypt",
@@ -55,9 +57,10 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1, "master", false, false),
+			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			filesString:    "README.md\nOther.md\n",
 		},
 		{
 			description: "get supports rebasing",
@@ -73,9 +76,10 @@ func TestGet(t *testing.T) {
 			parameters: resource.GetParameters{
 				IntegrationTool: "rebase",
 			},
-			pullRequest:    createTestPR(1, "master", false, false),
+			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			filesString:    "README.md\nOther.md\n",
 		},
 		{
 			description: "get supports checkout",
@@ -91,9 +95,10 @@ func TestGet(t *testing.T) {
 			parameters: resource.GetParameters{
 				IntegrationTool: "checkout",
 			},
-			pullRequest:    createTestPR(1, "master", false, false),
+			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			filesString:    "README.md\nOther.md\n",
 		},
 		{
 			description: "get supports git_depth",
@@ -107,7 +112,24 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{GitDepth: 2},
-			pullRequest:    createTestPR(1, "master", false, false),
+			pullRequest:    createTestPR(1, "master", false, false, true),
+			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
+			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			filesString:    "README.md\nOther.md\n",
+		},
+		{
+			description: "get works no file list",
+			source: resource.Source{
+				Repository:  "itsdalmo/test-repository",
+				AccessToken: "oauthtoken",
+			},
+			version: resource.Version{
+				PR:            "pr1",
+				Commit:        "commit1",
+				CommittedDate: time.Time{},
+			},
+			parameters:     resource.GetParameters{},
+			pullRequest:    createTestPR(1, "master", false, false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
 		},
@@ -153,6 +175,12 @@ func TestGet(t *testing.T) {
 				for filename, expected := range files {
 					actual := readTestFile(t, filepath.Join(dir, ".git", "resource", filename))
 					assert.Equal(t, expected, actual)
+				}
+				
+				if tc.filesString != "" {
+					changedFiles := readTestFile(t, filepath.Join(dir, ".git", "resource", "changedFiles"))
+					assert.Equal(t, tc.filesString, changedFiles)
+
 				}
 			}
 
@@ -258,7 +286,7 @@ func TestGetSkipDownload(t *testing.T) {
 	}
 }
 
-func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool) *resource.PullRequest {
+func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool, hasFiles bool) *resource.PullRequest {
 	n := strconv.Itoa(count)
 	d := time.Now().AddDate(0, 0, -count)
 	m := fmt.Sprintf("commit message%s", n)
@@ -266,7 +294,7 @@ func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool) *re
 		m = "[skip ci]" + m
 	}
 
-	return &resource.PullRequest{
+	retpr := resource.PullRequest{
 		PullRequestObject: resource.PullRequestObject{
 			ID:          fmt.Sprintf("pr%s", n),
 			Number:      count,
@@ -291,6 +319,19 @@ func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool) *re
 			},
 		},
 	}
+
+	if hasFiles {
+		retpr.Files = []resource.FilesChangedObject{
+			{
+				Path: "README.md",
+			},
+			{
+				Path: "Other.md",
+			},
+		}
+	}
+
+	return &retpr
 }
 
 func createTestDirectory(t *testing.T) string {
