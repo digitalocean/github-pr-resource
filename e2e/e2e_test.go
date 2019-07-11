@@ -325,21 +325,21 @@ func TestGetAndPutE2E(t *testing.T) {
 			metadata := readTestFile(t, filepath.Join(dir, ".git", "resource", "metadata.json"))
 			assert.Equal(t, tc.metadataString, metadata)
 
-			individual_files := map[string]string {
-				"pr": "4",
-				"url": "https://github.com/itsdalmo/test-repository/pull/4",
+			files := map[string]string{
+				"pr":        "4",
+				"url":       "https://github.com/itsdalmo/test-repository/pull/4",
 				"head_name": "my_second_pull",
-				"head_sha": "a5114f6ab89f4b736655642a11e8d15ce363d882",
+				"head_sha":  "a5114f6ab89f4b736655642a11e8d15ce363d882",
 				"base_name": "master",
-				"base_sha": "93eeeedb8a16e6662062d1eca5655108977cc59a",
-				"message": "Push 2.",
-				"author": "itsdalmo",
-			}
-			for filename, expected_content := range individual_files {
-				actual_content := readTestFile(t, filepath.Join(dir, ".git", "resource", filename))
-				assert.Equal(t, actual_content, expected_content)
+				"base_sha":  "93eeeedb8a16e6662062d1eca5655108977cc59a",
+				"message":   "Push 2.",
+				"author":    "itsdalmo",
 			}
 
+			for filename, expected := range files {
+				actual := readTestFile(t, filepath.Join(dir, ".git", "resource", filename))
+				assert.Equal(t, actual, expected)
+			}
 
 			// Check commit history
 			history := gitHistory(t, dir)
