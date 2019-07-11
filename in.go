@@ -93,6 +93,14 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		return nil, fmt.Errorf("failed to write metadata: %s", err)
 	}
 
+	for _, d := range metadata {
+		filename := d.Name
+		content := []byte(d.Value)
+		if err := ioutil.WriteFile(filepath.Join(path, filename), content, 0644); err != nil {
+			return nil, fmt.Errorf("failed to write metadata file %s: %s", filename, err)
+		}
+	}
+
 	return &GetResponse{
 		Version:  request.Version,
 		Metadata: metadata,
