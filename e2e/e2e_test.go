@@ -153,6 +153,7 @@ func TestGetAndPutE2E(t *testing.T) {
 		putParameters       resource.PutParameters
 		versionString       string
 		metadataString      string
+		metadataFiles       map[string]string
 		expectedCommitCount int
 		expectedCommits     []string
 	}{
@@ -169,10 +170,20 @@ func TestGetAndPutE2E(t *testing.T) {
 				Commit:        targetCommitID,
 				CommittedDate: time.Time{},
 			},
-			getParameters:       resource.GetParameters{},
-			putParameters:       resource.PutParameters{},
-			versionString:       `{"pr":"4","commit":"a5114f6ab89f4b736655642a11e8d15ce363d882","committed":"0001-01-01T00:00:00Z"}`,
-			metadataString:      `[{"name":"pr","value":"4"},{"name":"url","value":"https://github.com/itsdalmo/test-repository/pull/4"},{"name":"head_name","value":"my_second_pull"},{"name":"head_sha","value":"a5114f6ab89f4b736655642a11e8d15ce363d882"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"93eeeedb8a16e6662062d1eca5655108977cc59a"},{"name":"message","value":"Push 2."},{"name":"author","value":"itsdalmo"}]`,
+			getParameters:  resource.GetParameters{},
+			putParameters:  resource.PutParameters{},
+			versionString:  `{"pr":"4","commit":"a5114f6ab89f4b736655642a11e8d15ce363d882","committed":"0001-01-01T00:00:00Z"}`,
+			metadataString: `[{"name":"pr","value":"4"},{"name":"url","value":"https://github.com/itsdalmo/test-repository/pull/4"},{"name":"head_name","value":"my_second_pull"},{"name":"head_sha","value":"a5114f6ab89f4b736655642a11e8d15ce363d882"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"93eeeedb8a16e6662062d1eca5655108977cc59a"},{"name":"message","value":"Push 2."},{"name":"author","value":"itsdalmo"}]`,
+			metadataFiles: map[string]string{
+				"pr":        "4",
+				"url":       "https://github.com/itsdalmo/test-repository/pull/4",
+				"head_name": "my_second_pull",
+				"head_sha":  "a5114f6ab89f4b736655642a11e8d15ce363d882",
+				"base_name": "master",
+				"base_sha":  "93eeeedb8a16e6662062d1eca5655108977cc59a",
+				"message":   "Push 2.",
+				"author":    "itsdalmo",
+			},
 			expectedCommitCount: 10,
 			expectedCommits:     []string{"Merge commit 'a5114f6ab89f4b736655642a11e8d15ce363d882'"},
 		},
@@ -325,18 +336,7 @@ func TestGetAndPutE2E(t *testing.T) {
 			metadata := readTestFile(t, filepath.Join(dir, ".git", "resource", "metadata.json"))
 			assert.Equal(t, tc.metadataString, metadata)
 
-			files := map[string]string{
-				"pr":        "4",
-				"url":       "https://github.com/itsdalmo/test-repository/pull/4",
-				"head_name": "my_second_pull",
-				"head_sha":  "a5114f6ab89f4b736655642a11e8d15ce363d882",
-				"base_name": "master",
-				"base_sha":  "93eeeedb8a16e6662062d1eca5655108977cc59a",
-				"message":   "Push 2.",
-				"author":    "itsdalmo",
-			}
-
-			for filename, expected := range files {
+			for filename, expected := range tc.metadataFiles {
 				actual := readTestFile(t, filepath.Join(dir, ".git", "resource", filename))
 				assert.Equal(t, expected, actual)
 			}
