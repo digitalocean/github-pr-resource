@@ -139,19 +139,20 @@ func TestGet(t *testing.T) {
 				assert.Equal(t, tc.metadataString, metadata)
 
 				// Verify individual files
-				individual_files := map[string]string {
-					"pr": "1",
-					"url": "pr1 url",
+				files := map[string]string{
+					"pr":        "1",
+					"url":       "pr1 url",
 					"head_name": "pr1",
-					"head_sha": "oid1",
+					"head_sha":  "oid1",
 					"base_name": "master",
-					"base_sha": "sha",
-					"message": "commit message1",
-					"author": "login1",
+					"base_sha":  "sha",
+					"message":   "commit message1",
+					"author":    "login1",
 				}
-				for filename, expected_content := range individual_files {
-					actual_content := readTestFile(t, filepath.Join(dir, ".git", "resource", filename))
-					assert.Equal(t, actual_content, expected_content)
+
+				for filename, expected := range files {
+					actual := readTestFile(t, filepath.Join(dir, ".git", "resource", filename))
+					assert.Equal(t, expected, actual)
 				}
 			}
 
