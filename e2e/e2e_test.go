@@ -338,7 +338,7 @@ func TestGetAndPutE2E(t *testing.T) {
 
 			for filename, expected := range files {
 				actual := readTestFile(t, filepath.Join(dir, ".git", "resource", filename))
-				assert.Equal(t, actual, expected)
+				assert.Equal(t, expected, actual)
 			}
 
 			// Check commit history
