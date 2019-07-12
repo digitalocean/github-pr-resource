@@ -178,7 +178,7 @@ func TestGet(t *testing.T) {
 				}
 
 				if tc.filesString != "" {
-					changedFiles := readTestFile(t, filepath.Join(dir, ".git", "resource", "changedFiles"))
+					changedFiles := readTestFile(t, filepath.Join(dir, ".git", "resource", "changed_files"))
 					assert.Equal(t, tc.filesString, changedFiles)
 
 				}
@@ -321,7 +321,7 @@ func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool, has
 	}
 
 	if hasFiles {
-		retpr.Files = []resource.FilesChangedObject{
+		retpr.ChangedFiles = []resource.ChangedFileObject{
 			{
 				Path: "README.md",
 			},
