@@ -24,6 +24,7 @@ type Github interface {
 	ListModifiedFiles(int) ([]string, error)
 	PostComment(string, string) error
 	GetPullRequest(string, string) (*PullRequest, error)
+	GetChangedFiles(string, string) ([]ChangedFileObject, error)
 	UpdateCommitStatus(string, string, string, string, string, string) error
 }
 
@@ -198,6 +199,64 @@ func (m *GithubClient) PostComment(prNumber, comment string) error {
 	return err
 }
 
+// GetChangedFiles ...
+func (m *GithubClient) GetChangedFiles(prNumber string, commitRef string) ([]ChangedFileObject, error) {
+	pr, err := strconv.Atoi(prNumber)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert pull request number to int: %s", err)
+	}
+
+	var cfo []ChangedFileObject
+
+	var filequery struct {
+		Repository struct {
+			PullRequest struct {
+				Files struct {
+					Edges []struct {
+						Node struct {
+							ChangedFileObject
+						}
+					} `graphql:"edges"`
+					PageInfo struct {
+						PageInfoObject
+					} `graphql:"pageInfo"`
+				} `graphql:"files(first:$changedFilesFirst, after: $changedFilesEndCursor)"`
+			} `graphql:"pullRequest(number:$prNumber)"`
+		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
+	}
+
+	offset := ""
+	fetch := true
+
+	for fetch {
+		vars := map[string]interface{}{
+			"repositoryOwner":       githubv4.String(m.Owner),
+			"repositoryName":        githubv4.String(m.Repository),
+			"prNumber":              githubv4.Int(pr),
+			"changedFilesFirst":     githubv4.Int(100),
+			"changedFilesEndCursor": githubv4.String(offset),
+		}
+
+		if err := m.V4.Query(context.TODO(), &filequery, vars); err != nil {
+			return nil, err
+		}
+
+		for _, f := range filequery.Repository.PullRequest.Files.Edges {
+			cfo = append(cfo, ChangedFileObject{Path: f.Node.Path})
+		}
+
+		if filequery.Repository.PullRequest.Files.PageInfo.HasNextPage {
+			fetch = true
+			offset = filequery.Repository.PullRequest.Files.PageInfo.EndCursor
+		} else {
+			fetch = false
+		}
+
+	}
+
+	return cfo, nil
+}
+
 // GetPullRequest ...
 func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest, error) {
 	pr, err := strconv.Atoi(prNumber)
@@ -216,23 +275,15 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 						}
 					}
 				} `graphql:"commits(last:$commitsLast)"`
-				Files struct {
-					Edges []struct {
-						Node struct {
-							ChangedFileObject
-						}
-					}
-				} `graphql:"files(last:$changedFilesLast)"`
 			} `graphql:"pullRequest(number:$prNumber)"`
 		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
 	}
 
 	vars := map[string]interface{}{
-		"repositoryOwner":  githubv4.String(m.Owner),
-		"repositoryName":   githubv4.String(m.Repository),
-		"prNumber":         githubv4.Int(pr),
-		"commitsLast":      githubv4.Int(100),
-		"changedFilesLast": githubv4.Int(100),
+		"repositoryOwner": githubv4.String(m.Owner),
+		"repositoryName":  githubv4.String(m.Repository),
+		"prNumber":        githubv4.Int(pr),
+		"commitsLast":     githubv4.Int(100),
 	}
 
 	// TODO: Pagination - in case someone pushes > 100 commits before the build has time to start :p
@@ -241,18 +292,18 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 	}
 
 	for _, c := range query.Repository.PullRequest.Commits.Edges {
+		prObj := PullRequest{
+			PullRequestObject: query.Repository.PullRequest.PullRequestObject,
+			Tip:               c.Node.Commit,
+		}
+
 		if c.Node.Commit.OID == commitRef {
-			var fl []ChangedFileObject
-			for _, f := range query.Repository.PullRequest.Files.Edges {
-				fl = append(fl, ChangedFileObject{Path: f.Node.Path})
-			}
+			fl, _ := m.GetChangedFiles(prNumber, commitRef)
+
+			prObj.ChangedFiles = fl
 
 			// Return as soon as we find the correct ref.
-			return &PullRequest{
-				PullRequestObject: query.Repository.PullRequest.PullRequestObject,
-				Tip:               c.Node.Commit,
-				ChangedFiles:      fl,
-			}, nil
+			return &prObj, nil
 		}
 	}
 
