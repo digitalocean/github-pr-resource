@@ -101,15 +101,16 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		}
 
 	}
-	if len(pull.Files) != 0 {
+
+	if len(pull.ChangedFiles) != 0 {
 		var fl []byte
 
-		for _, v := range pull.Files {
+		for _, v := range pull.ChangedFiles {
 			fl = append(fl, []byte(v.Path+"\n")...)
 		}
 
 		// Create List with changed files
-		if err := ioutil.WriteFile(filepath.Join(path, "changedFiles"), fl, 0644); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(path, "changed_files"), fl, 0644); err != nil {
 			return nil, fmt.Errorf("failed to write file list: %s", err)
 		}
 	}

@@ -176,7 +176,7 @@ func TestGet(t *testing.T) {
 					actual := readTestFile(t, filepath.Join(dir, ".git", "resource", filename))
 					assert.Equal(t, expected, actual)
 				}
-				
+
 				if tc.filesString != "" {
 					changedFiles := readTestFile(t, filepath.Join(dir, ".git", "resource", "changedFiles"))
 					assert.Equal(t, tc.filesString, changedFiles)

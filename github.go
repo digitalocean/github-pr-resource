@@ -219,19 +219,20 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 				Files struct {
 					Edges []struct {
 						Node struct {
-							FilesChangedObject
+							ChangedFileObject
 						}
 					}
-				} `graphql:"files(last:$commitsLast)"`
+				} `graphql:"files(last:$changedFilesLast)"`
 			} `graphql:"pullRequest(number:$prNumber)"`
 		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
 	}
 
 	vars := map[string]interface{}{
-		"repositoryOwner": githubv4.String(m.Owner),
-		"repositoryName":  githubv4.String(m.Repository),
-		"prNumber":        githubv4.Int(pr),
-		"commitsLast":     githubv4.Int(100),
+		"repositoryOwner":  githubv4.String(m.Owner),
+		"repositoryName":   githubv4.String(m.Repository),
+		"prNumber":         githubv4.Int(pr),
+		"commitsLast":      githubv4.Int(100),
+		"changedFilesLast": githubv4.Int(100),
 	}
 
 	// TODO: Pagination - in case someone pushes > 100 commits before the build has time to start :p
@@ -241,16 +242,16 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 
 	for _, c := range query.Repository.PullRequest.Commits.Edges {
 		if c.Node.Commit.OID == commitRef {
-			var fl []FilesChangedObject
+			var fl []ChangedFileObject
 			for _, f := range query.Repository.PullRequest.Files.Edges {
-				fl = append(fl, FilesChangedObject{Path: f.Node.Path})
+				fl = append(fl, ChangedFileObject{Path: f.Node.Path})
 			}
 
 			// Return as soon as we find the correct ref.
 			return &PullRequest{
 				PullRequestObject: query.Repository.PullRequest.PullRequestObject,
 				Tip:               c.Node.Commit,
-				Files:             fl,
+				ChangedFiles:      fl,
 			}, nil
 		}
 	}
