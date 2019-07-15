@@ -38,7 +38,9 @@ func TestGet(t *testing.T) {
 				Commit:        "commit1",
 				CommittedDate: time.Time{},
 			},
-			parameters:     resource.GetParameters{},
+			parameters:     resource.GetParameters{
+				ChangedFilesQuery: true,
+			},
 			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
@@ -56,7 +58,9 @@ func TestGet(t *testing.T) {
 				Commit:        "commit1",
 				CommittedDate: time.Time{},
 			},
-			parameters:     resource.GetParameters{},
+			parameters:     resource.GetParameters{
+				ChangedFilesQuery: true,
+			},
 			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
@@ -75,6 +79,7 @@ func TestGet(t *testing.T) {
 			},
 			parameters: resource.GetParameters{
 				IntegrationTool: "rebase",
+				ChangedFilesQuery: true,
 			},
 			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
@@ -94,6 +99,7 @@ func TestGet(t *testing.T) {
 			},
 			parameters: resource.GetParameters{
 				IntegrationTool: "checkout",
+				ChangedFilesQuery: true,
 			},
 			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
@@ -111,7 +117,10 @@ func TestGet(t *testing.T) {
 				Commit:        "commit1",
 				CommittedDate: time.Time{},
 			},
-			parameters:     resource.GetParameters{GitDepth: 2},
+			parameters:     resource.GetParameters{
+				GitDepth: 2,
+				ChangedFilesQuery: true,
+			},
 			pullRequest:    createTestPR(1, "master", false, false, true),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
@@ -128,7 +137,9 @@ func TestGet(t *testing.T) {
 				Commit:        "commit1",
 				CommittedDate: time.Time{},
 			},
-			parameters:     resource.GetParameters{},
+			parameters:     resource.GetParameters{
+				ChangedFilesQuery: false,
+			},
 			pullRequest:    createTestPR(1, "master", false, false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
@@ -186,9 +197,10 @@ func TestGet(t *testing.T) {
 
 			// Validate Github calls
 			if assert.Equal(t, 1, github.GetPullRequestCallCount()) {
-				pr, commit := github.GetPullRequestArgsForCall(0)
+				pr, commit, cfq := github.GetPullRequestArgsForCall(0)
 				assert.Equal(t, tc.version.PR, pr)
 				assert.Equal(t, tc.version.Commit, commit)
+				assert.Equal(t, tc.parameters.ChangedFilesQuery, cfq)
 			}
 
 			// Validate Git calls

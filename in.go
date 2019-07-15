@@ -15,7 +15,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		return &GetResponse{Version: request.Version}, nil
 	}
 
-	pull, err := github.GetPullRequest(request.Version.PR, request.Version.Commit)
+	pull, err := github.GetPullRequest(request.Version.PR, request.Version.Commit, request.Params.ChangedFilesQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
 	}
@@ -123,9 +123,10 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 
 // GetParameters ...
 type GetParameters struct {
-	SkipDownload    bool   `json:"skip_download"`
-	IntegrationTool string `json:"integration_tool"`
-	GitDepth        int    `json:"git_depth"`
+	SkipDownload      bool   `json:"skip_download"`
+	IntegrationTool   string `json:"integration_tool"`
+	GitDepth          int    `json:"git_depth"`
+	ChangedFilesQuery bool   `json:"generate_changed_file_list"`
 }
 
 // GetRequest ...
