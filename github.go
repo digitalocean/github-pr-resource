@@ -127,7 +127,7 @@ func (m *GithubClient) ListOpenPullRequests() ([]*PullRequest, error) {
 		"prFirst":         githubv4.Int(100),
 		"prStates":        []githubv4.PullRequestState{githubv4.PullRequestStateOpen},
 		"prCursor":        (*githubv4.String)(nil),
-		"commitsLast":     githubv4.Int(1),
+		"commitsLast":     githubv4.Int(100),
 	}
 
 	var response []*PullRequest
