@@ -76,6 +76,10 @@ requested version and the metadata emitted by `get` are available to your tasks 
 - `.git/resource/metadata.json`
 - `.git/resource/changed_files` (if enabled by `generate_changed_file_list`)
 
+The information in `metadata.json` is also available as individual files in the `.git/resource` directory, e.g. the `base_sha`
+is available as `.git/resource/base_sha`. For a complete list of available (individual) metadata files, please check the code 
+[here](https://github.com/telia-oss/github-pr-resource/blob/master/in.go#L66).
+
 When specifying `skip_download` the pull request volume mounted to subsequent tasks will be empty, which is a problem
 when you set e.g. the pending status before running the actual tests. The workaround for this is to use an alias for
 the `put` (see https://github.com/telia-oss/github-pr-resource/issues/32 for more details).
