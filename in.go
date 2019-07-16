@@ -102,7 +102,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 
 	}
 
-	if request.Params.GenerateChangedFileList {
+	if request.Params.ListChangedFiles {
 		cfol, err := github.GetChangedFiles(request.Version.PR, request.Version.Commit)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch list of changed files: %s", err)
@@ -128,10 +128,10 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 
 // GetParameters ...
 type GetParameters struct {
-	SkipDownload            bool   `json:"skip_download"`
-	IntegrationTool         string `json:"integration_tool"`
-	GitDepth                int    `json:"git_depth"`
-	GenerateChangedFileList bool   `json:"list_changed_files"`
+	SkipDownload     bool   `json:"skip_download"`
+	IntegrationTool  string `json:"integration_tool"`
+	GitDepth         int    `json:"git_depth"`
+	ListChangedFiles bool   `json:"list_changed_files"`
 }
 
 // GetRequest ...

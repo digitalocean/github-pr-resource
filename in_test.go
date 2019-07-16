@@ -40,7 +40,7 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{
-				GenerateChangedFileList: true,
+				ListChangedFiles: true,
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
@@ -68,7 +68,7 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{
-				GenerateChangedFileList: true,
+				ListChangedFiles: true,
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
@@ -95,8 +95,8 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				IntegrationTool:         "rebase",
-				GenerateChangedFileList: true,
+				IntegrationTool:  "rebase",
+				ListChangedFiles: true,
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
@@ -123,8 +123,8 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				IntegrationTool:         "checkout",
-				GenerateChangedFileList: true,
+				IntegrationTool:  "checkout",
+				ListChangedFiles: true,
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
@@ -151,8 +151,8 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{
-				GitDepth:                2,
-				GenerateChangedFileList: true,
+				GitDepth:         2,
+				ListChangedFiles: true,
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
@@ -179,7 +179,7 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{
-				GenerateChangedFileList: false,
+				ListChangedFiles: false,
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
@@ -349,7 +349,7 @@ func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool) *re
 		m = "[skip ci]" + m
 	}
 
-	retpr := resource.PullRequest{
+	return &resource.PullRequest{
 		PullRequestObject: resource.PullRequestObject{
 			ID:          fmt.Sprintf("pr%s", n),
 			Number:      count,
@@ -374,8 +374,6 @@ func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool) *re
 			},
 		},
 	}
-
-	return &retpr
 }
 
 func createTestDirectory(t *testing.T) string {

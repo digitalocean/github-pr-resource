@@ -127,7 +127,7 @@ func (m *GithubClient) ListOpenPullRequests() ([]*PullRequest, error) {
 		"prFirst":         githubv4.Int(100),
 		"prStates":        []githubv4.PullRequestState{githubv4.PullRequestStateOpen},
 		"prCursor":        (*githubv4.String)(nil),
-		"commitsLast":     githubv4.Int(100),
+		"commitsLast":     githubv4.Int(1),
 	}
 
 	var response []*PullRequest
@@ -281,7 +281,7 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 		"repositoryOwner": githubv4.String(m.Owner),
 		"repositoryName":  githubv4.String(m.Repository),
 		"prNumber":        githubv4.Int(pr),
-		"commitsLast":     githubv4.Int(1),
+		"commitsLast":     githubv4.Int(100),
 	}
 
 	// TODO: Pagination - in case someone pushes > 100 commits before the build has time to start :p
@@ -290,14 +290,12 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 	}
 
 	for _, c := range query.Repository.PullRequest.Commits.Edges {
-		prObj := PullRequest{
-			PullRequestObject: query.Repository.PullRequest.PullRequestObject,
-			Tip:               c.Node.Commit,
-		}
-
 		if c.Node.Commit.OID == commitRef {
 			// Return as soon as we find the correct ref.
-			return &prObj, nil
+			return &PullRequest{
+				PullRequestObject: query.Repository.PullRequest.PullRequestObject,
+				Tip:               c.Node.Commit,
+			}, nil
 		}
 	}
 
