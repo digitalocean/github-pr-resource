@@ -60,3 +60,9 @@ tasks:
       CGO_ENABLED: '0'
       GOOS: '{{OS}}'
       GOARCH: '{{ARCH}}'
+
+  ci:
+    desc: CI build and tests
+    cmds:
+    - task: build
+    - if $(git diff --exit-code >> /dev/null); then echo "Diff in generated files and/or formatting" && exit 1; fi
