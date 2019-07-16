@@ -22,12 +22,11 @@ type FakeGithub struct {
 		result1 []resource.ChangedFileObject
 		result2 error
 	}
-	GetPullRequestStub        func(string, string, bool) (*resource.PullRequest, error)
+	GetPullRequestStub        func(string, string) (*resource.PullRequest, error)
 	getPullRequestMutex       sync.RWMutex
 	getPullRequestArgsForCall []struct {
 		arg1 string
 		arg2 string
-		arg3 bool
 	}
 	getPullRequestReturns struct {
 		result1 *resource.PullRequest
@@ -158,18 +157,17 @@ func (fake *FakeGithub) GetChangedFilesReturnsOnCall(i int, result1 []resource.C
 	}{result1, result2}
 }
 
-func (fake *FakeGithub) GetPullRequest(arg1 string, arg2 string, arg3 bool) (*resource.PullRequest, error) {
+func (fake *FakeGithub) GetPullRequest(arg1 string, arg2 string) (*resource.PullRequest, error) {
 	fake.getPullRequestMutex.Lock()
 	ret, specificReturn := fake.getPullRequestReturnsOnCall[len(fake.getPullRequestArgsForCall)]
 	fake.getPullRequestArgsForCall = append(fake.getPullRequestArgsForCall, struct {
 		arg1 string
 		arg2 string
-		arg3 bool
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("GetPullRequest", []interface{}{arg1, arg2, arg3})
+	}{arg1, arg2})
+	fake.recordInvocation("GetPullRequest", []interface{}{arg1, arg2})
 	fake.getPullRequestMutex.Unlock()
 	if fake.GetPullRequestStub != nil {
-		return fake.GetPullRequestStub(arg1, arg2, arg3)
+		return fake.GetPullRequestStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -184,17 +182,17 @@ func (fake *FakeGithub) GetPullRequestCallCount() int {
 	return len(fake.getPullRequestArgsForCall)
 }
 
-func (fake *FakeGithub) GetPullRequestCalls(stub func(string, string, bool) (*resource.PullRequest, error)) {
+func (fake *FakeGithub) GetPullRequestCalls(stub func(string, string) (*resource.PullRequest, error)) {
 	fake.getPullRequestMutex.Lock()
 	defer fake.getPullRequestMutex.Unlock()
 	fake.GetPullRequestStub = stub
 }
 
-func (fake *FakeGithub) GetPullRequestArgsForCall(i int) (string, string, bool) {
+func (fake *FakeGithub) GetPullRequestArgsForCall(i int) (string, string) {
 	fake.getPullRequestMutex.RLock()
 	defer fake.getPullRequestMutex.RUnlock()
 	argsForCall := fake.getPullRequestArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeGithub) GetPullRequestReturns(result1 *resource.PullRequest, result2 error) {

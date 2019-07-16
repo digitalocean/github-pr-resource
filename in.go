@@ -15,7 +15,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		return &GetResponse{Version: request.Version}, nil
 	}
 
-	pull, err := github.GetPullRequest(request.Version.PR, request.Version.Commit, request.Params.ChangedFilesQuery)
+	pull, err := github.GetPullRequest(request.Version.PR, request.Version.Commit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve pull request: %s", err)
 	}
@@ -102,10 +102,15 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 
 	}
 
-	if len(pull.ChangedFiles) != 0 {
+	if request.Params.GenerateChangedFileList {
+		cfol, err := github.GetChangedFiles(request.Version.PR, request.Version.Commit)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch list of changed files: %s", err)
+		}
+
 		var fl []byte
 
-		for _, v := range pull.ChangedFiles {
+		for _, v := range cfol {
 			fl = append(fl, []byte(v.Path+"\n")...)
 		}
 
@@ -123,10 +128,10 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 
 // GetParameters ...
 type GetParameters struct {
-	SkipDownload      bool   `json:"skip_download"`
-	IntegrationTool   string `json:"integration_tool"`
-	GitDepth          int    `json:"git_depth"`
-	ChangedFilesQuery bool   `json:"generate_changed_file_list"`
+	SkipDownload            bool   `json:"skip_download"`
+	IntegrationTool         string `json:"integration_tool"`
+	GitDepth                int    `json:"git_depth"`
+	GenerateChangedFileList bool   `json:"list_changed_files"`
 }
 
 // GetRequest ...

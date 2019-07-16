@@ -25,6 +25,7 @@ func TestGet(t *testing.T) {
 		pullRequest    *resource.PullRequest
 		versionString  string
 		metadataString string
+		files          []resource.ChangedFileObject
 		filesString    string
 	}{
 		{
@@ -39,11 +40,19 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{
-				ChangedFilesQuery: true,
+				GenerateChangedFileList: true,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, true),
+			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			files:    		[]resource.ChangedFileObject{
+				{
+					Path: "README.md",
+				},
+				{
+					Path: "Other.md",
+				},
+			},
 			filesString:    "README.md\nOther.md\n",
 		},
 		{
@@ -59,11 +68,19 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{
-				ChangedFilesQuery: true,
+				GenerateChangedFileList: true,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, true),
+			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			files:    		[]resource.ChangedFileObject{
+				{
+					Path: "README.md",
+				},
+				{
+					Path: "Other.md",
+				},
+			},
 			filesString:    "README.md\nOther.md\n",
 		},
 		{
@@ -78,12 +95,20 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				IntegrationTool: "rebase",
-				ChangedFilesQuery: true,
+				IntegrationTool:         "rebase",
+				GenerateChangedFileList: true,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, true),
+			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			files:    		[]resource.ChangedFileObject{
+				{
+					Path: "README.md",
+				},
+				{
+					Path: "Other.md",
+				},
+			},
 			filesString:    "README.md\nOther.md\n",
 		},
 		{
@@ -98,12 +123,20 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				IntegrationTool: "checkout",
-				ChangedFilesQuery: true,
+				IntegrationTool:         "checkout",
+				GenerateChangedFileList: true,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, true),
+			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			files:    		[]resource.ChangedFileObject{
+				{
+					Path: "README.md",
+				},
+				{
+					Path: "Other.md",
+				},
+			},
 			filesString:    "README.md\nOther.md\n",
 		},
 		{
@@ -118,12 +151,20 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{
-				GitDepth: 2,
-				ChangedFilesQuery: true,
+				GitDepth:                2,
+				GenerateChangedFileList: true,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, true),
+			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			files:    		[]resource.ChangedFileObject{
+				{
+					Path: "README.md",
+				},
+				{
+					Path: "Other.md",
+				},
+			},
 			filesString:    "README.md\nOther.md\n",
 		},
 		{
@@ -138,9 +179,9 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{
-				ChangedFilesQuery: false,
+				GenerateChangedFileList: false,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, false),
+			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
 		},
@@ -150,6 +191,10 @@ func TestGet(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			github := new(fakes.FakeGithub)
 			github.GetPullRequestReturns(tc.pullRequest, nil)
+
+			if tc.files != nil {
+				github.GetChangedFilesReturns(tc.files, nil)
+			}
 
 			git := new(fakes.FakeGit)
 			git.RevParseReturns("sha", nil)
@@ -188,19 +233,17 @@ func TestGet(t *testing.T) {
 					assert.Equal(t, expected, actual)
 				}
 
-				if tc.filesString != "" {
+				if tc.files != nil {
 					changedFiles := readTestFile(t, filepath.Join(dir, ".git", "resource", "changed_files"))
 					assert.Equal(t, tc.filesString, changedFiles)
-
 				}
 			}
 
 			// Validate Github calls
 			if assert.Equal(t, 1, github.GetPullRequestCallCount()) {
-				pr, commit, cfq := github.GetPullRequestArgsForCall(0)
+				pr, commit := github.GetPullRequestArgsForCall(0)
 				assert.Equal(t, tc.version.PR, pr)
 				assert.Equal(t, tc.version.Commit, commit)
-				assert.Equal(t, tc.parameters.ChangedFilesQuery, cfq)
 			}
 
 			// Validate Git calls
@@ -298,7 +341,7 @@ func TestGetSkipDownload(t *testing.T) {
 	}
 }
 
-func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool, hasFiles bool) *resource.PullRequest {
+func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool) *resource.PullRequest {
 	n := strconv.Itoa(count)
 	d := time.Now().AddDate(0, 0, -count)
 	m := fmt.Sprintf("commit message%s", n)
@@ -330,17 +373,6 @@ func createTestPR(count int, baseName string, skipCI bool, isCrossRepo bool, has
 				},
 			},
 		},
-	}
-
-	if hasFiles {
-		retpr.ChangedFiles = []resource.ChangedFileObject{
-			{
-				Path: "README.md",
-			},
-			{
-				Path: "Other.md",
-			},
-		}
 	}
 
 	return &retpr

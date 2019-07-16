@@ -74,7 +74,6 @@ func NewVersion(p *PullRequest) Version {
 type PullRequest struct {
 	PullRequestObject
 	Tip          CommitObject
-	ChangedFiles []ChangedFileObject
 }
 
 // PullRequestObject represents the GraphQL commit node.
@@ -110,13 +109,4 @@ type CommitObject struct {
 // https://developer.github.com/v4/object/pullrequestchangedfile/
 type ChangedFileObject struct {
 	Path string
-}
-
-// PageInfoObject represents the GraphQL PageInfo Object.
-// https://developer.github.com/v4/object/pageinfo/
-type PageInfoObject struct {
-	StartCursor string
-	HasPreviousPage bool
-	HasNextPage bool
-	EndCursor   string
 }
