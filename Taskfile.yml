@@ -65,4 +65,4 @@ tasks:
     desc: CI build and tests
     cmds:
     - task: build
-    - if $(git diff --exit-code >> /dev/null); then echo "Diff in generated files and/or formatting" && exit 1; fi
+    - if [ -n "$(git status --porcelain)" ];then echo "Diff in generated files and/or formatting" && exit 1; fi
