@@ -104,3 +104,9 @@ type CommitObject struct {
 		}
 	}
 }
+
+// ChangedFileObject represents the GraphQL FilesChanged node.
+// https://developer.github.com/v4/object/pullrequestchangedfile/
+type ChangedFileObject struct {
+	Path string
+}

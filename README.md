@@ -60,11 +60,12 @@ generate notifications over the webhook. So if you have a repository with little
 
 #### `get`
 
-| Parameter          | Required | Example  | Description                                                                        |
-|--------------------|----------|----------|------------------------------------------------------------------------------------|
-| `skip_download`    | No       | `true`   | Use with `get_params` in a `put` step to do nothing on the implicit get.           |
-| `integration_tool` | No       | `rebase` | The integration tool to use, `merge`, `rebase` or `checkout`. Defaults to `merge`. |
-| `git_depth`        | No       | `1`      | Shallow clone the repository using the `--depth` Git option                        |
+| Parameter             | Required | Example  | Description                                                                        |
+|-----------------------|----------|----------|------------------------------------------------------------------------------------|
+| `skip_download`       | No       | `true`   | Use with `get_params` in a `put` step to do nothing on the implicit get.           |
+| `integration_tool`    | No       | `rebase` | The integration tool to use, `merge`, `rebase` or `checkout`. Defaults to `merge`. |
+| `git_depth`           | No       | `1`      | Shallow clone the repository using the `--depth` Git option                        |
+| `list_changed_files`  | No       | `true`   | Generate a list of changed files and save alongside metadata                       |
 
 Clones the base (e.g. `master` branch) at the latest commit, and merges the pull request at the specified commit
 into master. This ensures that we are both testing and setting status on the exact commit that was requested in
@@ -73,6 +74,7 @@ input. Because the base of the PR is not locked to a specific commit in versions
 requested version and the metadata emitted by `get` are available to your tasks as JSON:
 - `.git/resource/version.json`
 - `.git/resource/metadata.json`
+- `.git/resource/changed_files` (if enabled by `list_changed_files`)
 
 The information in `metadata.json` is also available as individual files in the `.git/resource` directory, e.g. the `base_sha`
 is available as `.git/resource/base_sha`. For a complete list of available (individual) metadata files, please check the code 
