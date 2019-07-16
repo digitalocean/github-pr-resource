@@ -39,21 +39,10 @@ func TestGet(t *testing.T) {
 				Commit:        "commit1",
 				CommittedDate: time.Time{},
 			},
-			parameters: resource.GetParameters{
-				ListChangedFiles: true,
-			},
+			parameters:     resource.GetParameters{},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
-			files: []resource.ChangedFileObject{
-				{
-					Path: "README.md",
-				},
-				{
-					Path: "Other.md",
-				},
-			},
-			filesString: "README.md\nOther.md\n",
 		},
 		{
 			description: "get supports unlocking with git crypt",
@@ -67,21 +56,10 @@ func TestGet(t *testing.T) {
 				Commit:        "commit1",
 				CommittedDate: time.Time{},
 			},
-			parameters: resource.GetParameters{
-				ListChangedFiles: true,
-			},
+			parameters:     resource.GetParameters{},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
-			files: []resource.ChangedFileObject{
-				{
-					Path: "README.md",
-				},
-				{
-					Path: "Other.md",
-				},
-			},
-			filesString: "README.md\nOther.md\n",
 		},
 		{
 			description: "get supports rebasing",
@@ -95,21 +73,11 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				IntegrationTool:  "rebase",
-				ListChangedFiles: true,
+				IntegrationTool: "rebase",
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
-			files: []resource.ChangedFileObject{
-				{
-					Path: "README.md",
-				},
-				{
-					Path: "Other.md",
-				},
-			},
-			filesString: "README.md\nOther.md\n",
 		},
 		{
 			description: "get supports checkout",
@@ -123,21 +91,11 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				IntegrationTool:  "checkout",
-				ListChangedFiles: true,
+				IntegrationTool: "checkout",
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
-			files: []resource.ChangedFileObject{
-				{
-					Path: "README.md",
-				},
-				{
-					Path: "Other.md",
-				},
-			},
-			filesString: "README.md\nOther.md\n",
 		},
 		{
 			description: "get supports git_depth",
@@ -151,24 +109,14 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				GitDepth:         2,
-				ListChangedFiles: true,
+				GitDepth: 2,
 			},
 			pullRequest:    createTestPR(1, "master", false, false),
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
-			files: []resource.ChangedFileObject{
-				{
-					Path: "README.md",
-				},
-				{
-					Path: "Other.md",
-				},
-			},
-			filesString: "README.md\nOther.md\n",
 		},
 		{
-			description: "get works no file list",
+			description: "get supports list_changed_files",
 			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: "oauthtoken",
@@ -179,11 +127,20 @@ func TestGet(t *testing.T) {
 				CommittedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				ListChangedFiles: false,
+				ListChangedFiles: true,
 			},
-			pullRequest:    createTestPR(1, "master", false, false),
+			pullRequest: createTestPR(1, "master", false, false),
+			files: []resource.ChangedFileObject{
+				{
+					Path: "README.md",
+				},
+				{
+					Path: "Other.md",
+				},
+			},
 			versionString:  `{"pr":"pr1","commit":"commit1","committed":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"}]`,
+			filesString:    "README.md\nOther.md\n",
 		},
 	}
 
