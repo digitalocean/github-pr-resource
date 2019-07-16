@@ -66,3 +66,4 @@ tasks:
     cmds:
     - task: build
     - if [ -n "$(git status --porcelain)" ];then echo "Diff in generated files and/or formatting" && exit 1; fi
+    silent: true
