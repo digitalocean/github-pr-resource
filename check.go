@@ -42,8 +42,8 @@ Loop:
 			continue
 		}
 
-		// Filter pull request if it does not have at least 1 approved review.
-		if request.Source.RequireReviewApproval && p.ApprovedReviewCount < 1 {
+		// Filter pull request if it does not have the required number of approved review(s).
+		if p.ApprovedReviewCount < request.Source.RequiredReviewApprovals {
 			continue
 		}
 

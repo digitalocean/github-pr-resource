@@ -10,18 +10,18 @@ import (
 
 // Source represents the configuration for the resource.
 type Source struct {
-	Repository            string   `json:"repository"`
-	AccessToken           string   `json:"access_token"`
-	V3Endpoint            string   `json:"v3_endpoint"`
-	V4Endpoint            string   `json:"v4_endpoint"`
-	Paths                 []string `json:"paths"`
-	IgnorePaths           []string `json:"ignore_paths"`
-	DisableCISkip         bool     `json:"disable_ci_skip"`
-	SkipSSLVerification   bool     `json:"skip_ssl_verification"`
-	DisableForks          bool     `json:"disable_forks"`
-	GitCryptKey           string   `json:"git_crypt_key"`
-	BaseBranch            string   `json:"base_branch"`
-	RequireReviewApproval bool     `json:"require_review_approval"`
+	Repository              string   `json:"repository"`
+	AccessToken             string   `json:"access_token"`
+	V3Endpoint              string   `json:"v3_endpoint"`
+	V4Endpoint              string   `json:"v4_endpoint"`
+	Paths                   []string `json:"paths"`
+	IgnorePaths             []string `json:"ignore_paths"`
+	DisableCISkip           bool     `json:"disable_ci_skip"`
+	SkipSSLVerification     bool     `json:"skip_ssl_verification"`
+	DisableForks            bool     `json:"disable_forks"`
+	GitCryptKey             string   `json:"git_crypt_key"`
+	BaseBranch              string   `json:"base_branch"`
+	RequiredReviewApprovals int      `json:"required_review_approvals"`
 }
 
 // Validate the source configuration.
