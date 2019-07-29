@@ -24,6 +24,7 @@ type Github interface {
 	ListModifiedFiles(int) ([]string, error)
 	PostComment(string, string) error
 	GetPullRequest(string, string) (*PullRequest, error)
+	GetChangedFiles(string, string) ([]ChangedFileObject, error)
 	UpdateCommitStatus(string, string, string, string, string, string) error
 }
 
@@ -203,6 +204,62 @@ func (m *GithubClient) PostComment(prNumber, comment string) error {
 	return err
 }
 
+// GetChangedFiles ...
+func (m *GithubClient) GetChangedFiles(prNumber string, commitRef string) ([]ChangedFileObject, error) {
+	pr, err := strconv.Atoi(prNumber)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert pull request number to int: %s", err)
+	}
+
+	var cfo []ChangedFileObject
+
+	var filequery struct {
+		Repository struct {
+			PullRequest struct {
+				Files struct {
+					Edges []struct {
+						Node struct {
+							ChangedFileObject
+						}
+					} `graphql:"edges"`
+					PageInfo struct {
+						EndCursor   githubv4.String
+						HasNextPage bool
+					} `graphql:"pageInfo"`
+				} `graphql:"files(first:$changedFilesFirst, after: $changedFilesEndCursor)"`
+			} `graphql:"pullRequest(number:$prNumber)"`
+		} `graphql:"repository(owner:$repositoryOwner,name:$repositoryName)"`
+	}
+
+	offset := ""
+
+	for {
+		vars := map[string]interface{}{
+			"repositoryOwner":       githubv4.String(m.Owner),
+			"repositoryName":        githubv4.String(m.Repository),
+			"prNumber":              githubv4.Int(pr),
+			"changedFilesFirst":     githubv4.Int(100),
+			"changedFilesEndCursor": githubv4.String(offset),
+		}
+
+		if err := m.V4.Query(context.TODO(), &filequery, vars); err != nil {
+			return nil, err
+		}
+
+		for _, f := range filequery.Repository.PullRequest.Files.Edges {
+			cfo = append(cfo, ChangedFileObject{Path: f.Node.Path})
+		}
+
+		if !filequery.Repository.PullRequest.Files.PageInfo.HasNextPage {
+			break
+		}
+
+		offset = string(filequery.Repository.PullRequest.Files.PageInfo.EndCursor)
+	}
+
+	return cfo, nil
+}
+
 // GetPullRequest ...
 func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest, error) {
 	pr, err := strconv.Atoi(prNumber)
@@ -236,6 +293,7 @@ func (m *GithubClient) GetPullRequest(prNumber, commitRef string) (*PullRequest,
 	if err := m.V4.Query(context.TODO(), &query, vars); err != nil {
 		return nil, err
 	}
+
 	for _, c := range query.Repository.PullRequest.Commits.Edges {
 		if c.Node.Commit.OID == commitRef {
 			// Return as soon as we find the correct ref.
