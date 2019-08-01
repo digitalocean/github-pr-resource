@@ -32,7 +32,6 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `disable_forks`         | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository.                                                                                                                                                                        |
 | `git_crypt_key`         | No       | `AEdJVENSWVBUS0VZAAAAA...`       | Base64 encoded git-crypt key. Setting this will unlock / decrypt the repository with git-crypt. To get the key simply execute `git-crypt export-key -- - | base64` in an encrypted repository.                                                                                             |
 | `base_branch`           | No       | `master`                         | Name of a branch. The pipeline will only trigger on pull requests against the specified branch.                                                                                                                                                                                            |
-
 Notes:
  - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
  - Look at the [Concourse Resources documentation](https://concourse-ci.org/resources.html#resource-webhook-token)
