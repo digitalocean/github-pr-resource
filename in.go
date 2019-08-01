@@ -24,7 +24,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	if err := git.Init(pull.BaseRefName); err != nil {
 		return nil, err
 	}
-	if err := git.Pull(pull.Repository.URL, pull.BaseRefName, request.Params.GitDepth); err != nil {
+	if err := git.Pull(pull.RepositoryURL, pull.BaseRefName, request.Params.GitDepth); err != nil {
 		return nil, err
 	}
 
@@ -35,21 +35,21 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}
 
 	// Fetch the PR and merge the specified commit into the base
-	if err := git.Fetch(pull.Repository.URL, pull.Number, request.Params.GitDepth); err != nil {
+	if err := git.Fetch(pull.RepositoryURL, pull.Number, request.Params.GitDepth); err != nil {
 		return nil, err
 	}
 
 	switch tool := request.Params.IntegrationTool; tool {
 	case "rebase":
-		if err := git.Rebase(pull.BaseRefName, pull.Tip.OID); err != nil {
+		if err := git.Rebase(pull.BaseRefName, pull.HeadRef.OID); err != nil {
 			return nil, err
 		}
 	case "merge", "":
-		if err := git.Merge(pull.Tip.OID); err != nil {
+		if err := git.Merge(pull.HeadRef.OID); err != nil {
 			return nil, err
 		}
 	case "checkout":
-		if err := git.Checkout(pull.HeadRefName, pull.Tip.OID); err != nil {
+		if err := git.Checkout(pull.HeadRefName, pull.HeadRef.OID); err != nil {
 			return nil, err
 		}
 	default:
@@ -67,18 +67,19 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	metadata.Add("pr", strconv.Itoa(pull.Number))
 	metadata.Add("url", pull.URL)
 	metadata.Add("head_name", pull.HeadRefName)
-	metadata.Add("head_sha", pull.Tip.OID)
+	metadata.Add("head_sha", pull.HeadRef.OID)
+	metadata.Add("head_short_sha", pull.HeadRef.AbbreviatedOID)
 	metadata.Add("base_name", pull.BaseRefName)
 	metadata.Add("base_sha", baseSHA)
-	metadata.Add("message", pull.Tip.Message)
-	metadata.Add("author", pull.Tip.Author.User.Login)
+	metadata.Add("message", pull.HeadRef.Message)
+	metadata.Add("author", pull.HeadRef.Author)
 
 	// Write version and metadata for reuse in PUT
 	path := filepath.Join(outputDir, ".git", "resource")
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %s", err)
 	}
-	b, err := json.Marshal(request.Version)
+	b, err := json.Marshal(&request.Version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal version: %s", err)
 	}
@@ -103,7 +104,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}
 
 	if request.Params.ListChangedFiles {
-		cfol, err := github.GetChangedFiles(request.Version.PR, request.Version.Commit)
+		cfol, err := github.GetChangedFiles(request.Version.PR)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch list of changed files: %s", err)
 		}
@@ -111,7 +112,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		var fl []byte
 
 		for _, v := range cfol {
-			fl = append(fl, []byte(v.Path+"\n")...)
+			fl = append(fl, []byte(v+"\n")...)
 		}
 
 		// Create List with changed files
