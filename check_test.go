@@ -10,13 +10,15 @@ import (
 
 var (
 	testPullRequests = []*resource.PullRequest{
-		createTestPR(1, "master", true, false),
-		createTestPR(2, "master", false, false),
-		createTestPR(3, "master", false, false),
-		createTestPR(4, "master", false, false),
-		createTestPR(5, "master", false, true),
-		createTestPR(6, "master", false, false),
-		createTestPR(7, "develop", false, false),
+		createTestPR(1, "master", true, false, 0),
+		createTestPR(2, "master", false, false, 0),
+		createTestPR(3, "master", false, false, 0),
+		createTestPR(4, "master", false, false, 0),
+		createTestPR(5, "master", false, true, 0),
+		createTestPR(6, "master", false, false, 0),
+		createTestPR(7, "develop", false, false, 0),
+		createTestPR(8, "master", false, false, 1),
+		createTestPR(9, "master", false, false, 0),
 	}
 )
 
@@ -149,6 +151,19 @@ func TestCheck(t *testing.T) {
 			files:        [][]string{},
 			expected: resource.CheckResponse{
 				resource.NewVersion(testPullRequests[6]),
+			},
+		},
+		{
+			description: "check correctly ignores PRs with no approved reviews when specified",
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             "oauthtoken",
+				RequiredReviewApprovals: 1,
+			},
+			version:      resource.NewVersion(testPullRequests[8]),
+			pullRequests: testPullRequests,
+			expected: resource.CheckResponse{
+				resource.NewVersion(testPullRequests[7]),
 			},
 		},
 	}
