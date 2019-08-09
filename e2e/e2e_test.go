@@ -127,6 +127,34 @@ func TestCheckE2E(t *testing.T) {
 				resource.Version{PR: developPullRequestID, Commit: developCommitID, CommittedDate: developDateTime},
 			},
 		},
+
+		{
+			description: "check works with required review approvals",
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             os.Getenv("GITHUB_ACCESS_TOKEN"),
+				V3Endpoint:              "https://api.github.com/",
+				V4Endpoint:              "https://api.github.com/graphql",
+				RequiredReviewApprovals: 1,
+			},
+			version: resource.Version{},
+			expected: resource.CheckResponse{
+				resource.Version{PR: targetPullRequestID, Commit: targetCommitID, CommittedDate: targetDateTime},
+			},
+		},
+
+		{
+			description: "check works when we require multiple review approvals",
+			source: resource.Source{
+				Repository:              "itsdalmo/test-repository",
+				AccessToken:             os.Getenv("GITHUB_ACCESS_TOKEN"),
+				V3Endpoint:              "https://api.github.com/",
+				V4Endpoint:              "https://api.github.com/graphql",
+				RequiredReviewApprovals: 2,
+			},
+			version:  resource.Version{},
+			expected: resource.CheckResponse(nil),
+		},
 	}
 
 	for _, tc := range tests {
