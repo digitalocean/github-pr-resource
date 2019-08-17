@@ -22,6 +22,7 @@ type Source struct {
 	GitCryptKey             string   `json:"git_crypt_key"`
 	BaseBranch              string   `json:"base_branch"`
 	RequiredReviewApprovals int      `json:"required_review_approvals"`
+	Labels                  []string `json:"labels"`
 }
 
 // Validate the source configuration.
@@ -76,6 +77,7 @@ type PullRequest struct {
 	PullRequestObject
 	Tip                 CommitObject
 	ApprovedReviewCount int
+	Labels              []LabelObject
 }
 
 // PullRequestObject represents the GraphQL commit node.
@@ -111,4 +113,10 @@ type CommitObject struct {
 // https://developer.github.com/v4/object/pullrequestchangedfile/
 type ChangedFileObject struct {
 	Path string
+}
+
+// LabelObject represents the GraphQL label node.
+// https://developer.github.com/v4/object/label
+type LabelObject struct {
+	Name string
 }
