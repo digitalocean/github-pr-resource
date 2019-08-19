@@ -21,7 +21,6 @@ var (
 	targetPullRequestID  = "4"
 	targetDateTime       = time.Date(2018, time.May, 11, 8, 43, 48, 0, time.UTC)
 	latestCommitID       = "890a7e4f0d5b05bda8ea21b91f4604e3e0313581"
-	targetLabels         = []string{"enhancement", "help wanted"}
 	latestPullRequestID  = "5"
 	latestDateTime       = time.Date(2018, time.May, 14, 10, 51, 58, 0, time.UTC)
 	developCommitID      = "ac771f3b69cbd63b22bbda553f827ab36150c640"
@@ -158,11 +157,11 @@ func TestCheckE2E(t *testing.T) {
 		},
 
 		{
-			description: "check returns latest version from a PR with at least one of the desired labels on it",
+			description: "check returns latest version from a PR with desired labels on it",
 			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
-				Labels:      targetLabels,
+				Labels:      []string{"enhancement"},
 			},
 			version: resource.Version{},
 			expected: resource.CheckResponse{
