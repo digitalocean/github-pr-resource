@@ -10,14 +10,14 @@ import (
 
 var (
 	testPullRequests = []*resource.PullRequest{
-		createTestPR(1, "master", true, false, 0, []string{"bug"}),
-		createTestPR(2, "master", false, false, 0, []string{"duplicate"}),
-		createTestPR(3, "master", false, false, 0, []string{"bug", "good first issue"}),
+		createTestPR(1, "master", true, false, 0, nil),
+		createTestPR(2, "master", false, false, 0, nil),
+		createTestPR(3, "master", false, false, 0, nil),
 		createTestPR(4, "master", false, false, 0, nil),
-		createTestPR(5, "master", false, true, 0, []string{"invalid"}),
+		createTestPR(5, "master", false, true, 0, nil),
 		createTestPR(6, "master", false, false, 0, nil),
-		createTestPR(7, "develop", false, false, 0, []string{"help wanted"}),
-		createTestPR(8, "master", false, false, 1, nil),
+		createTestPR(7, "develop", false, false, 0, []string{"enhancement"}),
+		createTestPR(8, "master", false, false, 1, []string{"wontfix"}),
 		createTestPR(9, "master", false, false, 0, nil),
 	}
 )
@@ -176,7 +176,7 @@ func TestCheck(t *testing.T) {
 			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: "oauthtoken",
-				Labels:      []string{"help wanted", "enhancement"},
+				Labels:      []string{"enhancement"},
 			},
 			version:      resource.Version{},
 			pullRequests: testPullRequests,
