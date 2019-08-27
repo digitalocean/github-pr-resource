@@ -179,6 +179,7 @@ func TestCreated(t *testing.T) {
 	tests := []struct {
 		description string
 		pull        pullrequest.PullRequest
+		since       time.Time
 		expect      bool
 	}{
 		{
@@ -187,10 +188,11 @@ func TestCreated(t *testing.T) {
 				CreatedAt: time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
 				UpdatedAt: time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
 			},
+			since:  time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
 			expect: true,
 		},
 		{
-			description: "match Created after head commit",
+			description: "match Created after head commit and since last check",
 			pull: pullrequest.PullRequest{
 				CreatedAt: time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
 				HeadRef: pullrequest.Commit{
@@ -199,7 +201,21 @@ func TestCreated(t *testing.T) {
 					AuthoredDate:  time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 			},
+			since:  time.Date(2018, 12, 1, 0, 0, 0, 0, time.UTC),
 			expect: true,
+		},
+		{
+			description: "no match Created after head commit but not since last check",
+			pull: pullrequest.PullRequest{
+				CreatedAt: time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
+				HeadRef: pullrequest.Commit{
+					CommittedDate: time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC),
+					PushedDate:    time.Date(2018, 2, 1, 0, 0, 0, 0, time.UTC),
+					AuthoredDate:  time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			since:  time.Date(2019, 2, 1, 0, 0, 0, 0, time.UTC),
+			expect: false,
 		},
 		{
 			description: "no match",
@@ -211,13 +227,14 @@ func TestCreated(t *testing.T) {
 					AuthoredDate:  time.Date(2019, 1, 2, 0, 0, 0, 0, time.UTC),
 				},
 			},
+			since:  time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
 			expect: false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			out := pullrequest.Created()(tc.pull)
+			out := pullrequest.Created(tc.since)(tc.pull)
 			assert.Equal(t, tc.expect, out)
 		})
 	}

@@ -89,7 +89,7 @@ func newVersion(r CheckRequest, p pullrequest.PullRequest) bool {
 		pullrequest.Fork(r.Source.DisableForks)(p):
 		return false
 	// positive filters
-	case pullrequest.Created()(p),
+	case pullrequest.Created(r.Version.UpdatedDate)(p),
 		pullrequest.BaseRefChanged()(p),
 		pullrequest.BaseRefForcePushed()(p),
 		pullrequest.HeadRefForcePushed()(p),
