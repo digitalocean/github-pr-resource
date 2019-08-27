@@ -1,11 +1,13 @@
 package resource
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
 
 	"github.com/shurcooL/githubv4"
+	"github.com/telia-oss/github-pr-resource/pullrequest"
 )
 
 // Source represents the configuration for the resource.
@@ -14,29 +16,26 @@ type Source struct {
 	AccessToken         string   `json:"access_token"`
 	V3Endpoint          string   `json:"v3_endpoint"`
 	V4Endpoint          string   `json:"v4_endpoint"`
-	Paths               []string `json:"paths"`
-	IgnorePaths         []string `json:"ignore_paths"`
-	DisableCISkip       bool     `json:"disable_ci_skip"`
-	SkipSSLVerification bool     `json:"skip_ssl_verification"`
-	DisableForks        bool     `json:"disable_forks"`
-	GitCryptKey         string   `json:"git_crypt_key"`
-	BaseBranch          string   `json:"base_branch"`
+	Paths               []string `json:"paths,omitempty"`
+	IgnorePaths         []string `json:"ignore_paths,omitempty"`
+	DisableCISkip       bool     `json:"disable_ci_skip,omitempty"`
+	SkipSSLVerification bool     `json:"skip_ssl_verification,omitempty"`
+	DisableForks        bool     `json:"disable_forks,omitempty"`
+	GitCryptKey         string   `json:"git_crypt_key,omitempty"`
+	BaseBranch          string   `json:"base_branch,omitempty"`
+	PreviewSchema       bool     `json:"preview_schema,omitempty"`
 }
 
 // Validate the source configuration.
 func (s *Source) Validate() error {
-	if s.AccessToken == "" {
-		return errors.New("access_token must be set")
+	if s.AccessToken == "" || s.Repository == "" {
+		return errors.New("access_token & repository are required")
 	}
-	if s.Repository == "" {
-		return errors.New("repository must be set")
+
+	if len(s.V3Endpoint)+len(s.V4Endpoint) > 0 && (s.V3Endpoint == "" || s.V4Endpoint == "") {
+		return errors.New("both v3_endpoint & v4_endpoint endpoints are required for GitHub Enterprise")
 	}
-	if s.V3Endpoint != "" && s.V4Endpoint == "" {
-		return errors.New("v4_endpoint must be set together with v3_endpoint")
-	}
-	if s.V4Endpoint != "" && s.V3Endpoint == "" {
-		return errors.New("v3_endpoint must be set together with v4_endpoint")
-	}
+
 	return nil
 }
 
@@ -56,49 +55,124 @@ type MetadataField struct {
 
 // Version communicated with Concourse.
 type Version struct {
-	PR            string    `json:"pr"`
-	Commit        string    `json:"commit"`
-	CommittedDate time.Time `json:"committed,omitempty"`
+	PR          int       `json:"pr"`
+	Commit      string    `json:"commit"`
+	UpdatedDate time.Time `json:"updated"`
 }
 
-// NewVersion constructs a new Version.
-func NewVersion(p *PullRequest) Version {
-	return Version{
-		PR:            strconv.Itoa(p.Number),
-		Commit:        p.Tip.OID,
-		CommittedDate: p.Tip.CommittedDate.Time,
+// MarshalJSON custom marshaller to convert PR number
+func (v *Version) MarshalJSON() ([]byte, error) {
+	type Alias Version
+	return json.Marshal(&struct {
+		PR string `json:"pr"`
+		*Alias
+	}{
+		PR:    strconv.Itoa(v.PR),
+		Alias: (*Alias)(v),
+	})
+}
+
+// UnmarshalJSON custom unmarshaller to convert PR number
+func (v *Version) UnmarshalJSON(data []byte) error {
+	type Alias Version
+	aux := struct {
+		PR string `json:"pr"`
+		*Alias
+	}{
+		Alias: (*Alias)(v),
 	}
+
+	err := json.Unmarshal(data, &aux)
+	if err != nil {
+		return err
+	}
+
+	if aux.PR != "" {
+		v.PR, err = strconv.Atoi(aux.PR)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// PullRequest represents a pull request and includes the tip (commit).
-type PullRequest struct {
-	PullRequestObject
-	Tip CommitObject
+// NewVersion constructs a new Version
+func NewVersion(p pullrequest.PullRequest) Version {
+	return Version{
+		PR:          p.Number,
+		Commit:      p.HeadRef.OID,
+		UpdatedDate: p.UpdatedAt,
+	}
 }
 
 // PullRequestObject represents the GraphQL commit node.
 // https://developer.github.com/v4/object/pullrequest/
 type PullRequestObject struct {
-	ID          string
-	Number      int
-	Title       string
-	URL         string
-	BaseRefName string
-	HeadRefName string
-	Repository  struct {
+	ID                string
+	Number            int
+	Title             string
+	URL               string
+	BaseRefName       string
+	HeadRefName       string
+	IsCrossRepository bool
+	CreatedAt         githubv4.DateTime
+	UpdatedAt         githubv4.DateTime
+	HeadRef           struct {
+		ID     string
+		Name   string
+		Target struct {
+			CommitObject `graphql:"... on Commit"`
+		}
+	}
+	Repository struct {
 		URL string
 	}
-	IsCrossRepository bool
+	TimelineItems struct {
+		Edges []struct {
+			Node struct {
+				Typename            string `graphql:"__typename"`
+				BaseRefChangedEvent struct {
+					ID        string
+					CreatedAt githubv4.DateTime
+				} `graphql:"... on BaseRefChangedEvent"`
+				BaseRefForcePushedEvent struct {
+					ID        string
+					CreatedAt githubv4.DateTime
+				} `graphql:"... on BaseRefForcePushedEvent"`
+				HeadRefForcePushedEvent struct {
+					ID        string
+					CreatedAt githubv4.DateTime
+				} `graphql:"... on HeadRefForcePushedEvent"`
+				IssueComment struct {
+					ID        string
+					CreatedAt githubv4.DateTime
+					BodyText  string
+				} `graphql:"... on IssueComment"`
+				ReopenedEvent struct {
+					ID        string
+					CreatedAt githubv4.DateTime
+				} `graphql:"... on ReopenedEvent"`
+				PullRequestCommit struct {
+					ID     string
+					Commit CommitObject
+				} `graphql:"... on PullRequestCommit"`
+			}
+		}
+	} `graphql:"timelineItems(last:100,since:$s)"`
 }
 
 // CommitObject represents the GraphQL commit node.
 // https://developer.github.com/v4/object/commit/
 type CommitObject struct {
-	ID            string
-	OID           string
-	CommittedDate githubv4.DateTime
-	Message       string
-	Author        struct {
+	ID             string
+	OID            string
+	AbbreviatedOID string
+	AuthoredDate   githubv4.DateTime
+	CommittedDate  githubv4.DateTime
+	PushedDate     githubv4.DateTime
+	Message        string
+	Author         struct {
 		User struct {
 			Login string
 		}
