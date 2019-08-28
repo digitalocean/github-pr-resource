@@ -22,7 +22,6 @@ import (
 // Github for testing purposes.
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o fakes/fake_github.go . Github
 type Github interface {
-	GetLatestOpenPullRequest() ([]pullrequest.PullRequest, error)
 	ListOpenPullRequests(prSince time.Time) ([]pullrequest.PullRequest, error)
 	PostComment(int, string) error
 	GetPullRequest(int, string) (pullrequest.PullRequest, error)
@@ -103,11 +102,6 @@ func NewGithubClient(s *Source) (*GithubClient, error) {
 		Owner:      owner,
 		Repository: repository,
 	}, nil
-}
-
-// GetLatestOpenPullRequest gets the last commit on the latest open pull request
-func (m *GithubClient) GetLatestOpenPullRequest() ([]pullrequest.PullRequest, error) {
-	return m.searchOpenPullRequests(time.Now().AddDate(-3, 0, 0), 3)
 }
 
 // ListOpenPullRequests gets the last commit on all open pull requests

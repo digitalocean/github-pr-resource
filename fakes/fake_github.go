@@ -23,18 +23,6 @@ type FakeGithub struct {
 		result1 []string
 		result2 error
 	}
-	GetLatestOpenPullRequestStub        func() ([]pullrequest.PullRequest, error)
-	getLatestOpenPullRequestMutex       sync.RWMutex
-	getLatestOpenPullRequestArgsForCall []struct {
-	}
-	getLatestOpenPullRequestReturns struct {
-		result1 []pullrequest.PullRequest
-		result2 error
-	}
-	getLatestOpenPullRequestReturnsOnCall map[int]struct {
-		result1 []pullrequest.PullRequest
-		result2 error
-	}
 	GetPullRequestStub        func(int, string) (pullrequest.PullRequest, error)
 	getPullRequestMutex       sync.RWMutex
 	getPullRequestArgsForCall []struct {
@@ -153,61 +141,6 @@ func (fake *FakeGithub) GetChangedFilesReturnsOnCall(i int, result1 []string, re
 	}
 	fake.getChangedFilesReturnsOnCall[i] = struct {
 		result1 []string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeGithub) GetLatestOpenPullRequest() ([]pullrequest.PullRequest, error) {
-	fake.getLatestOpenPullRequestMutex.Lock()
-	ret, specificReturn := fake.getLatestOpenPullRequestReturnsOnCall[len(fake.getLatestOpenPullRequestArgsForCall)]
-	fake.getLatestOpenPullRequestArgsForCall = append(fake.getLatestOpenPullRequestArgsForCall, struct {
-	}{})
-	fake.recordInvocation("GetLatestOpenPullRequest", []interface{}{})
-	fake.getLatestOpenPullRequestMutex.Unlock()
-	if fake.GetLatestOpenPullRequestStub != nil {
-		return fake.GetLatestOpenPullRequestStub()
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.getLatestOpenPullRequestReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeGithub) GetLatestOpenPullRequestCallCount() int {
-	fake.getLatestOpenPullRequestMutex.RLock()
-	defer fake.getLatestOpenPullRequestMutex.RUnlock()
-	return len(fake.getLatestOpenPullRequestArgsForCall)
-}
-
-func (fake *FakeGithub) GetLatestOpenPullRequestCalls(stub func() ([]pullrequest.PullRequest, error)) {
-	fake.getLatestOpenPullRequestMutex.Lock()
-	defer fake.getLatestOpenPullRequestMutex.Unlock()
-	fake.GetLatestOpenPullRequestStub = stub
-}
-
-func (fake *FakeGithub) GetLatestOpenPullRequestReturns(result1 []pullrequest.PullRequest, result2 error) {
-	fake.getLatestOpenPullRequestMutex.Lock()
-	defer fake.getLatestOpenPullRequestMutex.Unlock()
-	fake.GetLatestOpenPullRequestStub = nil
-	fake.getLatestOpenPullRequestReturns = struct {
-		result1 []pullrequest.PullRequest
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeGithub) GetLatestOpenPullRequestReturnsOnCall(i int, result1 []pullrequest.PullRequest, result2 error) {
-	fake.getLatestOpenPullRequestMutex.Lock()
-	defer fake.getLatestOpenPullRequestMutex.Unlock()
-	fake.GetLatestOpenPullRequestStub = nil
-	if fake.getLatestOpenPullRequestReturnsOnCall == nil {
-		fake.getLatestOpenPullRequestReturnsOnCall = make(map[int]struct {
-			result1 []pullrequest.PullRequest
-			result2 error
-		})
-	}
-	fake.getLatestOpenPullRequestReturnsOnCall[i] = struct {
-		result1 []pullrequest.PullRequest
 		result2 error
 	}{result1, result2}
 }
@@ -470,8 +403,6 @@ func (fake *FakeGithub) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.getChangedFilesMutex.RLock()
 	defer fake.getChangedFilesMutex.RUnlock()
-	fake.getLatestOpenPullRequestMutex.RLock()
-	defer fake.getLatestOpenPullRequestMutex.RUnlock()
 	fake.getPullRequestMutex.RLock()
 	defer fake.getPullRequestMutex.RUnlock()
 	fake.listOpenPullRequestsMutex.RLock()
