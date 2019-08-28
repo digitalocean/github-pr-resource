@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 )
 
 var (
@@ -23,7 +24,9 @@ func init() {
 		debug = true
 	}
 
-	f, err := os.OpenFile(fmt.Sprintf("%s/github-pr-resource.log", dir), os.O_RDWR|os.O_CREATE, 0666)
+	cleanStaleLogs(dir)
+
+	f, err := os.OpenFile(fmt.Sprintf("%s/resource-%s.log", dir, time.Now().Format("2006-01-02")), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
