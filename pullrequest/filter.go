@@ -68,14 +68,14 @@ func BaseBranch(b string) Filter {
 	}
 }
 
-// Created returns true if the PR was created with no new commits
-func Created() Filter {
+// Created returns true if the PR was created with no new commits or since the last check
+func Created(v time.Time) Filter {
 	return func(p PullRequest) bool {
 		if p.CreatedAt.Equal(p.UpdatedAt) {
 			log.Println("created: true")
 			return true
 		}
-		if p.CreatedAt.After(latest(p.HeadRef.AuthoredDate, p.HeadRef.CommittedDate, p.HeadRef.PushedDate)) {
+		if p.CreatedAt.After(latest(v, p.HeadRef.AuthoredDate, p.HeadRef.CommittedDate, p.HeadRef.PushedDate)) {
 			log.Println("created: true")
 			return true
 		}
