@@ -1,9 +1,9 @@
 package log
 
 import (
-	"filepath"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
