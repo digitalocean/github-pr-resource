@@ -1,7 +1,7 @@
 package log
 
 import (
-	"fmt"
+	"filepath"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -17,7 +17,7 @@ func cleanStaleLogs(dir string) error {
 	for _, file := range tmpfiles {
 		if strings.HasPrefix(file.Name(), "resource-") && file.Mode().IsRegular() {
 			if time.Now().Sub(file.ModTime()) > 72*time.Hour {
-				err = os.Remove(fmt.Sprintf("%s%v%s", dir, os.PathSeparator, file.Name()))
+				err = os.Remove(filepath.Join(dir, file.Name()))
 				if err != nil {
 					return err
 				}
