@@ -110,11 +110,7 @@ func TestCheck(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			github := new(fakes.FakeGithub)
 
-			if tc.version.UpdatedDate.IsZero() {
-				github.GetLatestOpenPullRequestReturns(tc.pullRequests, nil)
-			} else {
-				github.ListOpenPullRequestsReturns(tc.pullRequests, nil)
-			}
+			github.ListOpenPullRequestsReturns(tc.pullRequests, nil)
 
 			for i, file := range tc.files {
 				github.GetChangedFilesReturnsOnCall(i, file, nil)
@@ -126,11 +122,7 @@ func TestCheck(t *testing.T) {
 			if assert.NoError(t, err) {
 				assert.Equal(t, tc.expected, output)
 			}
-			if tc.version.UpdatedDate.IsZero() {
-				assert.Equal(t, 1, github.GetLatestOpenPullRequestCallCount())
-			} else {
-				assert.Equal(t, 1, github.ListOpenPullRequestsCallCount())
-			}
+			assert.Equal(t, 1, github.ListOpenPullRequestsCallCount())
 		})
 	}
 }

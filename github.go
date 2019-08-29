@@ -22,7 +22,6 @@ import (
 // Github for testing purposes.
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -o fakes/fake_github.go . Github
 type Github interface {
-	GetLatestOpenPullRequest() ([]pullrequest.PullRequest, error)
 	ListOpenPullRequests(prSince time.Time) ([]pullrequest.PullRequest, error)
 	PostComment(int, string) error
 	GetPullRequest(int, string) (pullrequest.PullRequest, error)
@@ -105,11 +104,6 @@ func NewGithubClient(s *Source) (*GithubClient, error) {
 	}, nil
 }
 
-// GetLatestOpenPullRequest gets the last commit on the latest open pull request
-func (m *GithubClient) GetLatestOpenPullRequest() ([]pullrequest.PullRequest, error) {
-	return m.searchOpenPullRequests(time.Now().AddDate(-3, 0, 0), 3)
-}
-
 // ListOpenPullRequests gets the last commit on all open pull requests
 func (m *GithubClient) ListOpenPullRequests(since time.Time) ([]pullrequest.PullRequest, error) {
 	return m.searchOpenPullRequests(since, 100)
@@ -136,9 +130,7 @@ func (m *GithubClient) searchOpenPullRequests(since time.Time, number int) ([]pu
 		"c": (*githubv4.String)(nil),
 		"s": githubv4.DateTime{Time: since},
 		"n": githubv4.Int(number),
-		"q": githubv4.String(
-			fmt.Sprintf("is:pr is:open repo:%s/%s updated:>%s sort:updated", m.Owner, m.Repository, since.Format(time.RFC3339)),
-		),
+		"q": githubv4.String(fmt.Sprintf("is:pr is:open repo:%s/%s updated:>%s sort:updated", m.Owner, m.Repository, since.Format(time.RFC3339))),
 	}
 
 	var response []pullrequest.PullRequest

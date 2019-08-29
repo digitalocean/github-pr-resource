@@ -11,7 +11,7 @@ import (
 
 func findPulls(since time.Time, gh Github) ([]pullrequest.PullRequest, error) {
 	if since.IsZero() {
-		return gh.GetLatestOpenPullRequest()
+		since = time.Now().AddDate(-3, 0, 0)
 	}
 	return gh.ListOpenPullRequests(since)
 }

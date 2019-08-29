@@ -73,6 +73,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	metadata.Add("base_sha", baseSHA)
 	metadata.Add("message", pull.HeadRef.Message)
 	metadata.Add("author", pull.HeadRef.Author)
+	metadata.Add("events", fmt.Sprintf("%v", pull.Events))
 
 	// Write version and metadata for reuse in PUT
 	path := filepath.Join(outputDir, ".git", "resource")
