@@ -130,9 +130,7 @@ func (m *GithubClient) searchOpenPullRequests(since time.Time, number int) ([]pu
 		"c": (*githubv4.String)(nil),
 		"s": githubv4.DateTime{Time: since},
 		"n": githubv4.Int(number),
-		"q": githubv4.String(
-			fmt.Sprintf("is:pr is:open repo:%s/%s updated:>%s sort:updated", m.Owner, m.Repository, since.Format(time.RFC3339)),
-		),
+		"q": githubv4.String(fmt.Sprintf("is:pr is:open repo:%s/%s updated:>%s sort:updated", m.Owner, m.Repository, since.Format(time.RFC3339))),
 	}
 
 	var response []pullrequest.PullRequest
