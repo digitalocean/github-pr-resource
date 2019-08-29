@@ -1,13 +1,11 @@
 package pullrequest
 
 import (
-	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"time"
 
-	"github.com/gobwas/glob"
+	glob "github.com/sabhiram/go-gitignore"
 )
 
 // TimelineItem constants
@@ -165,11 +163,14 @@ func Patterns(patterns []string) Filter {
 func Files(patterns []string, invert bool) Filter {
 	return func(p PullRequest) bool {
 		matched := make([]int8, 0)
-		pattern := strings.Join(patterns[:], ",")
-		gc := glob.MustCompile(fmt.Sprintf("{%s}", pattern))
+		gc, err := glob.CompileIgnoreLines(patterns...)
+		if err != nil {
+			return false
+		}
+
 		for _, f := range p.Files {
 			log.Println("comparing patterns to changed file:", f)
-			if gc.Match(f) {
+			if gc.MatchesPath(f) {
 				if !invert {
 					log.Println("paths: true")
 					return true

@@ -593,17 +593,6 @@ func TestFiles(t *testing.T) {
 			},
 			expect: true,
 		},
-		/*{
-			description: "no match txt files @ root level",
-			patterns:    []string{"*.txt"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"test/file2.txt",
-				},
-			},
-			expect: false,
-		},*/
 		{
 			description: "match txt files at any level",
 			patterns:    []string{"**/*.txt"},
@@ -629,19 +618,6 @@ func TestFiles(t *testing.T) {
 			},
 			expect: true,
 		},
-		/*{
-			description: "no match any file in test dir",
-			patterns:    []string{"test/*"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"file1.txt",
-					"test/testing/file2.txt",
-					"test/testing/tested/file2.txt",
-				},
-			},
-			expect: false,
-		},*/
 		{
 			description: "match any file recursively in test dir",
 			patterns:    []string{"test/**"},

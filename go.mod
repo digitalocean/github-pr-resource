@@ -2,14 +2,13 @@ module github.com/telia-oss/github-pr-resource
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	//github.com/gobwas/glob v0.2.3
-	github.com/gobwas/glob v0.2.4-0.20190312191541-bcbbef0a8d85
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/onsi/ginkgo v1.10.0 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
+	github.com/sabhiram/go-gitignore v0.0.0-20180611051255-d3107576ba94
 	github.com/shurcooL/githubv4 v0.0.0-20190718010115-4ba037080260
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
 	github.com/stretchr/testify v1.4.0
