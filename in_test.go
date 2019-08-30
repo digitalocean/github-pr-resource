@@ -212,8 +212,7 @@ func TestGet(t *testing.T) {
 			}
 
 			if assert.Equal(t, 1, git.FetchCallCount()) {
-				url, pr, depth := git.FetchArgsForCall(0)
-				assert.Equal(t, tc.pullRequest.RepositoryURL, url)
+				pr, depth := git.FetchArgsForCall(0)
 				assert.Equal(t, tc.pullRequest.Number, pr)
 				assert.Equal(t, tc.parameters.GitDepth, depth)
 			}
