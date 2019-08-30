@@ -90,6 +90,11 @@ func (g *GitClient) Pull(uri, branch string, depth int) error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("clone failed: %s", err)
 	}
+
+	if err := g.command("git", "remote", "add", "origin", endpoint).Run(); err != nil {
+		return fmt.Errorf("failed to set remote origin: %s", err)
+	}
+
 	return nil
 }
 
