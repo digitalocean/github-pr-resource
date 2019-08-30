@@ -19,25 +19,28 @@ Make sure to check out [#migrating](#migrating) to learn more.
 
 ## Source Configuration
 
-| Parameter               | Required | Example                          | Description  |
-|-------------------------|----------|----------------------------------|--------------|
-| `repository`            | Yes      | `itsdalmo/test-repository`       | The repository to target |
-| `access_token`          | Yes      |                                  | A Github Access Token with repository access (required for setting status on commits). N.B. If you want github-pr-resource to work with a private repository. Set `repo:full` permissions on the access token you create on GitHub. If it is a public repository, `repo:status` is enough |
-| `v3_endpoint`           | NO       | `https://api.github.com`         | Endpoint to use for the V3 Github API (Restful) |
-| `v4_endpoint`           | NO       | `https://api.github.com/graphql` | Endpoint to use for the V4 Github API (Graphql) |
-| `paths`                 | No       | `terraform/*/*.tf`               | Only produce new versions if the PR includes changes to files that match one or more glob patterns or prefixes |
-| `ignore_paths`          | No       | `.ci/`                           | Inverse of the above. Pattern syntax is documented in [filepath.Match](https://golang.org/pkg/path/filepath/#Match), or a path prefix can be specified (e.g. `.ci/` will match everything in the `.ci` directory) |
-| `disable_ci_skip`       | No       | `true`                           | Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title |
-| `skip_ssl_verification` | No       | `true`                           | Disable SSL/TLS certificate validation on git and API clients. Use with care! |
-| `disable_forks`         | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository |
-| `git_crypt_key`         | No       | `AEdJVENSWVBUS0VZAAAAA...`       | Base64 encoded git-crypt key. Setting this will unlock / decrypt the repository with git-crypt. To get the key simply execute `git-crypt export-key -- - | base64` in an encrypted repository.  |
-| `base_branch`           | No       | `master`                         | Name of a branch. The pipeline will only trigger on pull requests against the specified branch |
-| `preview_schema`        | No       | `true`                           | if enabled, an `Accept: application/vnd.github.starfire-preview+json` header will be appended to each request to enable preview schema's that are hidden behind a feature flag on GitHub |
+| Parameter                   | Required | Example                          | Description  |
+|-----------------------------|----------|----------------------------------|--------------|
+| `repository`                | Yes      | `itsdalmo/test-repository`       | The repository to target |
+| `access_token`              | Yes      |                                  | A Github Access Token with repository access (required for setting status on commits). N.B. If you want github-pr-resource to work with a private repository. Set `repo:full` permissions on the access token you create on GitHub. If it is a public repository, `repo:status` is enough |
+| `v3_endpoint`               | NO       | `https://api.github.com`         | Endpoint to use for the V3 Github API (Restful) |
+| `v4_endpoint`               | NO       | `https://api.github.com/graphql` | Endpoint to use for the V4 Github API (Graphql) |
+| `paths`                     | No       | `terraform/*/*.tf`               | Only produce new versions if the PR includes changes to files that match one or more glob patterns or prefixes |
+| `ignore_paths`              | No       | `.ci/`                           | Inverse of the above. Pattern syntax is documented in [filepath.Match](https://golang.org/pkg/path/filepath/#Match), or a path prefix can be specified (e.g. `.ci/` will match everything in the `.ci` directory) |
+| `disable_ci_skip`           | No       | `true`                           | Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title |
+| `skip_ssl_verification`     | No       | `true`                           | Disable SSL/TLS certificate validation on git and API clients. Use with care! |
+| `disable_forks`             | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository |
+| `git_crypt_key`             | No       | `AEdJVENSWVBUS0VZAAAAA...`       | Base64 encoded git-crypt key. Setting this will unlock / decrypt the repository with git-crypt. To get the key simply execute `git-crypt export-key -- - | base64` in an encrypted repository.  |
+| `base_branch`               | No       | `master`                         | Name of a branch. The pipeline will only trigger on pull requests against the specified branch |
+| `preview_schema`            | No       | `true`                           | if enabled, an `Accept: application/vnd.github.starfire-preview+json` header will be appended to each request to enable preview schema's that are hidden behind a feature flag on GitHub |
+| `required_review_approvals` | No       | `2`                              | Disable triggering of the resource if the pull request does not have at least `X` approved review(s) |
+| `labels`                    | No       | `["bug", "enhancement"]`         | The labels on the PR. The pipeline will only trigger on pull requests having at least one of the specified labels |
 
 Notes:
  - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
  - Look at the [Concourse Resources documentation](https://concourse-ci.org/resources.html#resource-webhook-token)
  for webhook token configuration.
+ - When using `required_review_approvals`, you may also want to enable GitHub's branch protection rules to [dismiss stale pull request approvals when new commits are pushed](https://help.github.com/en/articles/enabling-required-reviews-for-pull-requests).
 
 ## Behaviour
 
@@ -239,6 +242,7 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
   - `api_endpoint` -> `v3_endpoint`
   - `base` -> `base_branch`
   - `base_url` -> `target_url`
+  - `require_review_approval` -> `required_review_approvals` (`bool` to `int`)
 - `get`:
   - `git.depth` -> `git_depth`
 - `put`:
@@ -256,7 +260,6 @@ If you are coming from [jtarchie/github-pullrequest-resource][original-resource]
 
 #### Parameters that did not make it:
 - `src`:
-  - `require_review_approval`
   - `authorship_restriction`
   - `label`
   - `git_config`: You can now get the pr/author info from .git/resource/metadata.json instead

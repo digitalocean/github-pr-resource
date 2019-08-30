@@ -13,7 +13,7 @@ import (
 	"github.com/telia-oss/github-pr-resource/pullrequest"
 )
 
-func createTestPR(count int, baseName string, skipCI, isCrossRepo, created, nocommit bool) pullrequest.PullRequest {
+func createTestPR(count int, baseName string, skipCI, isCrossRepo, created, nocommit bool, approvedReviews int, labels []string) pullrequest.PullRequest {
 	n := strconv.Itoa(count)
 	u := time.Now().AddDate(0, 0, count)
 
@@ -43,7 +43,7 @@ func createTestPR(count int, baseName string, skipCI, isCrossRepo, created, noco
 		commit.ID = ""
 	}
 
-	return resource.PullRequestFactory(resource.PullRequestObject{
+	pr := resource.PullRequestFactory(resource.PullRequestObject{
 		ID:                fmt.Sprintf("pr%s", n),
 		Number:            count,
 		Title:             fmt.Sprintf("pr%s title", n),
@@ -69,8 +69,12 @@ func createTestPR(count int, baseName string, skipCI, isCrossRepo, created, noco
 		Repository: struct{ URL string }{
 			URL: fmt.Sprintf("repo%s url", n),
 		},
-	},
-	)
+	})
+
+	pr.ApprovedReviewCount = approvedReviews
+	pr.Labels = labels
+
+	return pr
 }
 
 func createTestDirectory(t *testing.T) string {

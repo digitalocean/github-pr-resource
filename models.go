@@ -12,18 +12,20 @@ import (
 
 // Source represents the configuration for the resource.
 type Source struct {
-	Repository          string   `json:"repository"`
-	AccessToken         string   `json:"access_token"`
-	V3Endpoint          string   `json:"v3_endpoint"`
-	V4Endpoint          string   `json:"v4_endpoint"`
-	Paths               []string `json:"paths,omitempty"`
-	IgnorePaths         []string `json:"ignore_paths,omitempty"`
-	DisableCISkip       bool     `json:"disable_ci_skip,omitempty"`
-	SkipSSLVerification bool     `json:"skip_ssl_verification,omitempty"`
-	DisableForks        bool     `json:"disable_forks,omitempty"`
-	GitCryptKey         string   `json:"git_crypt_key,omitempty"`
-	BaseBranch          string   `json:"base_branch,omitempty"`
-	PreviewSchema       bool     `json:"preview_schema,omitempty"`
+	Repository              string   `json:"repository"`
+	AccessToken             string   `json:"access_token"`
+	V3Endpoint              string   `json:"v3_endpoint"`
+	V4Endpoint              string   `json:"v4_endpoint"`
+	Paths                   []string `json:"paths,omitempty"`
+	IgnorePaths             []string `json:"ignore_paths,omitempty"`
+	DisableCISkip           bool     `json:"disable_ci_skip,omitempty"`
+	SkipSSLVerification     bool     `json:"skip_ssl_verification,omitempty"`
+	DisableForks            bool     `json:"disable_forks,omitempty"`
+	GitCryptKey             string   `json:"git_crypt_key,omitempty"`
+	BaseBranch              string   `json:"base_branch,omitempty"`
+	PreviewSchema           bool     `json:"preview_schema,omitempty"`
+	RequiredReviewApprovals int      `json:"required_review_approvals,omitempty"`
+	Labels                  []string `json:"labels,omitempty"`
 }
 
 // Validate the source configuration.
@@ -128,6 +130,16 @@ type PullRequestObject struct {
 	Repository struct {
 		URL string
 	}
+	Labels struct {
+		Edges []struct {
+			Node struct {
+				LabelObject
+			}
+		}
+	} `graphql:"labels(first:100)"`
+	Reviews struct {
+		TotalCount int
+	} `graphql:"reviews(states:APPROVED)"`
 	TimelineItems struct {
 		Edges []struct {
 			Node struct {
@@ -183,4 +195,10 @@ type CommitObject struct {
 // https://developer.github.com/v4/object/pullrequestchangedfile/
 type ChangedFileObject struct {
 	Path string
+}
+
+// LabelObject represents the GraphQL label node.
+// https://developer.github.com/v4/object/label
+type LabelObject struct {
+	Name string
 }

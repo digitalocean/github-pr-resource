@@ -86,6 +86,8 @@ func newVersion(r CheckRequest, p pullrequest.PullRequest) bool {
 	// negative filters
 	case pullrequest.SkipCI(r.Source.DisableCISkip)(p),
 		pullrequest.BaseBranch(r.Source.BaseBranch)(p),
+		pullrequest.ApprovedReviewCount(r.Source.RequiredReviewApprovals)(p),
+		pullrequest.Labels(r.Source.Labels)(p),
 		pullrequest.Fork(r.Source.DisableForks)(p):
 		return false
 	// positive filters

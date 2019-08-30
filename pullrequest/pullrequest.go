@@ -4,21 +4,23 @@ import "time"
 
 // PullRequest represents a pull request
 type PullRequest struct {
-	ID                string
-	Number            int
-	Title             string
-	URL               string
-	RepositoryURL     string
-	BaseRefName       string
-	HeadRefName       string
-	IsCrossRepository bool
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
-	HeadRef           Commit
-	Events            []Event
-	Comments          []Comment
-	Commits           []Commit
-	Files             []string
+	ID                  string
+	Number              int
+	Title               string
+	URL                 string
+	RepositoryURL       string
+	BaseRefName         string
+	HeadRefName         string
+	IsCrossRepository   bool
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+	HeadRef             Commit
+	Events              []Event
+	Comments            []Comment
+	Commits             []Commit
+	Files               []string
+	Labels              []string
+	ApprovedReviewCount int
 }
 
 // Commit represents a commit

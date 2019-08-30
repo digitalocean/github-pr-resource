@@ -302,6 +302,12 @@ func parseRepository(s string) (string, string, error) {
 
 // PullRequestFactory generates a PullRequest object from a PullRequestObject
 func PullRequestFactory(p PullRequestObject) pullrequest.PullRequest {
+	labels := make([]string, 0)
+
+	for _, i := range p.Labels.Edges {
+		labels = append(labels, i.Node.LabelObject.Name)
+	}
+
 	events := make([]pullrequest.Event, 0)
 	comments := make([]pullrequest.Comment, 0)
 	commits := make([]pullrequest.Commit, 0)
@@ -339,20 +345,22 @@ func PullRequestFactory(p PullRequestObject) pullrequest.PullRequest {
 	}
 
 	return pullrequest.PullRequest{
-		ID:                p.ID,
-		Number:            p.Number,
-		Title:             p.Title,
-		URL:               p.URL,
-		RepositoryURL:     p.Repository.URL,
-		BaseRefName:       p.BaseRefName,
-		HeadRefName:       p.HeadRefName,
-		IsCrossRepository: p.IsCrossRepository,
-		CreatedAt:         p.CreatedAt.Time,
-		UpdatedAt:         p.UpdatedAt.Time,
-		HeadRef:           commitFactory(p.HeadRef.Target.CommitObject),
-		Events:            events,
-		Commits:           commits,
-		Comments:          comments,
+		ID:                  p.ID,
+		Number:              p.Number,
+		Title:               p.Title,
+		URL:                 p.URL,
+		RepositoryURL:       p.Repository.URL,
+		BaseRefName:         p.BaseRefName,
+		HeadRefName:         p.HeadRefName,
+		IsCrossRepository:   p.IsCrossRepository,
+		CreatedAt:           p.CreatedAt.Time,
+		UpdatedAt:           p.UpdatedAt.Time,
+		HeadRef:             commitFactory(p.HeadRef.Target.CommitObject),
+		Events:              events,
+		Commits:             commits,
+		Comments:            comments,
+		Labels:              labels,
+		ApprovedReviewCount: p.Reviews.TotalCount,
 	}
 }
 

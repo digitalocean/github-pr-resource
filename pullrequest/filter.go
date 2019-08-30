@@ -66,6 +66,40 @@ func BaseBranch(b string) Filter {
 	}
 }
 
+// ApprovedReviewCount returns true if pr review count is lt than configured count
+func ApprovedReviewCount(v int) Filter {
+	return func(p PullRequest) bool {
+		if p.ApprovedReviewCount < v {
+			log.Println("review_count: true - ", p.ApprovedReviewCount, v)
+			return true
+		}
+		log.Println("review_count: false - ", p.ApprovedReviewCount, v)
+		return false
+	}
+}
+
+// Labels returns true if pr does not have a configured label
+func Labels(v []string) Filter {
+	return func(p PullRequest) bool {
+		if len(v) == 0 {
+			log.Println("labels: false")
+			return false
+		}
+
+		for _, i := range v {
+			for _, k := range p.Labels {
+				if i == k {
+					log.Println("labels: false")
+					return false
+				}
+			}
+		}
+
+		log.Println("labels: true")
+		return true
+	}
+}
+
 // Created returns true if the PR was created with no new commits or since the last check
 func Created(v time.Time) Filter {
 	return func(p PullRequest) bool {

@@ -36,7 +36,7 @@ func TestGet(t *testing.T) {
 				UpdatedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1, "master", false, false, false, false),
+			pullRequest:    createTestPR(1, "master", false, false, false, false, 0, nil),
 			versionString:  `{"pr":"1","commit":"commit1","updated":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"head_short_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"events","value":"[]"}]`,
 		},
@@ -53,7 +53,7 @@ func TestGet(t *testing.T) {
 				UpdatedDate: time.Time{},
 			},
 			parameters:     resource.GetParameters{},
-			pullRequest:    createTestPR(1, "master", false, false, false, false),
+			pullRequest:    createTestPR(1, "master", false, false, false, false, 0, nil),
 			versionString:  `{"pr":"1","commit":"commit1","updated":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"head_short_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"events","value":"[]"}]`,
 		},
@@ -71,7 +71,7 @@ func TestGet(t *testing.T) {
 			parameters: resource.GetParameters{
 				IntegrationTool: "rebase",
 			},
-			pullRequest:    createTestPR(1, "master", false, false, false, false),
+			pullRequest:    createTestPR(1, "master", false, false, false, false, 0, nil),
 			versionString:  `{"pr":"1","commit":"commit1","updated":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"head_short_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"events","value":"[]"}]`,
 		},
@@ -89,7 +89,7 @@ func TestGet(t *testing.T) {
 			parameters: resource.GetParameters{
 				IntegrationTool: "checkout",
 			},
-			pullRequest:    createTestPR(1, "master", false, false, false, false),
+			pullRequest:    createTestPR(1, "master", false, false, false, false, 0, nil),
 			versionString:  `{"pr":"1","commit":"commit1","updated":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"head_short_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"events","value":"[]"}]`,
 		},
@@ -107,7 +107,7 @@ func TestGet(t *testing.T) {
 			parameters: resource.GetParameters{
 				GitDepth: 2,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, false, false),
+			pullRequest:    createTestPR(1, "master", false, false, false, false, 0, nil),
 			versionString:  `{"pr":"1","commit":"commit1","updated":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"head_short_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"events","value":"[]"}]`,
 		},
@@ -125,7 +125,7 @@ func TestGet(t *testing.T) {
 			parameters: resource.GetParameters{
 				ListChangedFiles: true,
 			},
-			pullRequest:    createTestPR(1, "master", false, false, false, false),
+			pullRequest:    createTestPR(1, "master", false, false, false, false, 0, nil),
 			files:          []string{"README.md", "Other.md"},
 			versionString:  `{"pr":"1","commit":"commit1","updated":"0001-01-01T00:00:00Z"}`,
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"head_short_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"events","value":"[]"}]`,
