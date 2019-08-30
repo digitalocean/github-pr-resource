@@ -34,7 +34,7 @@ func TestPut(t *testing.T) {
 				UpdatedDate: time.Time{},
 			},
 			parameters:  resource.PutParameters{},
-			pullRequest: createTestPR(1, "master", false, false, false, false),
+			pullRequest: createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 
 		{
@@ -51,7 +51,7 @@ func TestPut(t *testing.T) {
 			parameters: resource.PutParameters{
 				Status: "success",
 			},
-			pullRequest: createTestPR(1, "master", false, false, false, false),
+			pullRequest: createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 
 		{
@@ -69,7 +69,7 @@ func TestPut(t *testing.T) {
 				Status:  "failure",
 				Context: "build",
 			},
-			pullRequest: createTestPR(1, "master", false, false, false, false),
+			pullRequest: createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 
 		{
@@ -88,7 +88,7 @@ func TestPut(t *testing.T) {
 				BaseContext: "concourse-ci-custom",
 				Context:     "build",
 			},
-			pullRequest: createTestPR(1, "master", false, false, false, false),
+			pullRequest: createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 
 		{
@@ -106,7 +106,7 @@ func TestPut(t *testing.T) {
 				Status:    "failure",
 				TargetURL: "https://targeturl.com/concourse",
 			},
-			pullRequest: createTestPR(1, "master", false, false, false, false),
+			pullRequest: createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 
 		{
@@ -124,7 +124,7 @@ func TestPut(t *testing.T) {
 				Status:      "failure",
 				Description: "Concourse CI build",
 			},
-			pullRequest: createTestPR(1, "master", false, false, false, false),
+			pullRequest: createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 
 		{
@@ -141,7 +141,7 @@ func TestPut(t *testing.T) {
 			parameters: resource.PutParameters{
 				Comment: "comment",
 			},
-			pullRequest: createTestPR(1, "master", false, false, false, false),
+			pullRequest: createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 	}
 
@@ -226,7 +226,7 @@ func TestVariableSubstitution(t *testing.T) {
 				Comment: fmt.Sprintf("$%s", variableName),
 			},
 			expectedComment: variableValue,
-			pullRequest:     createTestPR(1, "master", false, false, false, false),
+			pullRequest:     createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 
 		{
@@ -245,7 +245,7 @@ func TestVariableSubstitution(t *testing.T) {
 				TargetURL: fmt.Sprintf("%s$%s", variableURL, variableName),
 			},
 			expectedTargetURL: fmt.Sprintf("%s%s", variableURL, variableValue),
-			pullRequest:       createTestPR(1, "master", false, false, false, false),
+			pullRequest:       createTestPR(1, "master", false, false, false, false, 0, nil),
 		},
 	}
 

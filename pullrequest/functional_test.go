@@ -175,6 +175,120 @@ func TestBaseBranch(t *testing.T) {
 	}
 }
 
+func TestLabels(t *testing.T) {
+	tests := []struct {
+		description string
+		labels      []string
+		pull        pullrequest.PullRequest
+		expect      bool
+	}{
+		{
+			description: "match label",
+			labels:      []string{"develop"},
+			pull: pullrequest.PullRequest{
+				Labels: []string{"develop", "wip", "stupid-ball"},
+			},
+			expect: false,
+		},
+		{
+			description: "no match not set",
+			labels:      []string{},
+			pull: pullrequest.PullRequest{
+				Labels: []string{"develop", "wip", "stupid-ball"},
+			},
+			expect: false,
+		},
+		{
+			description: "no match set",
+			labels:      []string{"stupid-ball"},
+			pull: pullrequest.PullRequest{
+				Labels: []string{"develop", "wip"},
+			},
+			expect: true,
+		},
+		{
+			description: "no match set",
+			labels:      []string{"stupid-ball"},
+			pull: pullrequest.PullRequest{
+				Labels: []string{},
+			},
+			expect: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			out := pullrequest.Labels(tc.labels)(tc.pull)
+			assert.Equal(t, tc.expect, out)
+		})
+	}
+}
+
+func TestRequiredApprovals(t *testing.T) {
+	tests := []struct {
+		description string
+		approvals   int
+		pull        pullrequest.PullRequest
+		expect      bool
+	}{
+		{
+			description: "0 is not less than 0 requirement",
+			approvals:   0,
+			pull: pullrequest.PullRequest{
+				ApprovedReviewCount: 0,
+			},
+			expect: false,
+		},
+		{
+			description: "1 is not less than 0 requirement",
+			approvals:   0,
+			pull: pullrequest.PullRequest{
+				ApprovedReviewCount: 1,
+			},
+			expect: false,
+		},
+		{
+			description: "0 is less than 1 requirement",
+			approvals:   1,
+			pull: pullrequest.PullRequest{
+				ApprovedReviewCount: 0,
+			},
+			expect: true,
+		},
+		{
+			description: "1 is not less than 1 requirement",
+			approvals:   1,
+			pull: pullrequest.PullRequest{
+				ApprovedReviewCount: 1,
+			},
+			expect: false,
+		},
+		{
+			description: "2 is not less than 1 requirement",
+			approvals:   1,
+			pull: pullrequest.PullRequest{
+				ApprovedReviewCount: 2,
+			},
+			expect: false,
+		},
+		{
+			description: "1 is less than 2 requirement",
+			approvals:   2,
+			pull: pullrequest.PullRequest{
+				ApprovedReviewCount: 1,
+			},
+			expect: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			out := pullrequest.ApprovedReviewCount(tc.approvals)(tc.pull)
+			assert.Equal(t, tc.expect, out)
+		})
+	}
+}
+
 func TestCreated(t *testing.T) {
 	tests := []struct {
 		description string
