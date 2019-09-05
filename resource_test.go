@@ -49,6 +49,7 @@ func createTestPR(count int, baseName string, skipCI, isCrossRepo, created, noco
 		Title:             fmt.Sprintf("pr%s title", n),
 		URL:               fmt.Sprintf("pr%s url", n),
 		BaseRefName:       baseName,
+		BaseRefOID:        "sha",
 		HeadRefName:       fmt.Sprintf("pr%s", n),
 		IsCrossRepository: isCrossRepo,
 		CreatedAt:         githubv4.DateTime{Time: c},

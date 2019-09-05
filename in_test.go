@@ -76,7 +76,7 @@ func TestGet(t *testing.T) {
 			metadataString: `[{"name":"pr","value":"1"},{"name":"url","value":"pr1 url"},{"name":"head_name","value":"pr1"},{"name":"head_sha","value":"oid1"},{"name":"head_short_sha","value":"oid1"},{"name":"base_name","value":"master"},{"name":"base_sha","value":"sha"},{"name":"message","value":"commit message1"},{"name":"author","value":"login1"},{"name":"events","value":"[]"}]`,
 		},
 		{
-			description: "get supports checkout",
+			description: "get supports merge",
 			source: resource.Source{
 				Repository:  "itsdalmo/test-repository",
 				AccessToken: "oauthtoken",
@@ -87,7 +87,7 @@ func TestGet(t *testing.T) {
 				UpdatedDate: time.Time{},
 			},
 			parameters: resource.GetParameters{
-				IntegrationTool: "checkout",
+				IntegrationTool: "merge",
 			},
 			pullRequest:    createTestPR(1, "master", false, false, false, false, 0, nil),
 			versionString:  `{"pr":"1","commit":"commit1","updated":"0001-01-01T00:00:00Z"}`,
@@ -194,21 +194,11 @@ func TestGet(t *testing.T) {
 			}
 
 			// Validate Git calls
-			if assert.Equal(t, 1, git.InitCallCount()) {
-				base := git.InitArgsForCall(0)
-				assert.Equal(t, tc.pullRequest.BaseRefName, base)
-			}
-
-			if assert.Equal(t, 1, git.PullCallCount()) {
-				url, base, depth := git.PullArgsForCall(0)
+			if assert.Equal(t, 1, git.CloneCallCount()) {
+				url, base, depth := git.CloneArgsForCall(0)
 				assert.Equal(t, tc.pullRequest.RepositoryURL, url)
 				assert.Equal(t, tc.pullRequest.BaseRefName, base)
 				assert.Equal(t, tc.parameters.GitDepth, depth)
-			}
-
-			if assert.Equal(t, 1, git.RevParseCallCount()) {
-				base := git.RevParseArgsForCall(0)
-				assert.Equal(t, tc.pullRequest.BaseRefName, base)
 			}
 
 			if assert.Equal(t, 1, git.FetchCallCount()) {
@@ -219,23 +209,34 @@ func TestGet(t *testing.T) {
 
 			switch tc.parameters.IntegrationTool {
 			case "rebase":
+				if assert.Equal(t, 1, git.RevParseCallCount()) {
+					base := git.RevParseArgsForCall(0)
+					assert.Equal(t, tc.pullRequest.BaseRefName, base)
+				}
+
 				if assert.Equal(t, 1, git.RebaseCallCount()) {
 					branch, tip := git.RebaseArgsForCall(0)
 					assert.Equal(t, tc.pullRequest.BaseRefName, branch)
 					assert.Equal(t, tc.version.Commit, tip)
 				}
-			case "checkout":
+			case "checkout", "":
 				if assert.Equal(t, 1, git.CheckoutCallCount()) {
 					branch, sha := git.CheckoutArgsForCall(0)
 					assert.Equal(t, tc.pullRequest.HeadRefName, branch)
 					assert.Equal(t, tc.version.Commit, sha)
 				}
-			default:
+			case "merge":
+				if assert.Equal(t, 1, git.RevParseCallCount()) {
+					base := git.RevParseArgsForCall(0)
+					assert.Equal(t, tc.pullRequest.BaseRefName, base)
+				}
+
 				if assert.Equal(t, 1, git.MergeCallCount()) {
 					tip := git.MergeArgsForCall(0)
 					assert.Equal(t, tc.version.Commit, tip)
 				}
 			}
+
 			if tc.source.GitCryptKey != "" {
 				if assert.Equal(t, 1, git.GitCryptUnlockCallCount()) {
 					key := git.GitCryptUnlockArgsForCall(0)

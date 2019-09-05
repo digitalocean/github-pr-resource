@@ -116,6 +116,7 @@ type PullRequestObject struct {
 	Title             string
 	URL               string
 	BaseRefName       string
+	BaseRefOID        string
 	HeadRefName       string
 	IsCrossRepository bool
 	CreatedAt         githubv4.DateTime

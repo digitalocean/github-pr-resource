@@ -145,8 +145,13 @@ func (g *GitClient) RevParse(branch string) (string, error) {
 }
 
 // Fetch ...
-func (g *GitClient) Fetch(prNumber int, depth int) error {
-	args := []string{"fetch", "origin", fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber))}
+func (g *GitClient) Fetch(prNumber, depth int) error {
+	args := []string{
+		"fetch",
+		"origin",
+		"-q",
+		fmt.Sprintf("pull/%s/head", strconv.Itoa(prNumber)),
+	}
 	args = appendDepth(args, depth)
 	cmd := g.command("git", args...)
 
@@ -164,8 +169,8 @@ func (g *GitClient) Fetch(prNumber int, depth int) error {
 
 // Checkout ...
 func (g *GitClient) Checkout(branch, sha string) error {
-	log.Println("rebasing:", branch, sha)
-	if err := g.command("git", "checkout", "-b", branch, sha).Run(); err != nil {
+	log.Println("checkout:", branch, sha)
+	if err := g.command("git", "checkout", "-b", "pr-"+branch, sha).Run(); err != nil {
 		return fmt.Errorf("checkout failed: %s", err)
 	}
 

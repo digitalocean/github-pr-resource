@@ -23,15 +23,9 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}
 
 	// Initialize and pull the base for the PR
-	err = getRepository(request, git, pull)
+	err = git.Clone(pull.RepositoryURL, pull.BaseRefName, request.Params.GitDepth)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get / clone repository: %s", err)
-	}
-
-	// Get the last commit SHA in base for the metadata
-	baseSHA, err := git.RevParse(pull.BaseRefName)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to clone repository: %s", err)
 	}
 
 	// Fetch the PR and merge the specified commit into the base
@@ -39,21 +33,31 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		return nil, err
 	}
 
-	switch tool := request.Params.IntegrationTool; tool {
+	switch request.Params.IntegrationTool {
 	case "rebase":
+		pull.BaseRefOID, err = git.RevParse(pull.BaseRefName)
+		if err != nil {
+			return nil, err
+		}
+
 		if err := git.Rebase(pull.BaseRefName, request.Version.Commit); err != nil {
 			return nil, err
 		}
-	case "merge", "":
+	case "merge":
+		pull.BaseRefOID, err = git.RevParse(pull.BaseRefName)
+		if err != nil {
+			return nil, err
+		}
+
 		if err := git.Merge(request.Version.Commit); err != nil {
 			return nil, err
 		}
-	case "checkout":
+	case "checkout", "":
 		if err := git.Checkout(pull.HeadRefName, request.Version.Commit); err != nil {
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("invalid integration tool specified: %s", tool)
+		return nil, fmt.Errorf("invalid integration tool specified: %s", request.Params.IntegrationTool)
 	}
 
 	if request.Source.GitCryptKey != "" {
@@ -62,18 +66,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		}
 	}
 
-	// Create the metadata
-	var metadata Metadata
-	metadata.Add("pr", strconv.Itoa(pull.Number))
-	metadata.Add("url", pull.URL)
-	metadata.Add("head_name", pull.HeadRefName)
-	metadata.Add("head_sha", pull.HeadRef.OID)
-	metadata.Add("head_short_sha", pull.HeadRef.AbbreviatedOID)
-	metadata.Add("base_name", pull.BaseRefName)
-	metadata.Add("base_sha", baseSHA)
-	metadata.Add("message", pull.HeadRef.Message)
-	metadata.Add("author", pull.HeadRef.Author)
-	metadata.Add("events", fmt.Sprintf("%v", pull.Events))
+	metadata := metadataFactory(pull)
 
 	// Write version and metadata for reuse in PUT
 	path := filepath.Join(outputDir, ".git", "resource")
@@ -128,23 +121,20 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}, nil
 }
 
-func getRepository(request GetRequest, git Git, pull pullrequest.PullRequest) error {
-	if request.Params.Clone {
-		if err := git.Clone(pull.RepositoryURL, pull.BaseRefName, request.Params.GitDepth); err != nil {
-			return err
-		}
+func metadataFactory(pull pullrequest.PullRequest) Metadata {
+	var metadata Metadata
+	metadata.Add("pr", strconv.Itoa(pull.Number))
+	metadata.Add("url", pull.URL)
+	metadata.Add("head_name", pull.HeadRefName)
+	metadata.Add("head_sha", pull.HeadRef.OID)
+	metadata.Add("head_short_sha", pull.HeadRef.AbbreviatedOID)
+	metadata.Add("base_name", pull.BaseRefName)
+	metadata.Add("base_sha", pull.BaseRefOID)
+	metadata.Add("message", pull.HeadRef.Message)
+	metadata.Add("author", pull.HeadRef.Author)
+	metadata.Add("events", fmt.Sprintf("%v", pull.Events))
 
-		return nil
-	}
-
-	if err := git.Init(pull.BaseRefName); err != nil {
-		return err
-	}
-	if err := git.Pull(pull.RepositoryURL, pull.BaseRefName, request.Params.GitDepth); err != nil {
-		return err
-	}
-
-	return nil
+	return metadata
 }
 
 // GetParameters ...
@@ -153,7 +143,6 @@ type GetParameters struct {
 	IntegrationTool  string `json:"integration_tool"`
 	GitDepth         int    `json:"git_depth"`
 	ListChangedFiles bool   `json:"list_changed_files"`
-	Clone            bool   `json:"clone"`
 }
 
 // GetRequest ...

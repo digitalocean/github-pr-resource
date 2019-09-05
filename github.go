@@ -351,6 +351,7 @@ func PullRequestFactory(p PullRequestObject) pullrequest.PullRequest {
 		URL:                 p.URL,
 		RepositoryURL:       p.Repository.URL,
 		BaseRefName:         p.BaseRefName,
+		BaseRefOID:          p.BaseRefOID,
 		HeadRefName:         p.HeadRefName,
 		IsCrossRepository:   p.IsCrossRepository,
 		CreatedAt:           p.CreatedAt.Time,

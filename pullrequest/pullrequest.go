@@ -10,6 +10,7 @@ type PullRequest struct {
 	URL                 string
 	RepositoryURL       string
 	BaseRefName         string
+	BaseRefOID          string
 	HeadRefName         string
 	IsCrossRepository   bool
 	CreatedAt           time.Time
