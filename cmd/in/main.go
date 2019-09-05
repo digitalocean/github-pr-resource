@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 
@@ -36,6 +37,7 @@ func main() {
 	}
 	response, err := resource.Get(request, github, git, outputDir)
 	if err != nil {
+		fmt.Println(err)
 		log.Fatalf("get failed: %s", err)
 	}
 

@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/telia-oss/github-pr-resource/pullrequest"
 )
 
 // Get (business logic)
@@ -21,11 +23,9 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}
 
 	// Initialize and pull the base for the PR
-	if err := git.Init(pull.BaseRefName); err != nil {
-		return nil, err
-	}
-	if err := git.Pull(pull.RepositoryURL, pull.BaseRefName, request.Params.GitDepth); err != nil {
-		return nil, err
+	err = getRepository(request, git, pull)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get / clone repository: %s", err)
 	}
 
 	// Get the last commit SHA in base for the metadata
@@ -35,7 +35,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}
 
 	// Fetch the PR and merge the specified commit into the base
-	if err := git.Fetch(pull.RepositoryURL, pull.Number, request.Params.GitDepth); err != nil {
+	if err := git.Fetch(pull.Number, request.Params.GitDepth); err != nil {
 		return nil, err
 	}
 
@@ -128,12 +128,32 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}, nil
 }
 
+func getRepository(request GetRequest, git Git, pull pullrequest.PullRequest) error {
+	if request.Params.Clone {
+		if err := git.Clone(pull.RepositoryURL, pull.BaseRefName, request.Params.GitDepth); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if err := git.Init(pull.BaseRefName); err != nil {
+		return err
+	}
+	if err := git.Pull(pull.RepositoryURL, pull.BaseRefName, request.Params.GitDepth); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetParameters ...
 type GetParameters struct {
 	SkipDownload     bool   `json:"skip_download"`
 	IntegrationTool  string `json:"integration_tool"`
 	GitDepth         int    `json:"git_depth"`
 	ListChangedFiles bool   `json:"list_changed_files"`
+	Clone            bool   `json:"clone"`
 }
 
 // GetRequest ...
