@@ -222,18 +222,18 @@ func TestGet(t *testing.T) {
 				if assert.Equal(t, 1, git.RebaseCallCount()) {
 					branch, tip := git.RebaseArgsForCall(0)
 					assert.Equal(t, tc.pullRequest.BaseRefName, branch)
-					assert.Equal(t, tc.pullRequest.HeadRef.OID, tip)
+					assert.Equal(t, tc.version.Commit, tip)
 				}
 			case "checkout":
 				if assert.Equal(t, 1, git.CheckoutCallCount()) {
 					branch, sha := git.CheckoutArgsForCall(0)
 					assert.Equal(t, tc.pullRequest.HeadRefName, branch)
-					assert.Equal(t, tc.pullRequest.HeadRef.OID, sha)
+					assert.Equal(t, tc.version.Commit, sha)
 				}
 			default:
 				if assert.Equal(t, 1, git.MergeCallCount()) {
 					tip := git.MergeArgsForCall(0)
-					assert.Equal(t, tc.pullRequest.HeadRef.OID, tip)
+					assert.Equal(t, tc.version.Commit, tip)
 				}
 			}
 			if tc.source.GitCryptKey != "" {
