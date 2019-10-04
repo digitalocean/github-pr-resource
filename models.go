@@ -12,20 +12,34 @@ import (
 
 // Source represents the configuration for the resource.
 type Source struct {
-	Repository              string   `json:"repository"`
-	AccessToken             string   `json:"access_token"`
-	V3Endpoint              string   `json:"v3_endpoint"`
-	V4Endpoint              string   `json:"v4_endpoint"`
-	Paths                   []string `json:"paths,omitempty"`
-	IgnorePaths             []string `json:"ignore_paths,omitempty"`
-	DisableCISkip           bool     `json:"disable_ci_skip,omitempty"`
-	SkipSSLVerification     bool     `json:"skip_ssl_verification,omitempty"`
-	DisableForks            bool     `json:"disable_forks,omitempty"`
-	GitCryptKey             string   `json:"git_crypt_key,omitempty"`
-	BaseBranch              string   `json:"base_branch,omitempty"`
-	PreviewSchema           bool     `json:"preview_schema,omitempty"`
-	RequiredReviewApprovals int      `json:"required_review_approvals,omitempty"`
-	Labels                  []string `json:"labels,omitempty"`
+	// Repository to check, get, put
+	Repository string `json:"repository"`
+	// AccessToken for GitHub API with permissions to Repository
+	AccessToken string `json:"access_token"`
+	// V3Endpoint for GitHub Rest API (leave blank for cloud)
+	V3Endpoint string `json:"v3_endpoint"`
+	// V4Endpoint for GitHub GraphQL API (leave blank for cloud)
+	V4Endpoint string `json:"v4_endpoint"`
+	// Paths of Repository to return versions for
+	Paths []string `json:"paths,omitempty"`
+	// IgnorePaths of Repository to skip returning versions for
+	IgnorePaths []string `json:"ignore_paths,omitempty"`
+	// DisableCISkip disables ability to skip CI via PR title / message
+	DisableCISkip bool `json:"disable_ci_skip,omitempty"`
+	// SkipSSLVerification when executing GitHub API requests
+	SkipSSLVerification bool `json:"skip_ssl_verification,omitempty"`
+	// DisableForks disables versions from forks of Repository
+	DisableForks bool `json:"disable_forks,omitempty"`
+	// GitCryptKey enables GitCrypt unlocking
+	GitCryptKey string `json:"git_crypt_key,omitempty"`
+	// BaseBranch returns versions only for matching base branch
+	BaseBranch string `json:"base_branch,omitempty"`
+	// PreviewSchema enables GraphQL preview schemas, see: https://developer.github.com/v4/previews/
+	PreviewSchema bool `json:"preview_schema,omitempty"`
+	// RequiredReviewApprovals returns versions when PR has >= approvals
+	RequiredReviewApprovals int `json:"required_review_approvals,omitempty"`
+	// Labels returns versions for PRs matching labels
+	Labels []string `json:"labels,omitempty"`
 }
 
 // Validate the source configuration.

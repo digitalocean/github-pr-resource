@@ -405,8 +405,8 @@ func TestBuildCI(t *testing.T) {
 			description: "match v1",
 			pull: pullrequest.PullRequest{
 				Comments: []pullrequest.Comment{
-					pullrequest.Comment{Body: "weeee I don't want to build ci"},
-					pullrequest.Comment{Body: "weeee I do want to [build ci]"},
+					{Body: "weeee I don't want to build ci"},
+					{Body: "weeee I do want to [build ci]"},
 				},
 			},
 			expect: true,
@@ -415,8 +415,8 @@ func TestBuildCI(t *testing.T) {
 			description: "match v2",
 			pull: pullrequest.PullRequest{
 				Comments: []pullrequest.Comment{
-					pullrequest.Comment{Body: "weeee I don't want to build ci"},
-					pullrequest.Comment{Body: "weeee I do want to [ci build]"},
+					{Body: "weeee I don't want to build ci"},
+					{Body: "weeee I do want to [ci build]"},
 				},
 			},
 			expect: true,
@@ -425,7 +425,7 @@ func TestBuildCI(t *testing.T) {
 			description: "no match",
 			pull: pullrequest.PullRequest{
 				Comments: []pullrequest.Comment{
-					pullrequest.Comment{Body: "weeee I don't want to build ci"},
+					{Body: "weeee I don't want to build ci"},
 				},
 			},
 			expect: false,
@@ -450,7 +450,7 @@ func TestBaseRefChanged(t *testing.T) {
 			description: "match single",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefChangedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -462,11 +462,11 @@ func TestBaseRefChanged(t *testing.T) {
 			description: "match many",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefChangedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -478,7 +478,7 @@ func TestBaseRefChanged(t *testing.T) {
 			description: "no match",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -506,7 +506,7 @@ func TestBaseRefForcePushed(t *testing.T) {
 			description: "match single",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -518,19 +518,19 @@ func TestBaseRefForcePushed(t *testing.T) {
 			description: "match many",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.HeadRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.HeadRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefChangedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -542,7 +542,7 @@ func TestBaseRefForcePushed(t *testing.T) {
 			description: "no match",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefChangedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -570,7 +570,7 @@ func TestHeadRefForcePushed(t *testing.T) {
 			description: "match single",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.HeadRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -582,19 +582,19 @@ func TestHeadRefForcePushed(t *testing.T) {
 			description: "match many",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.HeadRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.HeadRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefChangedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -606,7 +606,7 @@ func TestHeadRefForcePushed(t *testing.T) {
 			description: "no match",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -634,7 +634,7 @@ func TestReopened(t *testing.T) {
 			description: "match single",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.ReopenedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -646,19 +646,19 @@ func TestReopened(t *testing.T) {
 			description: "match many",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.HeadRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.HeadRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.ReopenedEvent,
 						CreatedAt: time.Now(),
 					},
-					pullrequest.Event{
+					{
 						Type:      pullrequest.BaseRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -670,7 +670,7 @@ func TestReopened(t *testing.T) {
 			description: "no match",
 			pull: pullrequest.PullRequest{
 				Events: []pullrequest.Event{
-					pullrequest.Event{
+					{
 						Type:      pullrequest.HeadRefForcePushedEvent,
 						CreatedAt: time.Now(),
 					},
@@ -759,25 +759,49 @@ func TestFiles(t *testing.T) {
 			expect: true,
 		},
 		{
-			description: "match /**/*",
-			patterns:    []string{"docode/src/do/teams/cns/network/ha-agent/**/*"},
+			description: "no match /**/*",
+			patterns:    []string{"/ci/**/*"},
 			invert:      false,
 			pull: pullrequest.PullRequest{
 				Files: []string{
-					"docode/src/do/teams/cns/network/ha-agent/README.md",
-					"docode/src/do/teams/cns/network/ha-agent/ci/pipeline.yml",
+					"src/teams/myteam/README.md",
+					"src/teams/myteam/ci/pipeline.yml",
+				},
+			},
+			expect: false,
+		},
+		{
+			description: "match /**/*",
+			patterns:    []string{"/ci/**/*"},
+			invert:      false,
+			pull: pullrequest.PullRequest{
+				Files: []string{
+					"ci/README.md",
+					"ci/pipeline.yml",
+				},
+			},
+			expect: true,
+		},
+		{
+			description: "match **/*",
+			patterns:    []string{"src/teams/myteam/**/*"},
+			invert:      false,
+			pull: pullrequest.PullRequest{
+				Files: []string{
+					"src/teams/myteam/README.md",
+					"src/teams/myteam/ci/pipeline.yml",
 				},
 			},
 			expect: true,
 		},
 		{
 			description: "match multiple files 2",
-			patterns:    []string{"docode/src/do/teams/cns/network/ha-agent/**/*", "docode/src/do/teams/cns/network/ha-agent/*"},
+			patterns:    []string{"src/teams/myteam/**/*", "src/teams/myteam/*"},
 			invert:      false,
 			pull: pullrequest.PullRequest{
 				Files: []string{
-					"docode/src/do/teams/cns/network/ha-agent/README.md",
-					"docode/src/do/teams/cns/network/ha-agent/ci/pipeline.yml",
+					"src/teams/myteam/README.md",
+					"src/teams/myteam/ci/pipeline.yml",
 				},
 			},
 			expect: true,

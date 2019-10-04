@@ -66,26 +66,28 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		}
 	}
 
-	metadata := metadataFactory(pull)
-
-	// Write version and metadata for reuse in PUT
 	path := filepath.Join(outputDir, ".git", "resource")
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %s", err)
 	}
-	b, err := json.Marshal(&request.Version)
+
+	metadata := metadataFactory(pull)
+	b, err := json.Marshal(&metadata)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal version: %s", err)
+		return nil, err
 	}
-	if err := ioutil.WriteFile(filepath.Join(path, "version.json"), b, 0644); err != nil {
-		return nil, fmt.Errorf("failed to write version: %s", err)
-	}
-	b, err = json.Marshal(metadata)
+	err = writeFile("metadata", path, b)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal metadata: %s", err)
+		return nil, err
 	}
-	if err := ioutil.WriteFile(filepath.Join(path, "metadata.json"), b, 0644); err != nil {
-		return nil, fmt.Errorf("failed to write metadata: %s", err)
+
+	b, err = json.Marshal(&request.Version)
+	if err != nil {
+		return nil, err
+	}
+	err = writeFile("version", path, b)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, d := range metadata {
@@ -94,7 +96,6 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		if err := ioutil.WriteFile(filepath.Join(path, filename), content, 0644); err != nil {
 			return nil, fmt.Errorf("failed to write metadata file %s: %s", filename, err)
 		}
-
 	}
 
 	if request.Params.ListChangedFiles {
@@ -137,12 +138,23 @@ func metadataFactory(pull pullrequest.PullRequest) Metadata {
 	return metadata
 }
 
+func writeFile(name, path string, b []byte) error {
+	if err := ioutil.WriteFile(filepath.Join(path, name+".json"), b, 0644); err != nil {
+		return fmt.Errorf("failed to write %s: %s", name, err)
+	}
+	return nil
+}
+
 // GetParameters ...
 type GetParameters struct {
-	SkipDownload     bool   `json:"skip_download"`
-	IntegrationTool  string `json:"integration_tool"`
-	GitDepth         int    `json:"git_depth"`
-	ListChangedFiles bool   `json:"list_changed_files"`
+	// SkipDownload will skip downloading the code to the volume, used with `put` steps
+	SkipDownload bool `json:"skip_download"`
+	// IntegrationTool defines the method of checking out the code (checkout [default], merge, rebase)
+	IntegrationTool string `json:"integration_tool"`
+	// GitDepth sets the number of commits to include in the clone (shallow clone)
+	GitDepth int `json:"git_depth"`
+	// ListChangedFiles generates a list of changed files in the `.git` directory
+	ListChangedFiles bool `json:"list_changed_files"`
 }
 
 // GetRequest ...

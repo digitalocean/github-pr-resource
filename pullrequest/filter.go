@@ -204,16 +204,18 @@ func Files(patterns []string, invert bool) Filter {
 
 		for _, f := range p.Files {
 			log.Println("comparing patterns to changed file:", f)
-			if gc.MatchesPath(f) {
+			if gc.MatchesPath("/" + f) {
 				if !invert {
-					log.Println("paths: true")
+					log.Println("paths: true -", "matched:", f)
 					return true
 				}
 
 				matched = append(matched, 1)
+				log.Println("matched:", f)
 			}
 		}
 
+		log.Println("invert:", invert, "- matched:", len(matched), "- files:", len(p.Files))
 		if invert && len(matched) == len(p.Files) {
 			log.Println("ignore paths: true")
 			return true
