@@ -49,10 +49,12 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 			log.Println("changed files found:", p.Files)
 
 			switch {
+			// if `paths` is configured && NONE of the changed files match `paths` pattern/s
 			case pullrequest.Patterns(paths)(p) && !pullrequest.Files(paths, false)(p):
 				log.Println("paths excluded pull")
 				continue
-			case !pullrequest.Patterns(paths)(p) && pullrequest.Patterns(iPaths)(p) && pullrequest.Files(iPaths, true)(p):
+			// if `ignore_paths` is configured && ALL of the changed files match `ignore_paths` pattern/s
+			case pullrequest.Patterns(iPaths)(p) && pullrequest.Files(iPaths, true)(p):
 				log.Println("ignore paths excluded pull")
 				continue
 			}

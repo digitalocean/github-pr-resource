@@ -82,7 +82,7 @@ func TestMarshalJSON(t *testing.T) {
 			description: "one version",
 			json:        []byte(`[{"pr":"1","commit":"a4afe32","updated":"2019-08-20T00:14:16Z"}]`),
 			versions: []resource.Version{
-				resource.Version{
+				{
 					PR:          1,
 					Commit:      "a4afe32",
 					UpdatedDate: time.Date(2019, time.August, 20, 0, 14, 16, 0, time.UTC),
@@ -93,12 +93,12 @@ func TestMarshalJSON(t *testing.T) {
 			description: "many versions",
 			json:        []byte(`[{"pr":"1","commit":"a4afe32","updated":"2019-08-20T00:14:16Z"},{"pr":"2","commit":"a4afe33","updated":"2020-08-20T00:14:16Z"}]`),
 			versions: []resource.Version{
-				resource.Version{
+				{
 					PR:          1,
 					Commit:      "a4afe32",
 					UpdatedDate: time.Date(2019, time.August, 20, 0, 14, 16, 0, time.UTC),
 				},
-				resource.Version{
+				{
 					PR:          2,
 					Commit:      "a4afe33",
 					UpdatedDate: time.Date(2020, time.August, 20, 0, 14, 16, 0, time.UTC),

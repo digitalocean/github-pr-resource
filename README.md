@@ -25,8 +25,8 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `access_token`              | Yes      |                                  | A Github Access Token with repository access (required for setting status on commits). N.B. If you want github-pr-resource to work with a private repository. Set `repo:full` permissions on the access token you create on GitHub. If it is a public repository, `repo:status` is enough |
 | `v3_endpoint`               | NO       | `https://api.github.com`         | Endpoint to use for the V3 Github API (Restful) |
 | `v4_endpoint`               | NO       | `https://api.github.com/graphql` | Endpoint to use for the V4 Github API (Graphql) |
-| `paths`                     | No       | `terraform/*/*.tf`               | Only produce new versions if the PR includes changes to files that match one or more glob patterns or prefixes |
-| `ignore_paths`              | No       | `.ci/`                           | Inverse of the above. Pattern syntax is documented in [filepath.Match](https://golang.org/pkg/path/filepath/#Match), or a path prefix can be specified (e.g. `.ci/` will match everything in the `.ci` directory) |
+| `paths`                     | No       | `terraform/**/*.tf`              | Only produce new versions if the PR includes changes to files that match one or more glob patterns using [go-gitignore](https://godoc.org/github.com/sabhiram/go-gitignore) |
+| `ignore_paths`              | No       | `.ci/**/*.yaml`                  | Inverse of the above, all changed files must match in order for the PR to be skipped |
 | `disable_ci_skip`           | No       | `true`                           | Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title |
 | `skip_ssl_verification`     | No       | `true`                           | Disable SSL/TLS certificate validation on git and API clients. Use with care! |
 | `disable_forks`             | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository |
@@ -136,7 +136,6 @@ Note that, should you retrigger a build in the hopes of testing the last commit 
 the base, Concourse will reuse the volume (i.e. not trigger a new `get`) if it still exists, which can produce
 unexpected results (#5). As such, re-testing a PR against a newer version of the base is best done by *pushing an
 empty commit to the PR*.
-
 
 #### `put`
 
