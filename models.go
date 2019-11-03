@@ -186,7 +186,7 @@ type PullRequestObject struct {
 				} `graphql:"... on PullRequestCommit"`
 			}
 		}
-	} `graphql:"timelineItems(last:100,since:$s)"`
+	} `graphql:"timelineItems(last:100,since:$s,itemTypes:[BASE_REF_CHANGED_EVENT,BASE_REF_FORCE_PUSHED_EVENT,HEAD_REF_FORCE_PUSHED_EVENT,ISSUE_COMMENT,REOPENED_EVENT])"`
 }
 
 // CommitObject represents the GraphQL commit node.
