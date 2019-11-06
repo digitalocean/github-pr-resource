@@ -35,6 +35,7 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `preview_schema`            | No       | `true`                           | if enabled, an `Accept: application/vnd.github.starfire-preview+json` header will be appended to each request to enable preview schema's that are hidden behind a feature flag on GitHub |
 | `required_review_approvals` | No       | `2`                              | Disable triggering of the resource if the pull request does not have at least `X` approved review(s) |
 | `labels`                    | No       | `["bug", "enhancement"]`         | The labels on the PR. The pipeline will only trigger on pull requests having at least one of the specified labels |
+| `checkout_branch_prefix`    | No       |  pre-                            | A prefix to add to the name of the checked out branch, defaults to empty string. If it is not set explicitly in `Source` definition, the resource will just checkout the remote branch wihtout creating any new local branch
 
 Notes:
  - If `v3_endpoint` is set, `v4_endpoint` must also be set (and the other way around).
