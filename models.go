@@ -40,6 +40,8 @@ type Source struct {
 	RequiredReviewApprovals int `json:"required_review_approvals,omitempty"`
 	// Labels returns versions for PRs matching labels
 	Labels []string `json:"labels,omitempty"`
+	// Prefix added to the checked out branch, it is optional, and defaults to empty string
+	CheckOutBranchPrefix string `json:"checkout_branch_prefix,omitempty"`
 }
 
 // Validate the source configuration.

@@ -34,17 +34,19 @@ func NewGitClient(source *Source, dir string, output io.Writer) (*GitClient, err
 		os.Setenv("GIT_SSL_NO_VERIFY", "true")
 	}
 	return &GitClient{
-		AccessToken: source.AccessToken,
-		Directory:   dir,
-		Output:      output,
+		AccessToken:          source.AccessToken,
+		Directory:            dir,
+		Output:               output,
+		CheckoutBranchPrefix: source.CheckOutBranchPrefix,
 	}, nil
 }
 
 // GitClient ...
 type GitClient struct {
-	AccessToken string
-	Directory   string
-	Output      io.Writer
+	AccessToken          string
+	Directory            string
+	Output               io.Writer
+	CheckoutBranchPrefix string
 }
 
 func (g *GitClient) command(name string, arg ...string) *exec.Cmd {
@@ -170,7 +172,7 @@ func (g *GitClient) Fetch(prNumber, depth int) error {
 // Checkout ...
 func (g *GitClient) Checkout(branch, sha string) error {
 	log.Println("checkout:", branch, sha)
-	if err := g.command("git", "checkout", "-b", "pr-"+branch, sha).Run(); err != nil {
+	if err := g.command("git", "checkout", "-b", g.CheckoutBranchPrefix+branch, sha).Run(); err != nil {
 		return fmt.Errorf("checkout failed: %s", err)
 	}
 
