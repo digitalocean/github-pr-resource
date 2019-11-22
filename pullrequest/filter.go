@@ -28,7 +28,7 @@ func SkipCI(disabled bool) Filter {
 			return false
 		}
 
-		re := regexp.MustCompile("(?i)\\[(ci skip|skip ci)\\]")
+		re := regexp.MustCompile(`(?i)\[(ci skip|skip ci)\]`)
 		if re.MatchString(p.Title) || re.MatchString(p.HeadRef.Message) {
 			log.Println("skipCI: true")
 			return true
@@ -116,13 +116,17 @@ func Created(v time.Time) Filter {
 }
 
 // BuildCI returns true if a comment containing [build ci] was added since the last check
-func BuildCI() Filter {
+// Supports filtering by pipeline name, e.g. `[build ci p="my-pipeline"]`
+func BuildCI(v string) Filter {
 	return func(p PullRequest) bool {
 		for _, c := range p.Comments {
-			re := regexp.MustCompile("(?i)\\[(ci build|build ci)\\]")
-			if re.MatchString(c.Body) {
-				log.Println("buildCI: true")
-				return true
+			re := regexp.MustCompile(`(?i)\[(ci build|build ci)[\sp\=]*\"*([\w\s\d\-]*)\"*\]`)
+			match := re.FindStringSubmatch(c.Body)
+			if len(match) > 0 {
+				if len(match[2]) == 0 || match[2] == v {
+					log.Println("buildCI: true")
+					return true
+				}
 			}
 		}
 		return false

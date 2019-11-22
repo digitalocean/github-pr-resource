@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/telia-oss/github-pr-resource/env"
 	"github.com/telia-oss/github-pr-resource/pullrequest"
 )
 
@@ -20,6 +21,8 @@ func findPulls(since time.Time, gh Github) ([]pullrequest.PullRequest, error) {
 func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 	var response CheckResponse
 
+	checkEnv := env.ReadCheck()
+
 	pulls, err := findPulls(request.Version.UpdatedDate, manager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last commits: %s", err)
@@ -32,7 +35,7 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 
 	for _, p := range pulls {
 		log.Printf("evaluate pull: %+v\n", p)
-		if !newVersion(request, p) {
+		if !newVersion(request, p, checkEnv) {
 			log.Println("no new version found")
 			continue
 		}
@@ -83,7 +86,7 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 	return response, nil
 }
 
-func newVersion(r CheckRequest, p pullrequest.PullRequest) bool {
+func newVersion(r CheckRequest, p pullrequest.PullRequest, e env.Check) bool {
 	switch {
 	// negative filters
 	case pullrequest.SkipCI(r.Source.DisableCISkip)(p),
@@ -98,7 +101,7 @@ func newVersion(r CheckRequest, p pullrequest.PullRequest) bool {
 		pullrequest.BaseRefForcePushed()(p),
 		pullrequest.HeadRefForcePushed()(p),
 		pullrequest.Reopened()(p),
-		pullrequest.BuildCI()(p),
+		pullrequest.BuildCI(e.BuildPipelineName)(p),
 		pullrequest.NewCommits(r.Version.UpdatedDate)(p):
 		return true
 	}

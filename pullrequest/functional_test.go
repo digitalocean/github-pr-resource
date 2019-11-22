@@ -422,6 +422,26 @@ func TestBuildCI(t *testing.T) {
 			expect: true,
 		},
 		{
+			description: "match caps",
+			pull: pullrequest.PullRequest{
+				Comments: []pullrequest.Comment{
+					{Body: "weeee I don't want to build ci"},
+					{Body: "weeee I do want to [BUILD CI]"},
+				},
+			},
+			expect: true,
+		},
+		{
+			description: "match w/pipeline name",
+			pull: pullrequest.PullRequest{
+				Comments: []pullrequest.Comment{
+					{Body: "weeee I don't want to build ci"},
+					{Body: "weeee I do want to [build ci p=\"my-pipeline\"]"},
+				},
+			},
+			expect: true,
+		},
+		{
 			description: "no match",
 			pull: pullrequest.PullRequest{
 				Comments: []pullrequest.Comment{
@@ -430,11 +450,21 @@ func TestBuildCI(t *testing.T) {
 			},
 			expect: false,
 		},
+		{
+			description: "no match w/pipeline name",
+			pull: pullrequest.PullRequest{
+				Comments: []pullrequest.Comment{
+					{Body: "weeee I don't want to build ci"},
+					{Body: "weeee I do want to [build ci p=\"their-pipeline\"]"},
+				},
+			},
+			expect: false,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			out := pullrequest.BuildCI()(tc.pull)
+			out := pullrequest.BuildCI("my-pipeline")(tc.pull)
 			assert.Equal(t, tc.expect, out)
 		})
 	}
