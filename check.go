@@ -87,11 +87,13 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 				}
 
 				if len(matches) > 0 {
-					matches, err = pullrequest.Files(iPaths)(matches)
+					ignoreMatches, err := pullrequest.Files(iPaths)(matches)
 					if err != nil {
 						log.Println("error identifying matching ignore_paths when both paths and ignore_paths are defined")
 						continue
 					}
+
+					matches = diff(matches, ignoreMatches)
 				}
 
 				if len(matches) == 0 {
@@ -121,6 +123,30 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 	log.Println("versions:", response)
 
 	return response, nil
+}
+
+// diff returns elements in match that are not found in ignoreMatch
+func diff(match []string, ignoreMatch []string) []string {
+	found := make(map[string]bool)
+
+	for _, f := range match {
+		found[f] = true
+	}
+
+	for _, f := range ignoreMatch {
+		if _, ok := found[f]; ok {
+			found[f] = false
+		}
+	}
+
+	var diff []string
+	for file, ret := range found {
+		if ret {
+			diff = append(diff, file)
+		}
+	}
+
+	return diff
 }
 
 func newVersion(r CheckRequest, p pullrequest.PullRequest) bool {
