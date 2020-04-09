@@ -833,6 +833,19 @@ func TestFiles(t *testing.T) {
 				"src/teams/myteam/ci/pipeline.yml",
 			},
 		},
+		{
+			description: "match paths ending in file separator",
+			patterns:    []string{"src/teams/myteam/Dockerfile", "src/teams/myteam/ci/", "src/teams/myteam/app/"},
+			files: []string{
+				"src/teams/myteam/ci/README.md",
+				"src/teams/myteam/ci/main.go",
+				"src/teams/yourteam/temp.go",
+			},
+			expect: []string{
+				"src/teams/myteam/ci/README.md",
+				"src/teams/myteam/ci/main.go",
+			},
+		},
 	}
 
 	for _, tc := range tests {
