@@ -48,15 +48,55 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 			log.Println("ignore paths configured:", iPaths)
 			log.Println("changed files found:", p.Files)
 
-			switch {
 			// if `paths` is configured && NONE of the changed files match `paths` pattern/s
-			case pullrequest.Patterns(paths)(p) && !pullrequest.Files(paths, false)(p):
-				log.Println("paths excluded pull")
-				continue
+			if pullrequest.Patterns(paths)(p) {
+				matches, err := pullrequest.Files(paths)(p.Files)
+				if err != nil {
+					log.Println("error identifying matching paths")
+					continue
+				}
+
+				if len(matches) == 0 {
+					log.Println("paths excluded pull")
+					continue
+				}
+			}
+
 			// if `ignore_paths` is configured && ALL of the changed files match `ignore_paths` pattern/s
-			case pullrequest.Patterns(iPaths)(p) && pullrequest.Files(iPaths, true)(p):
-				log.Println("ignore paths excluded pull")
-				continue
+			if pullrequest.Patterns(iPaths)(p) {
+				matches, err := pullrequest.Files(iPaths)(p.Files)
+				if err != nil {
+					log.Println("error identifying matching ignore_paths")
+					continue
+				}
+
+				if len(matches) == len(p.Files) {
+					log.Println("ignore paths excluded pull")
+					continue
+				}
+			}
+
+			// Both `paths` and `ignore_paths` are defined, it is possible for the pull request
+			// to contain files outside of `paths`
+			if pullrequest.Patterns(paths)(p) && pullrequest.Patterns(iPaths)(p) {
+				log.Println("paths and ignore_paths both defined")
+				matches, err := pullrequest.Files(paths)(p.Files)
+				if err != nil {
+					log.Println("error identifying matching paths when both paths and ignore_paths are defined")
+					continue
+				}
+
+				if len(matches) > 0 {
+					matches, err = pullrequest.Files(iPaths)(matches)
+					if err != nil {
+						log.Println("error identifying matching ignore_paths when both paths and ignore_paths are defined")
+						continue
+					}
+				}
+
+				if len(matches) == 0 {
+					continue
+				}
 			}
 		}
 
