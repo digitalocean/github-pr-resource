@@ -1,14 +1,12 @@
 package resource
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 
-	"github.com/telia-oss/github-pr-resource/pullrequest"
+	m "github.com/digitalocean/concourse-resource-library/metadata"
 )
 
 // Get (business logic)
@@ -72,7 +70,9 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 	}
 
 	metadata := metadataFactory(pull)
-	b, err := json.Marshal(&metadata)
+	metadata.AddJSON("version", &request.Version)
+
+	b, err := metadata.JSON()
 	if err != nil {
 		return nil, err
 	}
@@ -81,22 +81,7 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		return nil, err
 	}
 
-	b, err = json.Marshal(&request.Version)
-	if err != nil {
-		return nil, err
-	}
-	err = writeFile("version", path, b)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, d := range metadata {
-		filename := d.Name
-		content := []byte(d.Value)
-		if err := ioutil.WriteFile(filepath.Join(path, filename), content, 0644); err != nil {
-			return nil, fmt.Errorf("failed to write metadata file %s: %s", filename, err)
-		}
-	}
+	metadata.ToFiles(path)
 
 	if request.Params.ListChangedFiles {
 		cfol, err := github.GetChangedFiles(request.Version.PR)
@@ -120,22 +105,6 @@ func Get(request GetRequest, github Github, git Git, outputDir string) (*GetResp
 		Version:  request.Version,
 		Metadata: metadata,
 	}, nil
-}
-
-func metadataFactory(pull pullrequest.PullRequest) Metadata {
-	var metadata Metadata
-	metadata.Add("pr", strconv.Itoa(pull.Number))
-	metadata.Add("url", pull.URL)
-	metadata.Add("head_name", pull.HeadRefName)
-	metadata.Add("head_sha", pull.HeadRef.OID)
-	metadata.Add("head_short_sha", pull.HeadRef.AbbreviatedOID)
-	metadata.Add("base_name", pull.BaseRefName)
-	metadata.Add("base_sha", pull.BaseRefOID)
-	metadata.Add("message", pull.HeadRef.Message)
-	metadata.Add("author", pull.HeadRef.Author)
-	metadata.Add("events", fmt.Sprintf("%v", pull.Events))
-
-	return metadata
 }
 
 func writeFile(name, path string, b []byte) error {
@@ -166,6 +135,6 @@ type GetRequest struct {
 
 // GetResponse ...
 type GetResponse struct {
-	Version  Version  `json:"version"`
-	Metadata Metadata `json:"metadata,omitempty"`
+	Version  Version    `json:"version"`
+	Metadata m.Metadata `json:"metadata,omitempty"`
 }

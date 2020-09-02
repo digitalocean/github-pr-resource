@@ -55,20 +55,6 @@ func (s *Source) Validate() error {
 	return nil
 }
 
-// Metadata output from get/put steps.
-type Metadata []*MetadataField
-
-// Add a MetadataField to the Metadata.
-func (m *Metadata) Add(name, value string) {
-	*m = append(*m, &MetadataField{Name: name, Value: value})
-}
-
-// MetadataField ...
-type MetadataField struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
 // Version communicated with Concourse.
 type Version struct {
 	PR          int       `json:"pr"`
