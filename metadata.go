@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -23,8 +22,7 @@ func metadataFactory(pull pullrequest.PullRequest) meta.Metadata {
 	m.Add("author", pull.HeadRef.Author)
 	m.Add("events", fmt.Sprintf("%v", pull.Events))
 
-	labels, _ := json.Marshal(pull.Labels)
-	m.AddJSON("labels", string(labels))
+	m.AddJSON("labels", &pull.Labels)
 
 	return m
 }
