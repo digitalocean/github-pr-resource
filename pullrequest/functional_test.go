@@ -746,6 +746,19 @@ func TestFiles(t *testing.T) {
 			expect: true,
 		},
 		{
+			description: "no match in test subdirectory",
+			patterns:    []string{"/mytest/**"},
+			invert:      false,
+			pull: pullrequest.PullRequest{
+				Files: []string{
+					"file1.txt",
+					"testing/test/file2.txt",
+					"testing/test/tested/file2.txt",
+				},
+			},
+			expect: false,
+		},
+		{
 			description: "match multiple files",
 			patterns:    []string{"ci/dockerfiles/**/*", "ci/dockerfiles/*", "ci/tasks/build-image.yml", "ci/pipelines/images.yml"},
 			invert:      false,

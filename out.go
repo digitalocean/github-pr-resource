@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	m "github.com/digitalocean/concourse-resource-library/metadata"
 )
 
 // Put (business logic)
@@ -29,7 +31,7 @@ func Put(request PutRequest, manager Github, inputDir string) (*PutResponse, err
 	}
 
 	// Metadata available after a GET step.
-	var metadata Metadata
+	var metadata m.Metadata
 	b, err = readFile("metadata", path)
 	if err != nil {
 		return nil, err
@@ -92,8 +94,8 @@ type PutRequest struct {
 
 // PutResponse ...
 type PutResponse struct {
-	Version  Version  `json:"version"`
-	Metadata Metadata `json:"metadata,omitempty"`
+	Version  Version    `json:"version"`
+	Metadata m.Metadata `json:"metadata,omitempty"`
 }
 
 // PutParameters for the resource.
