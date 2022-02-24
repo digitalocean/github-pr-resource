@@ -1,5 +1,7 @@
 ## Github PR resource
 
+:exclamation: **This repo is a fork of [Telia OSS's resource](https://github.com/telia-oss/github-pr-resource) for internal use** :exclamation:
+
 [![Build Status](https://travis-ci.org/telia-oss/github-pr-resource.svg?branch=master)](https://travis-ci.org/telia-oss/github-pr-resource)
 [![Go Report Card](https://goreportcard.com/badge/github.com/telia-oss/github-pr-resource)](https://goreportcard.com/report/github.com/telia-oss/github-pr-resource)
 [![Docker Automated build](https://img.shields.io/docker/automated/teliaoss/github-pr-resource.svg)](https://hub.docker.com/r/teliaoss/github-pr-resource/)
