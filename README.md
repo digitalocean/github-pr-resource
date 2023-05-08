@@ -31,7 +31,7 @@ Make sure to check out [#migrating](#migrating) to learn more.
 | `ignore_paths`              | No       | `.ci/**/*.yaml`                  | Inverse of the above, all changed files must match in order for the PR to be skipped |
 | `disable_ci_skip`           | No       | `true`                           | Disable ability to skip builds with `[ci skip]` and `[skip ci]` in commit message or pull request title |
 | `skip_ssl_verification`     | No       | `true`                           | Disable SSL/TLS certificate validation on git and API clients. Use with care! |
-| `disable_forks`             | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository |
+| `disable_forks`             | No       | `true`                           | Disable triggering of the resource if the pull request's fork repository is different to the configured repository (defaults to `true`)|
 | `git_crypt_key`             | No       | `AEdJVENSWVBUS0VZAAAAA...`       | Base64 encoded git-crypt key. Setting this will unlock / decrypt the repository with git-crypt. To get the key simply execute `git-crypt export-key -- - | base64` in an encrypted repository.  |
 | `base_branch`               | No       | `master`                         | Name of a branch. The pipeline will only trigger on pull requests against the specified branch |
 | `preview_schema`            | No       | `true`                           | if enabled, an `Accept: application/vnd.github.starfire-preview+json` header will be appended to each request to enable preview schema's that are hidden behind a feature flag on GitHub |
