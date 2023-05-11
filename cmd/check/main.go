@@ -12,6 +12,11 @@ import (
 func main() {
 	var request resource.CheckRequest
 
+	// default DisableForks to true to prevent forks from being used as an attack
+	// vector unless `disable_forks` is explicitly set to false in the JSON that
+	// is unmarshaled.
+	request.Source.DisableForks = true
+
 	input := rlog.WriteStdin()
 	defer rlog.Close()
 
