@@ -3,6 +3,7 @@ package pullrequest
 import (
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	glob "github.com/sabhiram/go-gitignore"
@@ -191,37 +192,30 @@ func Patterns(patterns []string) Filter {
 	}
 }
 
-// Files matches the PRs changed files against a set of glob patterns:
-// (invert == false) returns true if patterns empty OR any of the changed files match the patterns
-// (invert == true) returns true if all of the changed files match the patterns to ignore
-func Files(patterns []string, invert bool) Filter {
-	return func(p PullRequest) bool {
-		matched := make([]int8, 0)
+// Files returns the files that match against a set of glob patterns:
+func Files(patterns []string) func([]string) ([]string, error) {
+	return func(files []string) ([]string, error) {
+		matches := make([]string, 0)
+
 		gc, err := glob.CompileIgnoreLines(patterns...)
 		if err != nil {
-			return false
+			return matches, err
 		}
 
-		for _, f := range p.Files {
+		for _, f := range files {
 			log.Println("comparing patterns to changed file:", f)
-			if gc.MatchesPath("/" + f) {
-				if !invert {
-					log.Println("paths: true -", "matched:", f)
-					return true
-				}
+			fn := f
+			if !strings.HasPrefix(f, "/") {
+				fn = "/" + f
+			}
 
-				matched = append(matched, 1)
-				log.Println("matched:", f)
+			if gc.MatchesPath(fn) {
+				matches = append(matches, f)
 			}
 		}
 
-		log.Println("invert:", invert, "- matched:", len(matched), "- files:", len(p.Files))
-		if invert && len(matched) == len(p.Files) {
-			log.Println("ignore paths: true")
-			return true
-		}
-
-		return false
+		log.Printf("found %d matching files", len(matches))
+		return matches, nil
 	}
 }
 

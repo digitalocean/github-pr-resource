@@ -48,15 +48,57 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 			log.Println("ignore paths configured:", iPaths)
 			log.Println("changed files found:", p.Files)
 
-			switch {
 			// if `paths` is configured && NONE of the changed files match `paths` pattern/s
-			case pullrequest.Patterns(paths)(p) && !pullrequest.Files(paths, false)(p):
-				log.Println("paths excluded pull")
-				continue
+			if pullrequest.Patterns(paths)(p) {
+				matches, err := pullrequest.Files(paths)(p.Files)
+				if err != nil {
+					log.Println("error identifying matching paths")
+					continue
+				}
+
+				if len(matches) == 0 {
+					log.Println("paths excluded pull")
+					continue
+				}
+			}
+
 			// if `ignore_paths` is configured && ALL of the changed files match `ignore_paths` pattern/s
-			case pullrequest.Patterns(iPaths)(p) && pullrequest.Files(iPaths, true)(p):
-				log.Println("ignore paths excluded pull")
-				continue
+			if pullrequest.Patterns(iPaths)(p) {
+				matches, err := pullrequest.Files(iPaths)(p.Files)
+				if err != nil {
+					log.Println("error identifying matching ignore_paths")
+					continue
+				}
+
+				if len(matches) == len(p.Files) {
+					log.Println("ignore paths excluded pull")
+					continue
+				}
+			}
+
+			// Both `paths` and `ignore_paths` are defined, it is possible for the pull request
+			// to contain files outside of `paths`
+			if pullrequest.Patterns(paths)(p) && pullrequest.Patterns(iPaths)(p) {
+				log.Println("paths and ignore_paths both defined")
+				matches, err := pullrequest.Files(paths)(p.Files)
+				if err != nil {
+					log.Println("error identifying matching paths when both paths and ignore_paths are defined")
+					continue
+				}
+
+				if len(matches) > 0 {
+					ignoreMatches, err := pullrequest.Files(iPaths)(matches)
+					if err != nil {
+						log.Println("error identifying matching ignore_paths when both paths and ignore_paths are defined")
+						continue
+					}
+
+					matches = diff(matches, ignoreMatches)
+				}
+
+				if len(matches) == 0 {
+					continue
+				}
 			}
 		}
 
@@ -81,6 +123,30 @@ func Check(request CheckRequest, manager Github) (CheckResponse, error) {
 	log.Println("versions:", response)
 
 	return response, nil
+}
+
+// diff returns elements in match that are not found in ignoreMatch
+func diff(match []string, ignoreMatch []string) []string {
+	found := make(map[string]bool)
+
+	for _, f := range match {
+		found[f] = true
+	}
+
+	for _, f := range ignoreMatch {
+		if _, ok := found[f]; ok {
+			found[f] = false
+		}
+	}
+
+	var diff []string
+	for file, ret := range found {
+		if ret {
+			diff = append(diff, file)
+		}
+	}
+
+	return diff
 }
 
 func newVersion(r CheckRequest, p pullrequest.PullRequest) bool {

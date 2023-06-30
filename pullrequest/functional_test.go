@@ -692,58 +692,89 @@ func TestFiles(t *testing.T) {
 	tests := []struct {
 		description string
 		patterns    []string
-		invert      bool
-		pull        pullrequest.PullRequest
-		expect      bool
+		files       []string
+		expect      []string
 	}{
 		{
 			description: "match txt files @ root level",
 			patterns:    []string{"*.txt"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"file1.txt",
-				},
+			files: []string{
+				"file1.txt",
 			},
-			expect: true,
+			expect: []string{
+				"file1.txt",
+			},
 		},
 		{
 			description: "match txt files at any level",
 			patterns:    []string{"**/*.txt"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"test/file2.txt",
-					"test/testing/file2.txt",
-					"test/testing/tested/file2.txt",
-				},
+			files: []string{
+				"test/file2.txt",
+				"test/testing/file2.txt",
+				"test/testing/tested/file2.txt",
 			},
-			expect: true,
+			expect: []string{
+				"test/file2.txt",
+				"test/testing/file2.txt",
+				"test/testing/tested/file2.txt",
+			},
 		},
 		{
 			description: "match any file in test dir",
 			patterns:    []string{"test/*"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"file1.txt",
-					"test/file2.txt",
-				},
+			files: []string{
+				"file1.txt",
+				"test/file2.txt",
 			},
-			expect: true,
+			expect: []string{
+				"test/file2.txt",
+			},
 		},
 		{
 			description: "match any file recursively in test dir",
 			patterns:    []string{"test/**"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"file1.txt",
-					"test/testing/file2.txt",
-					"test/testing/tested/file2.txt",
-				},
+			files: []string{
+				"file1.txt",
+				"test/testing/file2.txt",
+				"test/testing/tested/file2.txt",
 			},
-			expect: true,
+			expect: []string{
+				"test/testing/file2.txt",
+				"test/testing/tested/file2.txt",
+			},
+		},
+		// {
+		// 	description: "no match in test subdirectory",
+		// 	patterns:    []string{"test/**"},
+		// 	files: []string{
+		// 		"file1.txt",
+		// 		"testing/test/file2.txt",
+		// 		"testing/test/tested/file2.txt",
+		// 	},
+		// 	expect: []string{},
+		// },
+		{
+			description: "No match in test root directory",
+			patterns:    []string{"/test/**"},
+			files: []string{
+				"file1.txt",
+				"testing/test/file2.txt",
+				"testing/test/tested/file2.txt",
+			},
+			expect: []string{},
+		},
+		{
+			description: "Match in test root",
+			patterns:    []string{"/test/*"},
+			files: []string{
+				"file1.txt",
+				"testing/test/file2.txt",
+				"testing/test/tested/file2.txt",
+				"/test/file3.txt",
+			},
+			expect: []string{
+				"/test/file3.txt",
+			},
 		},
 		{
 			description: "no match in test subdirectory",
@@ -761,69 +792,79 @@ func TestFiles(t *testing.T) {
 		{
 			description: "match multiple files",
 			patterns:    []string{"ci/dockerfiles/**/*", "ci/dockerfiles/*", "ci/tasks/build-image.yml", "ci/pipelines/images.yml"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"ci/Makefile",
-					"ci/pipelines/images.yml",
-					"terraform/Makefile",
-				},
+			files: []string{
+				"ci/Makefile",
+				"ci/pipelines/images.yml",
+				"terraform/Makefile",
 			},
-			expect: true,
+			expect: []string{
+				"ci/pipelines/images.yml",
+			},
 		},
 		{
 			description: "no match /**/*",
 			patterns:    []string{"/ci/**/*"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"src/teams/myteam/README.md",
-					"src/teams/myteam/ci/pipeline.yml",
-				},
+			files: []string{
+				"src/teams/myteam/README.md",
+				"src/teams/myteam/ci/pipeline.yml",
 			},
-			expect: false,
+			expect: []string{},
 		},
 		{
 			description: "match /**/*",
 			patterns:    []string{"/ci/**/*"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"ci/README.md",
-					"ci/pipeline.yml",
-				},
+			files: []string{
+				"ci/README.md",
+				"ci/pipeline.yml",
 			},
-			expect: true,
+			expect: []string{
+				"ci/README.md",
+				"ci/pipeline.yml",
+			},
 		},
 		{
 			description: "match **/*",
 			patterns:    []string{"src/teams/myteam/**/*"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"src/teams/myteam/README.md",
-					"src/teams/myteam/ci/pipeline.yml",
-				},
+			files: []string{
+				"src/teams/myteam/README.md",
+				"src/teams/myteam/ci/pipeline.yml",
 			},
-			expect: true,
+			expect: []string{
+				"src/teams/myteam/README.md",
+				"src/teams/myteam/ci/pipeline.yml",
+			},
 		},
 		{
 			description: "match multiple files 2",
 			patterns:    []string{"src/teams/myteam/**/*", "src/teams/myteam/*"},
-			invert:      false,
-			pull: pullrequest.PullRequest{
-				Files: []string{
-					"src/teams/myteam/README.md",
-					"src/teams/myteam/ci/pipeline.yml",
-				},
+			files: []string{
+				"src/teams/myteam/README.md",
+				"src/teams/myteam/ci/pipeline.yml",
 			},
-			expect: true,
+			expect: []string{
+				"src/teams/myteam/README.md",
+				"src/teams/myteam/ci/pipeline.yml",
+			},
+		},
+		{
+			description: "match paths ending in file separator",
+			patterns:    []string{"src/teams/myteam/Dockerfile", "src/teams/myteam/ci/", "src/teams/myteam/app/"},
+			files: []string{
+				"src/teams/myteam/ci/README.md",
+				"src/teams/myteam/ci/main.go",
+				"src/teams/yourteam/temp.go",
+			},
+			expect: []string{
+				"src/teams/myteam/ci/README.md",
+				"src/teams/myteam/ci/main.go",
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.description, func(t *testing.T) {
-			out := pullrequest.Files(tc.patterns, tc.invert)(tc.pull)
+			out, err := pullrequest.Files(tc.patterns)(tc.files)
+			assert.Nil(t, err)
 			assert.Equal(t, tc.expect, out)
 		})
 	}
